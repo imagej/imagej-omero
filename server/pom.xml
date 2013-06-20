@@ -14,11 +14,24 @@
 	<url>http://developer.imagej.net/</url>
 	<inceptionYear>2013</inceptionYear>
 
+	<properties>
+		<!-- TEMP: Pin to SNAPSHOT version of ImageJ. This is to add support for
+			the not-yet-released Identifiable functionality on ImageJ's 'identifiers'
+			branch. Build will not be repeatable until this pin is replaced with a
+			new release version of ImageJ. -->
+		<imagej.version>2.0.0-SNAPSHOT</imagej.version>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>${imagej.groupId}</groupId>
 			<artifactId>ij-app</artifactId>
 			<version>${imagej.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>args4j</groupId>
+			<artifactId>args4j</artifactId>
+			<version>2.0.16</version>
 		</dependency>
 
 		<dependency>

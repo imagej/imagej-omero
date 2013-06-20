@@ -23,14 +23,9 @@
 
 package imagej.omero.server;
 
-/** Main class. */
-public class Main {
-
-	/** Main method. */
-	public static void main(final String[] args) {
-		final ModuleExecutor moduleExecutor = new ModuleExecutor();
-		final int result = moduleExecutor.execute(args);
-		System.exit(result);
-	}
-
-}
+/**
+ * Temporary placeholder for OMERO <code>JobParams</code> data structure.
+ * 
+ * @see "https://github.com/openmicroscopy/openmicroscopy/blob/v.4.4.8/components/blitz/resources/omero/Scripts.ice#L288"
+ */
+public interface OMEROJobParams { }
