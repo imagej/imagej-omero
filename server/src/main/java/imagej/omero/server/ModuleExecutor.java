@@ -136,6 +136,7 @@ public class ModuleExecutor extends AbstractContextual {
 				ij.log().warn("Ignoring unidentifiable module: " + info);
 				continue;
 			}
+			if (verbose) ij.log().info("Indexed module: " + info);
 			ids.put(id, info);
 		}
 	}
