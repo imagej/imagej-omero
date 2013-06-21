@@ -305,6 +305,10 @@ public class ModuleExecutor extends AbstractContextual {
 
 		// write out the stub
 		final File stub = new File(stubPath);
+		if (!stub.getParentFile().exists()) {
+			// create stubs directory if needed
+			stub.getParentFile().mkdir();
+		}
 		final DataOutputStream out =
 			new DataOutputStream(new FileOutputStream(stub));
 		out.writeUTF(id);
