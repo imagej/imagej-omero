@@ -66,7 +66,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<mainClass>imagej.omero.Main</mainClass>
+					<mainClass>imagej.omero.server.Main</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
