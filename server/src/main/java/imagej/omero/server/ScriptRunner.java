@@ -193,9 +193,31 @@ public class ScriptRunner extends AbstractContextual {
 	public omero.grid.Param convertItem(final ModuleItem<?> item) {
 		final omero.grid.Param param = new omero.grid.Param();
 		param.optional = !item.isRequired();
-		param.prototype = omero.rtypes.rstring(""); // FIXME
+		param.prototype = prototype(item.getType());
 		param.description = item.getDescription();
 		return param;
+	}
+
+	/** Creates an OMERO parameter prototype for the given Java class. */
+	public omero.RType prototype(final Class<?> type) {
+		// TODO: Handle more cases.
+		if (Boolean.class.isAssignableFrom(type)) {
+			return omero.rtypes.rbool(false);
+		}
+		if (Double.class.isAssignableFrom(type)) {
+			return omero.rtypes.rdouble(Double.NaN);
+		}
+		if (Float.class.isAssignableFrom(type)) {
+			return omero.rtypes.rfloat(Float.NaN);
+		}
+		if (Integer.class.isAssignableFrom(type)) {
+			return omero.rtypes.rint(0);
+		}
+		if (Long.class.isAssignableFrom(type)) {
+			return omero.rtypes.rlong(0L);
+		}
+		// default case: convert to string
+		return omero.rtypes.rstring("");
 	}
 
 	/** Converts an ImageJ parameter value to an OMERO parameter value. */
