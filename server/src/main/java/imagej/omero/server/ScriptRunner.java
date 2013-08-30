@@ -37,7 +37,6 @@ import java.util.concurrent.ExecutionException;
 
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
-import org.scijava.log.LogService;
 import org.scijava.util.Manifest;
 
 /**
@@ -75,16 +74,6 @@ public class ScriptRunner extends AbstractContextual {
 		return ij;
 	}
 
-	/** Gets whether verbose output mode is enabled. */
-	public boolean isVerbose() {
-		return ij.log().isDebug();
-	}
-
-	/** Toggles verbose output mode. */
-	public void setVerbose(final boolean verbose) {
-		ij.log().setLevel(verbose ? LogService.DEBUG : LogService.INFO);
-	}
-	
 	/** Toplevel invocation entry point from OMERO Jython scripts. */
 	public void invoke(final String command) throws omero.ServerError,
 		Glacier2.CannotCreateSessionException, Glacier2.PermissionDeniedException
