@@ -1,0 +1,12 @@
+#!/usr/bin/env jython
+
+"""
+Example ImageJ wrapper script for a command called "HelloWorld"
+"""
+
+# NB: For debugging.
+#import java.lang.System
+#java.lang.System.setProperty("scijava.log.level:imagej.omero.server.ScriptRunner", "debug")
+
+import imagej.omero.server.ScriptRunner
+imagej.omero.server.ScriptRunner().invoke("HelloWorld")
