@@ -223,24 +223,16 @@ public class ScriptRunner extends AbstractContextual {
 	/** Converts an ImageJ parameter value to an OMERO parameter value. */
 	public omero.RType convertValue(final Object value) {
 		// TODO: Handle more cases.
-		if (value instanceof Boolean) {
-			return omero.rtypes.rbool((Boolean) value);
+
+		// try generic conversion method
+		try {
+			return omero.rtypes.rtype(value);
 		}
-		if (value instanceof Double) {
-			return omero.rtypes.rdouble((Double) value);
-		}
-		if (value instanceof Float) {
-			return omero.rtypes.rfloat((Float) value);
-		}
-		if (value instanceof Integer) {
-			return omero.rtypes.rint((Integer) value);
-		}
-		if (value instanceof Long) {
-			return omero.rtypes.rlong((Long) value);
+		catch (final omero.ClientError err) {
+			// default case: convert to string
+			return omero.rtypes.rstring(value.toString());
 		}
 
-		// default case: convert to string
-		return omero.rtypes.rstring(value.toString());
 	}
 
 	/** Converts an OMERO parameter value to an ImageJ parameter value. */
