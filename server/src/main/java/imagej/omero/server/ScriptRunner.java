@@ -33,7 +33,7 @@ import imagej.module.ModuleItem;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
@@ -96,19 +96,7 @@ public class ScriptRunner extends AbstractContextual {
 
 			final String parse = c.getProperty("omero.scripts.parse");
 			if (!parse.isEmpty()) params(c, info);
-			else {
-				try {
-					launch(c, info);
-				}
-				catch (final InterruptedException exc) {
-					ij.log().error(info.getTitle() + ": error executing script", exc);
-					return;
-				}
-				catch (final ExecutionException exc) {
-					ij.log().error(info.getTitle() + ": error executing script", exc);
-					return;
-				}
-			}
+			else launch(c, info);
 		}
 		finally {
 			c.__del__();
@@ -127,7 +115,7 @@ public class ScriptRunner extends AbstractContextual {
 
 	/** Executes an ImageJ module, for the specified OMERO session. */
 	public void launch(final omero.client c, final ModuleInfo info)
-		throws omero.ServerError, InterruptedException, ExecutionException
+		throws omero.ServerError
 	{
 		// populate inputs
 		ij.log().debug(info.getTitle() + ": populating inputs");
@@ -138,7 +126,8 @@ public class ScriptRunner extends AbstractContextual {
 
 		// execute ImageJ module
 		ij.log().debug(info.getTitle() + ": executing module");
-		final Module module = ij.command().run(info, inputMap).get();
+		final Future<Module> future = ij.command().run(info, inputMap);
+		final Module module = ij.module().waitFor(future);
 
 		// populate outputs
 		ij.log().debug(info.getTitle() + ": populating outputs");
