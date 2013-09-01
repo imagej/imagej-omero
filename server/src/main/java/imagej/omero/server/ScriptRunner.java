@@ -31,9 +31,13 @@ import imagej.module.ModuleException;
 import imagej.module.ModuleInfo;
 import imagej.module.ModuleItem;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -231,6 +235,46 @@ public class ScriptRunner extends AbstractContextual {
 
 	/** Converts an OMERO parameter value to an ImageJ parameter value. */
 	public Object convertValue(final omero.RType value) {
+		if (value instanceof omero.RCollection) {
+			// collection of objects
+			final Collection<omero.RType> omeroCollection =
+				((omero.RCollection) value).getValue();
+			final Collection<Object> collection;
+			if (value instanceof omero.RArray || value instanceof omero.RList) {
+				// NB: See special handling for omero.RArray below.
+				collection = new ArrayList<Object>();
+			}
+			else if (value instanceof omero.RSet) {
+				collection = new HashSet<Object>();
+			}
+			else {
+				ij.log().error("Unsupported collection: " + value.getClass().getName());
+				return null;
+			}
+			// convert elements recursively
+			Object element = null; // NB: Save 1st non-null element for later use.
+			for (final omero.RType rType : omeroCollection) {
+				final Object converted = convertValue(rType);
+				if (element != null) element = converted;
+				collection.add(converted);
+			}
+			if (value instanceof omero.RArray) {
+				// convert from Collection to array of the appropriate type
+				if (element == null) return collection.toArray(); // unknown type
+				return toArray(collection, element.getClass()); // typed on 1st element
+			}
+			return collection;
+		}
+		if (value instanceof omero.RMap) {
+			// map of objects
+			final Map<String, omero.RType> omeroMap = ((omero.RMap) value).getValue();
+			final Map<String, Object> map = new HashMap<String, Object>();
+			for (final String key : omeroMap.keySet()) {
+				map.put(key, convertValue(omeroMap.get(key)));
+			}
+			return map;
+		}
+
 		// Use getValue() method if one exists for this type.
 		// This is necessary because there is no common interface
 		// with the getValue() method implemented by each subclass.
@@ -255,6 +299,16 @@ public class ScriptRunner extends AbstractContextual {
 	}
 
 	// -- Helper methods --
+
+	/** Converts a {@link Collection} to an array of the given type. */
+	private <T> T[] toArray(final Collection<Object> collection,
+		final Class<T> type)
+	{
+		final Object array = Array.newInstance(type, 0);
+		@SuppressWarnings("unchecked")
+		final T[] typedArray = (T[]) array;
+		return collection.toArray(typedArray);
+	}
 
 	/**
 	 * Extracts the version of the given module, by scanning the relevant JAR
