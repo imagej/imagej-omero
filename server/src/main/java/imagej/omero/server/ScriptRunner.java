@@ -70,7 +70,7 @@ public class ScriptRunner extends AbstractContextual {
 
 	// -- ScriptRunner methods --
 
-	/** Gets the ImageJ context wrapper used by this module executor. */
+	/** Gets the ImageJ application gateway used by this module executor. */
 	public ImageJ ij() {
 		return ij;
 	}
