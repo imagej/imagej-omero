@@ -186,7 +186,8 @@ public class ScriptRunner extends AbstractContextual {
 
 	/** Creates an OMERO parameter prototype for the given Java class. */
 	public omero.RType prototype(final Class<?> type) {
-		// TODO: Handle more cases.
+		// TODO: Handle more cases?
+
 		if (Boolean.class.isAssignableFrom(type)) {
 			return omero.rtypes.rbool(false);
 		}
@@ -220,7 +221,7 @@ public class ScriptRunner extends AbstractContextual {
 
 	/** Converts an ImageJ parameter value to an OMERO parameter value. */
 	public omero.RType convertValue(final Object value) {
-		// TODO: Handle more cases.
+		// TODO: Handle more cases?
 
 		// try generic conversion method
 		try {
@@ -230,7 +231,6 @@ public class ScriptRunner extends AbstractContextual {
 			// default case: convert to string
 			return omero.rtypes.rstring(value.toString());
 		}
-
 	}
 
 	/** Converts an OMERO parameter value to an ImageJ parameter value. */
