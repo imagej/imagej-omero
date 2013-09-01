@@ -34,6 +34,9 @@ import imagej.module.ModuleItem;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.scijava.AbstractContextual;
@@ -194,6 +197,18 @@ public class ScriptRunner extends AbstractContextual {
 		}
 		if (Long.class.isAssignableFrom(type)) {
 			return omero.rtypes.rlong(0L);
+		}
+		if (type.isArray()) {
+			return omero.rtypes.rarray();
+		}
+		if (List.class.isAssignableFrom(type)) {
+			return omero.rtypes.rlist();
+		}
+		if (Map.class.isAssignableFrom(type)) {
+			return omero.rtypes.rmap();
+		}
+		if (Set.class.isAssignableFrom(type)) {
+			return omero.rtypes.rset();
 		}
 		// default case: convert to string
 		return omero.rtypes.rstring("");
