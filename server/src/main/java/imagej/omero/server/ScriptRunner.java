@@ -25,6 +25,7 @@ package imagej.omero.server;
 
 import imagej.ImageJ;
 import imagej.command.CommandInfo;
+import imagej.core.commands.debug.SystemInformation;
 import imagej.module.Module;
 import imagej.module.ModuleException;
 import imagej.module.ModuleInfo;
@@ -82,7 +83,7 @@ public class ScriptRunner extends AbstractContextual {
 
 		// dump system properties, for debugging purposes
 		ij.log().debug("System properties:");
-		ij.log().debug(imagej.core.commands.debug.SystemInformation.getSystemProperties());
+		ij.log().debug(SystemInformation.getSystemProperties());
 
 		// look up the requested command (FIXME: support non-command modules too)
 		final CommandInfo info = ij.command().getCommand(command);
