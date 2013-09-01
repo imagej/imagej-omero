@@ -143,7 +143,7 @@ public class ScriptRunner extends AbstractContextual {
 	public omero.RType convertInfo(final ModuleInfo info) {
 		// populate module metadata
 		final omero.grid.JobParams params = new omero.grid.JobParams();
-		params.name = "[ImageJ] " + info.getTitle(); //info.getName();
+		params.name = "[ImageJ] " + info.getTitle(); // info.getName();
 		params.version = getVersion(info);
 		params.description = info.getDescription();
 		params.stdoutFormat = "text/plain";
