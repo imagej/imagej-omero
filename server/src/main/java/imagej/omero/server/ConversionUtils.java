@@ -47,8 +47,8 @@ public final class ConversionUtils {
 
 	// -- Utility methods --
 
-	/** Converts ImageJ parameter metadata to OMERO parameter metadata. */
-	public static omero.grid.Param convertItem(final ModuleItem<?> item) {
+	/** Converts an ImageJ module parameter to an OMERO job parameter. */
+	public static omero.grid.Param getJobParam(final ModuleItem<?> item) {
 		final omero.grid.Param param = new omero.grid.Param();
 		param.optional = !item.isRequired();
 		param.prototype = prototype(item.getType());

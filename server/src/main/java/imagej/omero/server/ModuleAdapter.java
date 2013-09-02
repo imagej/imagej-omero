@@ -103,7 +103,7 @@ public class ModuleAdapter extends AbstractContextual {
 		// Parsing. See OmeroPy/src/omero/scripts.py
 		// for the Python implementation.
 		// =========================================
-		client.setOutput("omero.scripts.parse", convertInfo());
+		client.setOutput("omero.scripts.parse", getJobInfo());
 	}
 
 	/** Executes an ImageJ module, for the specified OMERO session. */
@@ -131,7 +131,7 @@ public class ModuleAdapter extends AbstractContextual {
 	}
 
 	/** Converts ImageJ module metadata to OMERO job metadata. */
-	public omero.RType convertInfo() {
+	public omero.RType getJobInfo() {
 		// populate module metadata
 		final omero.grid.JobParams params = new omero.grid.JobParams();
 		params.name = "[ImageJ] " + info.getTitle(); // info.getName();
@@ -145,14 +145,14 @@ public class ModuleAdapter extends AbstractContextual {
 		// convert metadata for each module input
 		params.inputs = new HashMap<String, omero.grid.Param>();
 		for (final ModuleItem<?> item : info.inputs()) {
-			final omero.grid.Param param = ConversionUtils.convertItem(item);
+			final omero.grid.Param param = ConversionUtils.getJobParam(item);
 			if (param != null) params.inputs.put(item.getName(), param);
 		}
 
 		// convert metadata for each module output
 		params.outputs = new HashMap<String, omero.grid.Param>();
 		for (final ModuleItem<?> item : info.outputs()) {
-			final omero.grid.Param param = ConversionUtils.convertItem(item);
+			final omero.grid.Param param = ConversionUtils.getJobParam(item);
 			if (param != null) params.outputs.put(item.getName(), param);
 		}
 
