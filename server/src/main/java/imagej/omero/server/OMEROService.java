@@ -23,30 +23,29 @@
 
 package imagej.omero.server;
 
-import java.lang.reflect.Array;
-import java.util.Collection;
+import imagej.module.ModuleItem;
+import omero.RType;
+import omero.grid.Param;
+
+import org.scijava.service.Service;
 
 /**
- * Utility methods for converting between data types.
+ * Interface for ImageJ services that manage OMERO data conversion.
  * 
  * @author Curtis Rueden
  */
-public final class ConversionUtils {
+public interface OMEROService extends Service {
 
-	private ConversionUtils() {
-		// NB: Prevent instantiation of utility class.
-	}
+	/** Converts an ImageJ parameter value to an OMERO parameter value. */
+	omero.RType convertValue(Object value);
 
-	// -- Utility methods --
+	/** Converts an OMERO parameter value to an ImageJ value of the given type. */
+	Object convertValue(omero.RType value, Class<?> type);
 
-	/** Converts a {@link Collection} to an array of the given type. */
-	public static <T> T[] toArray(final Collection<Object> collection,
-		final Class<T> type)
-	{
-		final Object array = Array.newInstance(type, 0);
-		@SuppressWarnings("unchecked")
-		final T[] typedArray = (T[]) array;
-		return collection.toArray(typedArray);
-	}
+	/** Converts an ImageJ module parameter to an OMERO job parameter. */
+	Param getJobParam(ModuleItem<?> item);
+
+	/** Creates an OMERO parameter prototype for the given Java class. */
+	RType prototype(Class<?> type);
 
 }
