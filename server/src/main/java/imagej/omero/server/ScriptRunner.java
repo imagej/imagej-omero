@@ -189,8 +189,7 @@ public class ScriptRunner extends AbstractContextual {
 
 	/** Creates an OMERO parameter prototype for the given Java class. */
 	public omero.RType prototype(final Class<?> type) {
-		// TODO: Handle more cases?
-
+		// image types
 		if (Dataset.class.isAssignableFrom(type) ||
 			DatasetView.class.isAssignableFrom(type) ||
 			ImageDisplay.class.isAssignableFrom(type))
@@ -199,6 +198,7 @@ public class ScriptRunner extends AbstractContextual {
 			return omero.rtypes.rlong(0);
 		}
 
+		// primitive types
 		if (Boolean.class.isAssignableFrom(type)) {
 			return omero.rtypes.rbool(false);
 		}
@@ -214,6 +214,8 @@ public class ScriptRunner extends AbstractContextual {
 		if (Long.class.isAssignableFrom(type)) {
 			return omero.rtypes.rlong(0L);
 		}
+
+		// data structure types
 		if (type.isArray()) {
 			return omero.rtypes.rarray();
 		}
@@ -226,14 +228,21 @@ public class ScriptRunner extends AbstractContextual {
 		if (Set.class.isAssignableFrom(type)) {
 			return omero.rtypes.rset();
 		}
+
 		// default case: convert to string
+		// works for many types, including but not limited to:
+		// - char
+		// - imagej.util.ColorRGB
+		// - java.io.File
+		// - java.lang.Character
+		// - java.lang.String
+		// - java.math.BigDecimal
+		// - java.math.BigInteger
 		return omero.rtypes.rstring("");
 	}
 
 	/** Converts an ImageJ parameter value to an OMERO parameter value. */
 	public omero.RType convertValue(final Object value) {
-		// TODO: Handle more cases?
-
 		if (value instanceof Dataset) {
 			// TODO: Extract pixels and upload to OMERO.
 			return null;
