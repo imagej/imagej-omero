@@ -314,7 +314,7 @@ public class ScriptRunner extends AbstractContextual {
 		}
 
 		// Use getValue() method if one exists for this type.
-		// This is necessary because there is no common interface
+		// Reflection is necessary because there is no common interface
 		// with the getValue() method implemented by each subclass.
 		try {
 			final Method method = value.getClass().getMethod("getValue");
