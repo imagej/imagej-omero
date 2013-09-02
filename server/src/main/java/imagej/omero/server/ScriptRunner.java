@@ -48,6 +48,7 @@ import java.util.concurrent.Future;
 
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
+import org.scijava.util.ClassUtils;
 import org.scijava.util.Manifest;
 
 /**
@@ -132,7 +133,8 @@ public class ScriptRunner extends AbstractContextual {
 		ij.log().debug(info.getTitle() + ": populating inputs");
 		final HashMap<String, Object> inputMap = new HashMap<String, Object>();
 		for (final String name : c.getInputKeys()) {
-			inputMap.put(name, convertValue(c.getInput(name)));
+			final Class<?> type = info.getInput(name).getType();
+			inputMap.put(name, convertValue(c.getInput(name), type));
 		}
 
 		// execute ImageJ module
@@ -269,8 +271,8 @@ public class ScriptRunner extends AbstractContextual {
 		}
 	}
 
-	/** Converts an OMERO parameter value to an ImageJ parameter value. */
-	public Object convertValue(final omero.RType value) {
+	/** Converts an OMERO parameter value to an ImageJ value of the given type. */
+	public Object convertValue(final omero.RType value, final Class<?> type) {
 		if (value instanceof omero.RCollection) {
 			// collection of objects
 			final Collection<omero.RType> omeroCollection =
@@ -290,7 +292,7 @@ public class ScriptRunner extends AbstractContextual {
 			// convert elements recursively
 			Object element = null; // NB: Save 1st non-null element for later use.
 			for (final omero.RType rType : omeroCollection) {
-				final Object converted = convertValue(rType);
+				final Object converted = convertValue(rType, null);
 				if (element != null) element = converted;
 				collection.add(converted);
 			}
@@ -306,7 +308,7 @@ public class ScriptRunner extends AbstractContextual {
 			final Map<String, omero.RType> omeroMap = ((omero.RMap) value).getValue();
 			final Map<String, Object> map = new HashMap<String, Object>();
 			for (final String key : omeroMap.keySet()) {
-				map.put(key, convertValue(omeroMap.get(key)));
+				map.put(key, convertValue(omeroMap.get(key), null));
 			}
 			return map;
 		}
@@ -316,7 +318,8 @@ public class ScriptRunner extends AbstractContextual {
 		// with the getValue() method implemented by each subclass.
 		try {
 			final Method method = value.getClass().getMethod("getValue");
-			return method.invoke(value);
+			final Object result = method.invoke(value);
+			return convertToType(result, type);
 		}
 		catch (final NoSuchMethodException exc) {
 			ij.log().debug(exc);
@@ -335,6 +338,44 @@ public class ScriptRunner extends AbstractContextual {
 	}
 
 	// -- Helper methods --
+
+	/**
+	 * Converts the given POJO to the specified type (if given).
+	 * <p>
+	 * This method mainly exists to support OMERO pixel IDs; i.e., conversion of
+	 * numbers to ImageJ image types.
+	 * </p>
+	 */
+	private <T> T convertToType(Object result, Class<T> type) {
+		if (result == null) return null;
+		if (type == null || type.isInstance(result)) {
+			@SuppressWarnings("unchecked")
+			final T typedResult = (T) result;
+			return typedResult;
+		}
+		if (ClassUtils.isNumber(result.getClass())) {
+			if (Dataset.class.isAssignableFrom(type)) {
+				// FIXME: Implement this.
+				return null;
+			}
+			if (DatasetView.class.isAssignableFrom(type)) {
+				final Dataset dataset = convertToType(result, Dataset.class);
+				@SuppressWarnings("unchecked")
+				final T dataView = (T) ij.imageDisplay().createDataView(dataset);
+				return dataView;
+			}
+			if (ImageDisplay.class.isAssignableFrom(type)) {
+				final Dataset dataset = convertToType(result, Dataset.class);
+				@SuppressWarnings("unchecked")
+				final T display = (T) ij.display().createDisplay(dataset);
+				return display;
+			}
+		}
+		ij.log().error(
+			"Cannot convert: " + result.getClass().getName() + " to " +
+				type.getName());
+		return null;
+	}
 
 	/** Converts a {@link Collection} to an array of the given type. */
 	private <T> T[] toArray(final Collection<Object> collection,
