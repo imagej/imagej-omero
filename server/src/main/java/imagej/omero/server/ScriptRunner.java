@@ -52,7 +52,7 @@ import org.scijava.util.ClassUtils;
 import org.scijava.util.Manifest;
 
 /**
- * Helper class for executing ImageJ {@link Module}s as OMERO scripts.
+ * Executes ImageJ {@link Module}s as OMERO scripts.
  * 
  * @author Curtis Rueden
  * @see "https://www.openmicroscopy.org/site/support/omero4/developers/Modules/Scripts.html"
