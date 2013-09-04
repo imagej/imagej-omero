@@ -241,9 +241,20 @@ public class DefaultOMEROService extends AbstractService implements
 	/**
 	 * Converts the given POJO to the specified type (if given).
 	 * <p>
-	 * This method mainly exists to support OMERO pixel IDs; i.e., conversion of
-	 * numbers to ImageJ image types.
+	 * This method handles coersion of POJOs unwrapped from OMERO into the
+	 * relevant type needed by ImageJ. Examples:
 	 * </p>
+	 * <ol>
+	 * <li>Many ImageJ types (such as {@link imagej.util.ColorRGB}) are mapped to
+	 * {@link String} for use with OMERO. We lean on the SciJava Common
+	 * {@link ClassUtils#convert(Object, Class)} method to handle conversion of
+	 * such types back to ImageJ's expected type for the parameter.</li>
+	 * <li>ImageJ's image types (i.e., {@link Dataset}, {@link DatasetView} and
+	 * {@link ImageDisplay}) are mapped to {@code long} since OMERO communicates
+	 * about images using pixel IDs. Work must be done to download pixels from a
+	 * specified ID and converting the result to the appropriate ImageJ image type
+	 * such as {@link Dataset}.</li>
+	 * </ol>
 	 */
 	private <T> T convertToType(final Object result, final Class<T> type) {
 		if (result == null) return null;
