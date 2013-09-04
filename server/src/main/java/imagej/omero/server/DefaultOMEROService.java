@@ -279,8 +279,11 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 		if (ClassUtils.isNumber(result.getClass())) {
 			if (Dataset.class.isAssignableFrom(type)) {
-				// FIXME: Implement this.
-				return null;
+				final long id = ((Number) result).longValue();
+				// TODO: Consider consequences of this cast more carefully.
+				@SuppressWarnings("unchecked")
+				final T dataset = (T) downloadPixels(client, id);
+				return dataset;
 			}
 			if (DatasetView.class.isAssignableFrom(type)) {
 				final Dataset dataset = convertToType(client, result, Dataset.class);
