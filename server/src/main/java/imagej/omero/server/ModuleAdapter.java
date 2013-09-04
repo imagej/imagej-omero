@@ -36,6 +36,7 @@ import java.util.concurrent.Future;
 
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
+import org.scijava.ItemVisibility;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.util.Manifest;
@@ -97,7 +98,9 @@ public class ModuleAdapter extends AbstractContextual {
 		log.debug(info.getTitle() + ": populating inputs");
 		final HashMap<String, Object> inputMap = new HashMap<String, Object>();
 		for (final String name : client.getInputKeys()) {
-			final Class<?> type = info.getInput(name).getType();
+			final ModuleItem<?> item = info.getInput(name);
+			if (item.getVisibility() == ItemVisibility.MESSAGE) continue;
+			final Class<?> type = item.getType();
 			final Object value =
 				omeroService.convertValue(client.getInput(name), type);
 			inputMap.put(name, value);
