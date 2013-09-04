@@ -30,6 +30,7 @@ import imagej.data.display.ImageDisplayService;
 import imagej.display.DisplayService;
 import imagej.module.ModuleItem;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -130,7 +131,7 @@ public class DefaultOMEROService extends AbstractService implements
 					return collection.toArray();
 				}
 				// typed on 1st element
-				return ConversionUtils.toArray(collection, element.getClass());
+				return toArray(collection, element.getClass());
 			}
 			// not an array, but a bona fide collection
 			return collection;
@@ -274,6 +275,16 @@ public class DefaultOMEROService extends AbstractService implements
 				type.getName());
 		}
 		return converted;
+	}
+
+	/** Converts a {@link Collection} to an array of the given type. */
+	private <T> T[] toArray(final Collection<Object> collection,
+		final Class<T> type)
+	{
+		final Object array = Array.newInstance(type, 0);
+		@SuppressWarnings("unchecked")
+		final T[] typedArray = (T[]) array;
+		return collection.toArray(typedArray);
 	}
 
 }
