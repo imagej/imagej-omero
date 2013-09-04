@@ -99,7 +99,8 @@ public class ModuleAdapter extends AbstractContextual {
 		final HashMap<String, Object> inputMap = new HashMap<String, Object>();
 		for (final String name : client.getInputKeys()) {
 			final Class<?> type = info.getInput(name).getType();
-			final Object value = omeroService.toImageJ(client.getInput(name), type);
+			final Object value =
+				omeroService.toImageJ(client, client.getInput(name), type);
 			inputMap.put(name, value);
 		}
 
@@ -111,7 +112,8 @@ public class ModuleAdapter extends AbstractContextual {
 		// populate outputs
 		log.debug(info.getTitle() + ": populating outputs");
 		for (final ModuleItem<?> item : module.getInfo().outputs()) {
-			final omero.RType value = omeroService.toOMERO(item.getValue(module));
+			final omero.RType value =
+				omeroService.toOMERO(client, item.getValue(module));
 			client.setOutput(item.getName(), value);
 		}
 

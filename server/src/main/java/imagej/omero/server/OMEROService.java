@@ -37,10 +37,10 @@ import org.scijava.service.Service;
 public interface OMEROService extends Service {
 
 	/** Converts an ImageJ parameter value to an OMERO parameter value. */
-	omero.RType toOMERO(Object value);
+	omero.RType toOMERO(omero.client client, Object value);
 
 	/** Converts an OMERO parameter value to an ImageJ value of the given type. */
-	Object toImageJ(omero.RType value, Class<?> type);
+	Object toImageJ(omero.client client, omero.RType value, Class<?> type);
 
 	/** Converts an ImageJ module parameter to an OMERO job parameter. */
 	Param getJobParam(ModuleItem<?> item);
