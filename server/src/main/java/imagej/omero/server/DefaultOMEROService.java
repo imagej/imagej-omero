@@ -225,13 +225,13 @@ public class DefaultOMEROService extends AbstractService implements
 			log.debug(exc);
 		}
 		catch (final IllegalArgumentException exc) {
-			log.warn(exc);
+			log.error(exc);
 		}
 		catch (final IllegalAccessException exc) {
-			log.warn(exc);
+			log.error(exc);
 		}
 		catch (final InvocationTargetException exc) {
-			log.warn(exc);
+			log.error(exc);
 		}
 		log.error("Unsupported type: " + value.getClass().getName());
 		return null;
