@@ -273,7 +273,8 @@ public class DefaultOMEROService extends AbstractService implements
 		final Class<T> type)
 	{
 		if (result == null) return null;
-		if (type == null || type.isInstance(result)) {
+		if (type == null) {
+			// no type given; try a simple cast
 			@SuppressWarnings("unchecked")
 			final T typedResult = (T) result;
 			return typedResult;
