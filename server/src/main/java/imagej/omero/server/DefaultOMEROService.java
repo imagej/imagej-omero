@@ -72,7 +72,7 @@ public class DefaultOMEROService extends AbstractService implements
 	// -- OMEROService methods --
 
 	@Override
-	public omero.RType convert(final Object value) {
+	public omero.RType toOMERO(final Object value) {
 		if (value instanceof Dataset) {
 			// TODO: Extract pixels and upload to OMERO.
 			return null;
@@ -80,12 +80,12 @@ public class DefaultOMEROService extends AbstractService implements
 		else if (value instanceof DatasetView) {
 			final DatasetView datasetView = (DatasetView) value;
 			// TODO: Verify whether any view-specific metadata can be preserved.
-			return convert(datasetView.getData());
+			return toOMERO(datasetView.getData());
 		}
 		else if (value instanceof ImageDisplay) {
 			final ImageDisplay imageDisplay = (ImageDisplay) value;
 			// TODO: Support more aspects of image displays; e.g., multiple datasets.
-			return convert(imageDisplayService.getActiveDataset(imageDisplay));
+			return toOMERO(imageDisplayService.getActiveDataset(imageDisplay));
 		}
 		else {
 			// try generic conversion method
@@ -100,7 +100,7 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public Object convert(final omero.RType value, final Class<?> type) {
+	public Object toImageJ(final omero.RType value, final Class<?> type) {
 		if (value instanceof omero.RCollection) {
 			// collection of objects
 			final Collection<omero.RType> omeroCollection =
@@ -120,7 +120,7 @@ public class DefaultOMEROService extends AbstractService implements
 			// convert elements recursively
 			Object element = null; // NB: Save 1st non-null element for later use.
 			for (final omero.RType rType : omeroCollection) {
-				final Object converted = convert(rType, null);
+				final Object converted = toImageJ(rType, null);
 				if (element != null) element = converted;
 				collection.add(converted);
 			}
@@ -141,7 +141,7 @@ public class DefaultOMEROService extends AbstractService implements
 			final Map<String, omero.RType> omeroMap = ((omero.RMap) value).getValue();
 			final Map<String, Object> map = new HashMap<String, Object>();
 			for (final String key : omeroMap.keySet()) {
-				map.put(key, convert(omeroMap.get(key), null));
+				map.put(key, toImageJ(omeroMap.get(key), null));
 			}
 			return map;
 		}
