@@ -190,19 +190,20 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 
 		// primitive types
-		if (Boolean.class.isAssignableFrom(type)) {
+		final Class<?> saneType = ClassUtils.getNonprimitiveType(type);
+		if (Boolean.class.isAssignableFrom(saneType)) {
 			return omero.rtypes.rbool(false);
 		}
-		if (Double.class.isAssignableFrom(type)) {
+		if (Double.class.isAssignableFrom(saneType)) {
 			return omero.rtypes.rdouble(Double.NaN);
 		}
-		if (Float.class.isAssignableFrom(type)) {
+		if (Float.class.isAssignableFrom(saneType)) {
 			return omero.rtypes.rfloat(Float.NaN);
 		}
-		if (Integer.class.isAssignableFrom(type)) {
+		if (Integer.class.isAssignableFrom(saneType)) {
 			return omero.rtypes.rint(0);
 		}
-		if (Long.class.isAssignableFrom(type)) {
+		if (Long.class.isAssignableFrom(saneType)) {
 			return omero.rtypes.rlong(0L);
 		}
 
