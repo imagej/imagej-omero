@@ -72,6 +72,70 @@ public class DefaultOMEROService extends AbstractService implements
 	// -- OMEROService methods --
 
 	@Override
+	public omero.grid.Param getJobParam(final ModuleItem<?> item) {
+		final omero.grid.Param param = new omero.grid.Param();
+		param.optional = !item.isRequired();
+		param.prototype = prototype(item.getType());
+		param.description = item.getDescription();
+		return param;
+	}
+
+	@Override
+	public omero.RType prototype(final Class<?> type) {
+		// image types
+		if (Dataset.class.isAssignableFrom(type) ||
+			DatasetView.class.isAssignableFrom(type) ||
+			ImageDisplay.class.isAssignableFrom(type))
+		{
+			// use a pixels ID
+			return omero.rtypes.rlong(0);
+		}
+
+		// primitive types
+		final Class<?> saneType = ClassUtils.getNonprimitiveType(type);
+		if (Boolean.class.isAssignableFrom(saneType)) {
+			return omero.rtypes.rbool(false);
+		}
+		if (Double.class.isAssignableFrom(saneType)) {
+			return omero.rtypes.rdouble(Double.NaN);
+		}
+		if (Float.class.isAssignableFrom(saneType)) {
+			return omero.rtypes.rfloat(Float.NaN);
+		}
+		if (Integer.class.isAssignableFrom(saneType)) {
+			return omero.rtypes.rint(0);
+		}
+		if (Long.class.isAssignableFrom(saneType)) {
+			return omero.rtypes.rlong(0L);
+		}
+
+		// data structure types
+		if (type.isArray()) {
+			return omero.rtypes.rarray();
+		}
+		if (List.class.isAssignableFrom(type)) {
+			return omero.rtypes.rlist();
+		}
+		if (Map.class.isAssignableFrom(type)) {
+			return omero.rtypes.rmap();
+		}
+		if (Set.class.isAssignableFrom(type)) {
+			return omero.rtypes.rset();
+		}
+
+		// default case: convert to string
+		// works for many types, including but not limited to:
+		// - char
+		// - imagej.util.ColorRGB
+		// - java.io.File
+		// - java.lang.Character
+		// - java.lang.String
+		// - java.math.BigDecimal
+		// - java.math.BigInteger
+		return omero.rtypes.rstring("");
+	}
+
+	@Override
 	public omero.RType toOMERO(final omero.client client, final Object value) {
 		if (value instanceof Dataset) {
 			// FIXME: Extract pixels and upload to OMERO.
@@ -170,70 +234,6 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 		log.error("Unsupported type: " + value.getClass().getName());
 		return null;
-	}
-
-	@Override
-	public omero.grid.Param getJobParam(final ModuleItem<?> item) {
-		final omero.grid.Param param = new omero.grid.Param();
-		param.optional = !item.isRequired();
-		param.prototype = prototype(item.getType());
-		param.description = item.getDescription();
-		return param;
-	}
-
-	@Override
-	public omero.RType prototype(final Class<?> type) {
-		// image types
-		if (Dataset.class.isAssignableFrom(type) ||
-			DatasetView.class.isAssignableFrom(type) ||
-			ImageDisplay.class.isAssignableFrom(type))
-		{
-			// use a pixels ID
-			return omero.rtypes.rlong(0);
-		}
-
-		// primitive types
-		final Class<?> saneType = ClassUtils.getNonprimitiveType(type);
-		if (Boolean.class.isAssignableFrom(saneType)) {
-			return omero.rtypes.rbool(false);
-		}
-		if (Double.class.isAssignableFrom(saneType)) {
-			return omero.rtypes.rdouble(Double.NaN);
-		}
-		if (Float.class.isAssignableFrom(saneType)) {
-			return omero.rtypes.rfloat(Float.NaN);
-		}
-		if (Integer.class.isAssignableFrom(saneType)) {
-			return omero.rtypes.rint(0);
-		}
-		if (Long.class.isAssignableFrom(saneType)) {
-			return omero.rtypes.rlong(0L);
-		}
-
-		// data structure types
-		if (type.isArray()) {
-			return omero.rtypes.rarray();
-		}
-		if (List.class.isAssignableFrom(type)) {
-			return omero.rtypes.rlist();
-		}
-		if (Map.class.isAssignableFrom(type)) {
-			return omero.rtypes.rmap();
-		}
-		if (Set.class.isAssignableFrom(type)) {
-			return omero.rtypes.rset();
-		}
-
-		// default case: convert to string
-		// works for many types, including but not limited to:
-		// - char
-		// - imagej.util.ColorRGB
-		// - java.io.File
-		// - java.lang.Character
-		// - java.lang.String
-		// - java.math.BigDecimal
-		// - java.math.BigInteger
-		return omero.rtypes.rstring("");
 	}
 
 	// -- Helper methods --
