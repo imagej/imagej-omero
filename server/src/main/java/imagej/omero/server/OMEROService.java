@@ -23,6 +23,7 @@
 
 package imagej.omero.server;
 
+import imagej.data.Dataset;
 import imagej.module.ModuleItem;
 import omero.RType;
 import omero.grid.Param;
@@ -48,5 +49,16 @@ public interface OMEROService extends Service {
 	/** Converts an OMERO parameter value to an ImageJ value of the given type. */
 	Object toImageJ(omero.client client, omero.RType value, Class<?> type);
 
+	/**
+	 * Downloads the pixels at the given ID from OMERO, storing the result into a
+	 * new ImageJ {@link Dataset}.
+	 */
+	Dataset downloadPixels(omero.client client, long id);
+
+	/**
+	 * Uploads the given ImageJ {@link Dataset}'s pixels to OMERO, returning the
+	 * new pixels ID on the OMERO server.
+	 */
+	long uploadPixels(omero.client client, Dataset dataset);
 
 }

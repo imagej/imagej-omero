@@ -236,6 +236,18 @@ public class DefaultOMEROService extends AbstractService implements
 		return null;
 	}
 
+	@Override
+	public Dataset downloadPixels(final omero.client client, final long id) {
+		// FIXME: Implement this.
+		return null;
+	}
+
+	@Override
+	public long uploadPixels(final omero.client client, final Dataset dataset) {
+		// FIXME: Implement this.
+		return 0;
+	}
+
 	// -- Helper methods --
 
 	/**
