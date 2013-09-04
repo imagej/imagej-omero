@@ -98,9 +98,7 @@ public class ModuleAdapter extends AbstractContextual {
 		log.debug(info.getTitle() + ": populating inputs");
 		final HashMap<String, Object> inputMap = new HashMap<String, Object>();
 		for (final String name : client.getInputKeys()) {
-			final ModuleItem<?> item = info.getInput(name);
-			if (item.getVisibility() == ItemVisibility.MESSAGE) continue;
-			final Class<?> type = item.getType();
+			final Class<?> type = info.getInput(name).getType();
 			final Object value = omeroService.convert(client.getInput(name), type);
 			inputMap.put(name, value);
 		}
@@ -135,6 +133,7 @@ public class ModuleAdapter extends AbstractContextual {
 		// convert metadata for each module input
 		params.inputs = new HashMap<String, omero.grid.Param>();
 		for (final ModuleItem<?> item : info.inputs()) {
+			if (item.getVisibility() == ItemVisibility.MESSAGE) continue;
 			final omero.grid.Param param = omeroService.getJobParam(item);
 			if (param != null) params.inputs.put(item.getName(), param);
 		}
