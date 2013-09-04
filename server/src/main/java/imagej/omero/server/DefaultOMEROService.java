@@ -218,7 +218,7 @@ public class DefaultOMEROService extends AbstractService implements
 		try {
 			final Method method = value.getClass().getMethod("getValue");
 			final Object result = method.invoke(value);
-			return convertToType(result, type);
+			return convertToType(client, result, type);
 		}
 		catch (final NoSuchMethodException exc) {
 			log.debug(exc);
@@ -268,7 +268,9 @@ public class DefaultOMEROService extends AbstractService implements
 	 * such as {@link Dataset}.</li>
 	 * </ol>
 	 */
-	private <T> T convertToType(final Object result, final Class<T> type) {
+	private <T> T convertToType(final omero.client client, final Object result,
+		final Class<T> type)
+	{
 		if (result == null) return null;
 		if (type == null || type.isInstance(result)) {
 			@SuppressWarnings("unchecked")
@@ -281,13 +283,13 @@ public class DefaultOMEROService extends AbstractService implements
 				return null;
 			}
 			if (DatasetView.class.isAssignableFrom(type)) {
-				final Dataset dataset = convertToType(result, Dataset.class);
+				final Dataset dataset = convertToType(client, result, Dataset.class);
 				@SuppressWarnings("unchecked")
 				final T dataView = (T) imageDisplayService.createDataView(dataset);
 				return dataView;
 			}
 			if (ImageDisplay.class.isAssignableFrom(type)) {
-				final Dataset dataset = convertToType(result, Dataset.class);
+				final Dataset dataset = convertToType(client, result, Dataset.class);
 				@SuppressWarnings("unchecked")
 				final T display = (T) displayService.createDisplay(dataset);
 				return display;
