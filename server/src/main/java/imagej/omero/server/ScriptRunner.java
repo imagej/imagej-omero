@@ -78,6 +78,9 @@ public class ScriptRunner extends AbstractContextual {
 
 		// look up the requested command (FIXME: support non-command modules too)
 		final CommandInfo info = ij.command().getCommand(command);
+		if (info == null) {
+			throw new IllegalArgumentException("No such command: " + command);
+		}
 
 		// initialize OMERO client session
 		final omero.client c = new omero.client();
