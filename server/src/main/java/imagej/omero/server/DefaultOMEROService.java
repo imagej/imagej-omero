@@ -266,9 +266,13 @@ public class DefaultOMEROService extends AbstractService implements
 				return display;
 			}
 		}
-		log.error("Cannot convert: " + result.getClass().getName() + " to " +
-			type.getName());
-		return null;
+		// use SciJava Common's automagical conversion routine
+		final T converted = ClassUtils.convert(result, type);
+		if (converted == null) {
+			log.error("Cannot convert: " + result.getClass().getName() + " to " +
+				type.getName());
+		}
+		return converted;
 	}
 
 }
