@@ -44,21 +44,24 @@ public interface OMEROService extends Service {
 	RType prototype(Class<?> type);
 
 	/** Converts an ImageJ parameter value to an OMERO parameter value. */
-	omero.RType toOMERO(omero.client client, Object value);
+	omero.RType toOMERO(omero.client client, Object value)
+		throws omero.ServerError;
 
 	/** Converts an OMERO parameter value to an ImageJ value of the given type. */
-	Object toImageJ(omero.client client, omero.RType value, Class<?> type);
+	Object toImageJ(omero.client client, omero.RType value, Class<?> type)
+		throws omero.ServerError;
 
 	/**
 	 * Downloads the pixels at the given ID from OMERO, storing the result into a
 	 * new ImageJ {@link Dataset}.
 	 */
-	Dataset downloadPixels(omero.client client, long id);
+	Dataset downloadPixels(omero.client client, long id) throws omero.ServerError;
 
 	/**
 	 * Uploads the given ImageJ {@link Dataset}'s pixels to OMERO, returning the
 	 * new pixels ID on the OMERO server.
 	 */
-	long uploadPixels(omero.client client, Dataset dataset);
+	long uploadPixels(omero.client client, Dataset dataset)
+		throws omero.ServerError;
 
 }
