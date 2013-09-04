@@ -279,6 +279,8 @@ public class DefaultOMEROService extends AbstractService implements
 			final T typedResult = (T) result;
 			return typedResult;
 		}
+
+		// special case for converting an OMERO pixels ID to an ImageJ image type
 		if (ClassUtils.isNumber(result.getClass())) {
 			if (Dataset.class.isAssignableFrom(type)) {
 				final long id = ((Number) result).longValue();
