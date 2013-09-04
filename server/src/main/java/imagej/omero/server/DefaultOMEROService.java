@@ -138,8 +138,9 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public omero.RType toOMERO(final omero.client client, final Object value) {
 		if (value instanceof Dataset) {
-			// FIXME: Extract pixels and upload to OMERO.
-			return null;
+			// upload pixels to OMERO, returning the resultant pixels ID
+			final long id = uploadPixels(client, (Dataset) value);
+			return toOMERO(client, id);
 		}
 		else if (value instanceof DatasetView) {
 			final DatasetView datasetView = (DatasetView) value;
