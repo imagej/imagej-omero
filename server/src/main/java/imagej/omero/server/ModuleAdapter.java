@@ -101,8 +101,7 @@ public class ModuleAdapter extends AbstractContextual {
 			final ModuleItem<?> item = info.getInput(name);
 			if (item.getVisibility() == ItemVisibility.MESSAGE) continue;
 			final Class<?> type = item.getType();
-			final Object value =
-				omeroService.convertValue(client.getInput(name), type);
+			final Object value = omeroService.convert(client.getInput(name), type);
 			inputMap.put(name, value);
 		}
 
@@ -114,8 +113,7 @@ public class ModuleAdapter extends AbstractContextual {
 		// populate outputs
 		log.debug(info.getTitle() + ": populating outputs");
 		for (final ModuleItem<?> item : module.getInfo().outputs()) {
-			final omero.RType value =
-				omeroService.convertValue(item.getValue(module));
+			final omero.RType value = omeroService.convert(item.getValue(module));
 			client.setOutput(item.getName(), value);
 		}
 
