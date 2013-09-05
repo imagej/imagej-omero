@@ -134,17 +134,25 @@ public class ModuleAdapter extends AbstractContextual {
 
 		// convert metadata for each module input
 		params.inputs = new HashMap<String, omero.grid.Param>();
+		int inputIndex = 0;
 		for (final ModuleItem<?> item : info.inputs()) {
 			if (item.getVisibility() == ItemVisibility.MESSAGE) continue;
 			final omero.grid.Param param = omeroService.getJobParam(item);
-			if (param != null) params.inputs.put(item.getName(), param);
+			if (param != null) {
+				param.grouping = "" + inputIndex++;
+				params.inputs.put(item.getName(), param);
+			}
 		}
 
 		// convert metadata for each module output
 		params.outputs = new HashMap<String, omero.grid.Param>();
+		int outputIndex = 0;
 		for (final ModuleItem<?> item : info.outputs()) {
 			final omero.grid.Param param = omeroService.getJobParam(item);
-			if (param != null) params.outputs.put(item.getName(), param);
+			if (param != null) {
+				param.grouping = "" + outputIndex++;
+				params.outputs.put(item.getName(), param);
+			}
 		}
 
 		return omero.rtypes.rinternal(params);
