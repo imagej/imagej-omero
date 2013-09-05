@@ -84,7 +84,7 @@ public class ModuleAdapter extends AbstractContextual {
 
 	// -- ModuleAdapter methods --
 
-	/** Parses ImageJ module parameters, for the specified OMERO session. */
+	/** Parses script parameters for the associated ImageJ module. */
 	public void params() throws omero.ServerError {
 		// Parsing. See OmeroPy/src/omero/scripts.py
 		// for the Python implementation.
@@ -92,7 +92,7 @@ public class ModuleAdapter extends AbstractContextual {
 		client.setOutput("omero.scripts.parse", getJobInfo());
 	}
 
-	/** Executes an ImageJ module, for the specified OMERO session. */
+	/** Executes the associated ImageJ module as an OMERO script. */
 	public void launch() throws omero.ServerError {
 		// populate inputs
 		log.debug(info.getTitle() + ": populating inputs");
@@ -151,8 +151,8 @@ public class ModuleAdapter extends AbstractContextual {
 	}
 
 	/**
-	 * Extracts the version of the given module, by scanning the relevant JAR
-	 * manifest.
+	 * Extracts the version of the associated ImageJ module, by scanning the
+	 * relevant JAR manifest.
 	 * 
 	 * @return The <code>Implementation-Version</code> of the associated JAR
 	 *         manifest; or if there is no associated JAR manifest, or something
