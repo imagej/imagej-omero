@@ -32,6 +32,7 @@ import imagej.module.ModuleItem;
 import imagej.module.ModuleService;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.Future;
 
 import org.scijava.AbstractContextual;
@@ -132,6 +133,12 @@ public class ModuleAdapter extends AbstractContextual {
 
 		// TODO: Instantiate and preprocess the module, excluding resolved inputs.
 
+		// count module inputs and outputs
+		final int inputCount = count(info.inputs());
+		final int outputCount = count(info.outputs());
+		final int inputDigits = String.valueOf(inputCount).length();
+		final int outputDigits = String.valueOf(outputCount).length();
+
 		// convert metadata for each module input
 		params.inputs = new HashMap<String, omero.grid.Param>();
 		int inputIndex = 0;
@@ -139,7 +146,7 @@ public class ModuleAdapter extends AbstractContextual {
 			if (item.getVisibility() == ItemVisibility.MESSAGE) continue;
 			final omero.grid.Param param = omeroService.getJobParam(item);
 			if (param != null) {
-				param.grouping = "" + inputIndex++;
+				param.grouping = pad(inputIndex++, inputDigits);
 				params.inputs.put(item.getName(), param);
 			}
 		}
@@ -150,7 +157,7 @@ public class ModuleAdapter extends AbstractContextual {
 		for (final ModuleItem<?> item : info.outputs()) {
 			final omero.grid.Param param = omeroService.getJobParam(item);
 			if (param != null) {
-				param.grouping = "" + outputIndex++;
+				param.grouping = pad(outputIndex++, outputDigits);
 				params.outputs.put(item.getName(), param);
 			}
 		}
@@ -178,6 +185,28 @@ public class ModuleAdapter extends AbstractContextual {
 		final Manifest m = Manifest.getManifest(c);
 		if (m == null) return null;
 		return m.getImplementationVersion();
+	}
+
+	// -- Helper methods --
+
+	/** Counts the number of elements iterated by the given {@link Iterable}. */
+	private int count(final Iterable<?> iterable) {
+		if (iterable == null) return -1;
+		int count = 0;
+		final Iterator<?> iterator = iterable.iterator();
+		while (iterator.hasNext()) {
+			iterator.next();
+			count++;
+		}
+		return count;
+	}
+
+	/**
+	 * Gets a zero-padded string of the given number, with the specified number of
+	 * digits.
+	 */
+	private String pad(final int num, final int outputDigits) {
+		return String.format("%0" + outputDigits + "d", num);
 	}
 
 }
