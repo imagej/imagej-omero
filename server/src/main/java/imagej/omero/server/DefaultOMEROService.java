@@ -77,6 +77,7 @@ public class DefaultOMEROService extends AbstractService implements
 		param.optional = !item.isRequired();
 		param.prototype = prototype(item.getType());
 		param.description = item.getDescription();
+		// TODO: populate param.values, param.min and param.max
 		return param;
 	}
 
