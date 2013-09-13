@@ -59,7 +59,6 @@ import omero.api.ServiceFactoryPrx;
 import omero.model.Image;
 import omero.model.Pixels;
 
-import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 /**
