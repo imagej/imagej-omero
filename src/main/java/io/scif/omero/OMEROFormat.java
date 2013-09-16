@@ -490,15 +490,63 @@ public class OMEROFormat extends AbstractFormat {
 
 	public static class Writer extends AbstractWriter<Metadata> {
 
+		private OMEROSession session;
+		private RawPixelsStorePrx store;
+
 		@Override
 		public void savePlane(final int imageIndex, final int planeIndex,
 			final Plane plane, final int x, final int y, final int w, final int h)
 			throws FormatException, IOException
 		{
+			// TODO: Consider whether to reuse OMERO session from somewhere else.
+			if (session == null) initSession();
+
 			final byte[] bytes = plane.getBytes();
+			final int[] zct =
+				FormatTools.getZCTCoords(getMetadata(), imageIndex, planeIndex);
+			try {
+				store.setPlane(bytes, zct[0], zct[1], zct[2]);
+			}
+			catch (final ServerError err) {
+				throw new FormatException("Error writing to OMERO: imageIndex=" +
+					imageIndex + ", planeIndex=" + planeIndex, err);
+			}
 
 			System.out.println(bytes.length);
 		}
+
+		@Override
+		public void close() {
+			if (store != null) {
+				// save the data
+				try {
+					store.save();
+					store.close();
+				}
+				catch (final ServerError err) {
+					log().error(err);
+				}
+			}
+			session = null;
+			store = null;
+		}
+
+		private void initSession() throws FormatException {
+			try {
+				session = new OMEROSession(getMetadata());
+				store = session.createPixels();
+			}
+			catch (final ServerError err) {
+				throw new FormatException(err);
+			}
+			catch (final PermissionDeniedException exc) {
+				throw new FormatException(exc);
+			}
+			catch (final CannotCreateSessionException exc) {
+				throw new FormatException(exc);
+			}
+		}
+
 	}
 
 }
