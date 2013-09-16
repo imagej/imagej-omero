@@ -118,6 +118,39 @@ public class OMEROFormat extends AbstractFormat {
 		@Field(label = "Pixels ID")
 		private long pixelsID;
 
+		@Field
+		private int sizeX;
+
+		@Field
+		private int sizeY;
+
+		@Field
+		private int sizeZ;
+
+		@Field
+		private int sizeC;
+
+		@Field
+		private int sizeT;
+
+		@Field
+		private Double physSizeX;
+
+		@Field
+		private Double physSizeY;
+
+		@Field
+		private Double physSizeZ;
+
+		@Field
+		private Integer physSizeC;
+
+		@Field
+		private Double physSizeT;
+
+		@Field
+		private String pixelType;
+
 		// -- io.scif.omero.OMEROFormat.Metadata methods --
 
 		public String getName() {
@@ -156,6 +189,50 @@ public class OMEROFormat extends AbstractFormat {
 			return pixelsID;
 		}
 
+		public int getSizeX() {
+			return sizeX;
+		}
+
+		public int getSizeY() {
+			return sizeY;
+		}
+
+		public int getSizeZ() {
+			return sizeZ;
+		}
+
+		public int getSizeC() {
+			return sizeC;
+		}
+
+		public int getSizeT() {
+			return sizeT;
+		}
+
+		public Double getPhysicalSizeX() {
+			return physSizeX;
+		}
+
+		public Double getPhysicalSizeY() {
+			return physSizeY;
+		}
+
+		public Double getPhysicalSizeZ() {
+			return physSizeZ;
+		}
+
+		public Integer getPhysicalSizeC() {
+			return physSizeC;
+		}
+
+		public Double getPhysicalSizeT() {
+			return physSizeT;
+		}
+
+		public String getPixelType() {
+			return pixelType;
+		}
+
 		public void setName(final String name) {
 			this.name = name;
 		}
@@ -190,6 +267,50 @@ public class OMEROFormat extends AbstractFormat {
 
 		public void setPixelsID(final long pixelsID) {
 			this.pixelsID = pixelsID;
+		}
+
+		public void setSizeX(final int sizeX) {
+			this.sizeX = sizeX;
+		}
+
+		public void setSizeY(final int sizeY) {
+			this.sizeY = sizeY;
+		}
+
+		public void setSizeZ(final int sizeZ) {
+			this.sizeZ = sizeZ;
+		}
+
+		public void setSizeC(final int sizeC) {
+			this.sizeC = sizeC;
+		}
+
+		public void setSizeT(final int sizeT) {
+			this.sizeT = sizeT;
+		}
+
+		public void setPhysicalSizeX(final double physSizeX) {
+			this.physSizeX = physSizeX;
+		}
+
+		public void setPhysicalSizeY(final double physSizeY) {
+			this.physSizeY = physSizeY;
+		}
+
+		public void setPhysicalSizeZ(final double physSizeZ) {
+			this.physSizeZ = physSizeZ;
+		}
+
+		public void setPhysicalSizeC(final int physSizeC) {
+			this.physSizeC = physSizeC;
+		}
+
+		public void setPhysicalSizeT(final double physSizeT) {
+			this.physSizeT = physSizeT;
+		}
+
+		public void setPixelType(final String pixelType) {
+			this.pixelType = pixelType;
 		}
 
 		public void createSession() {
