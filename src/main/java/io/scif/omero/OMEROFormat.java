@@ -43,9 +43,7 @@ import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 import net.imglib2.meta.Axes;
 import net.imglib2.meta.CalibratedAxis;
@@ -53,10 +51,7 @@ import net.imglib2.meta.DefaultCalibratedAxis;
 import omero.RDouble;
 import omero.RInt;
 import omero.ServerError;
-import omero.api.IPixelsPrx;
 import omero.api.RawPixelsStorePrx;
-import omero.api.ServiceFactoryPrx;
-import omero.model.Image;
 import omero.model.Pixels;
 
 import org.scijava.plugin.Plugin;
@@ -85,11 +80,6 @@ public class OMEROFormat extends AbstractFormat {
 	// -- Nested classes --
 
 	public static class Metadata extends AbstractMetadata {
-
-		private transient omero.client client;
-		private transient ServiceFactoryPrx session;
-		private transient Pixels pix;
-		private transient RawPixelsStorePrx store;
 
 		@Field
 		private String name;
@@ -313,145 +303,38 @@ public class OMEROFormat extends AbstractFormat {
 			this.pixelType = pixelType;
 		}
 
-		public void createSession() {
-			if (client != null) endSession();
-
-			// create OMERO client
-			if (server != null) {
-				client = new omero.client(server, port);
-			}
-			else {
-				client = new omero.client();
-			}
-
-			try {
-				// initialize the session (i.e., log in)
-				try {
-					if (sessionID != null) {
-						session = client.createSession(sessionID, sessionID);
-					}
-					else if (user != null && password != null) {
-						session = client.createSession(user, password);
-					}
-					else {
-						session = client.createSession();
-					}
-
-					if (!encrypted) {
-						client = client.createClient(false);
-						session = client.getSession();
-					}
-				}
-				catch (final CannotCreateSessionException exc) {
-					log().error(exc);
-				}
-				catch (final PermissionDeniedException exc) {
-					log().error(exc);
-				}
-
-				session.detachOnDestroy();
-
-				// obtain pixels ID from image ID if necessary
-				if (pixelsID == 0 && imageID != 0) {
-					final List<Image> images =
-						session.getContainerService().getImages("Image",
-							Arrays.asList(imageID), null);
-					if (images == null || images.isEmpty()) {
-						throw new IllegalArgumentException("Invalid image ID: " + imageID);
-					}
-					pixelsID = images.get(0).getPixels(0).getId().getValue();
-				}
-
-				if (pixelsID == 0) {
-					throw new IllegalArgumentException("No pixels ID given!");
-				}
-
-				// access pixels metadata
-				final IPixelsPrx pixelsService = session.getPixelsService();
-				pix = pixelsService.retrievePixDescription(pixelsID);
-
-				// configure the raw pixels store
-				store = session.createRawPixelsStore();
-				store.setPixelsId(pixelsID, false);
-			}
-			catch (final ServerError err) {
-				log().error(err);
-			}
-		}
-
-		public void endSession() {
-			if (client == null) return;
-			client.__del__();
-			client = null;
-			session = null;
-			pix = null;
-		}
-
 		// -- io.scif.Metadata methods --
 
 		@Override
 		public void populateImageMetadata() {
-			// extract dimensional axis order and extents
-			// TODO: Check whether this logic already exists as a helper somewhere.
-			final CalibratedAxis[] axes = new CalibratedAxis[5];
-			final int[] axisLengths = new int[5];
-//			final String dimOrder = pix.getDimensionOrder().getValue().getValue();
-			final String dimOrder = "XYZCT";
-			for (int i = 0; i < dimOrder.length(); i++) {
-				final char c = dimOrder.charAt(i);
-				switch (c) {
-					case 'X':
-						axes[i] = new DefaultCalibratedAxis(Axes.X);
-						final RDouble physSizeX = pix.getPhysicalSizeX();
-						if (physSizeX != null) axes[i].setCalibration(physSizeX.getValue());
-						axisLengths[i] = pix.getSizeX().getValue();
-						break;
-					case 'Y':
-						axes[i] = new DefaultCalibratedAxis(Axes.Y);
-						final RDouble physSizeY = pix.getPhysicalSizeY();
-						if (physSizeY != null) axes[i].setCalibration(physSizeY.getValue());
-						axisLengths[i] = pix.getSizeY().getValue();
-						break;
-					case 'Z':
-						axes[i] = new DefaultCalibratedAxis(Axes.Z);
-						final RDouble physSizeZ = pix.getPhysicalSizeZ();
-						if (physSizeZ != null) axes[i].setCalibration(physSizeZ.getValue());
-						axisLengths[i] = pix.getSizeZ().getValue();
-						break;
-					case 'T':
-						axes[i] = new DefaultCalibratedAxis(Axes.TIME);
-						final RDouble timeInc = pix.getTimeIncrement();
-						if (timeInc != null) axes[i].setCalibration(timeInc.getValue());
-						axisLengths[i] = pix.getSizeT().getValue();
-						break;
-					case 'C':
-						axes[i] = new DefaultCalibratedAxis(Axes.CHANNEL);
-						// final double originC = pix.getWaveStart().getValue();
-						final RInt waveInc = pix.getWaveIncrement();
-						if (waveInc != null) axes[i].setCalibration(waveInc.getValue());
-						axisLengths[i] = pix.getSizeC().getValue();
-						break;
-					default:
-						throw new IllegalArgumentException("Unknown dimension order: " +
-							dimOrder);
-				}
-			}
+			final CalibratedAxis xAxis = new DefaultCalibratedAxis(Axes.X);
+			if (physSizeX != null) xAxis.setCalibration(physSizeX);
+			final CalibratedAxis yAxis = new DefaultCalibratedAxis(Axes.Y);
+			if (physSizeY != null) yAxis.setCalibration(physSizeY);
+			final CalibratedAxis zAxis = new DefaultCalibratedAxis(Axes.Z);
+			if (physSizeZ != null) zAxis.setCalibration(physSizeZ);
+			final CalibratedAxis cAxis = new DefaultCalibratedAxis(Axes.CHANNEL);
+			if (physSizeC != null) cAxis.setCalibration(physSizeC);
+			final CalibratedAxis tAxis = new DefaultCalibratedAxis(Axes.TIME);
+			if (physSizeT != null) tAxis.setCalibration(physSizeT);
+			final CalibratedAxis[] axes = { xAxis, yAxis, zAxis, cAxis, tAxis };
+
+			final int[] axisLengths = { sizeX, sizeY, sizeZ, sizeC, sizeT };
 
 			// obtain pixel type
-			final String pixelTypeString = pix.getPixelsType().getValue().getValue();
-			final int pixelType = FormatTools.pixelTypeFromString(pixelTypeString);
+			final int pixType = FormatTools.pixelTypeFromString(pixelType);
 
 			// populate SCIFIO ImageMetadata
 			createImageMetadata(1);
 			final ImageMetadata imageMeta = get(0);
 			imageMeta.setAxes(axes, axisLengths);
-			imageMeta.setPixelType(pixelType);
+			imageMeta.setPixelType(pixType);
 			imageMeta.setMetadataComplete(true);
 			imageMeta.setOrderCertain(true);
 
 			// TEMP: Until SCIFIO issue #62 is resolved
 			// https://github.com/scifio/scifio/issues/62
-			imageMeta.setBitsPerPixel(FormatTools.getBitsPerPixel(pixelType));
+			imageMeta.setBitsPerPixel(FormatTools.getBitsPerPixel(pixType));
 		}
 
 	}
@@ -513,23 +396,67 @@ public class OMEROFormat extends AbstractFormat {
 				}
 			}
 
-			// initialize OMERO client session
-			meta.createSession();
+			final OMEROSession session;
+			final Pixels pix;
+			try {
+				// create OMERO session
+				session = new OMEROSession(meta);
+
+				// access pixels
+				final long pixelsID = session.getPixelsID();
+				meta.setPixelsID(pixelsID);
+				pix = session.getPixels();
+			}
+			catch (final ServerError exc) {
+				throw new FormatException(exc);
+			}
+			catch (final PermissionDeniedException exc) {
+				throw new FormatException(exc);
+			}
+			catch (final CannotCreateSessionException exc) {
+				throw new FormatException(exc);
+			}
+
+			// parse pixel sizes
+			meta.setSizeX(pix.getSizeX().getValue());
+			meta.setSizeY(pix.getSizeY().getValue());
+			meta.setSizeZ(pix.getSizeZ().getValue());
+			meta.setSizeC(pix.getSizeC().getValue());
+			meta.setSizeT(pix.getSizeT().getValue());
+
+			// parse physical pixel sizes
+			final RDouble physSizeX = pix.getPhysicalSizeX();
+			if (physSizeX != null) meta.setPhysicalSizeX(physSizeX.getValue());
+			final RDouble physSizeY = pix.getPhysicalSizeY();
+			if (physSizeY != null) meta.setPhysicalSizeY(physSizeY.getValue());
+			final RDouble physSizeZ = pix.getPhysicalSizeZ();
+			if (physSizeZ != null) meta.setPhysicalSizeZ(physSizeZ.getValue());
+			final RInt physSizeC = pix.getWaveIncrement();
+			if (physSizeC != null) meta.setPhysicalSizeC(physSizeC.getValue());
+			final RDouble physSizeT = pix.getTimeIncrement();
+			if (physSizeT != null) meta.setPhysicalSizeT(physSizeT.getValue());
+
+			session.close();
 		}
 
 	}
 
 	public static class Reader extends ByteArrayReader<Metadata> {
 
+		private OMEROSession session;
+		private RawPixelsStorePrx store;
+
 		@Override
 		public ByteArrayPlane openPlane(final int imageIndex, final int planeIndex,
 			final ByteArrayPlane plane, final int x, final int y, final int w,
 			final int h) throws FormatException, IOException
 		{
+			// TODO: Consider whether to reuse OMERO session from the parsing step.
+			if (session == null) initSession();
+
 			final int[] zct = FormatTools.getZCTCoords(this, imageIndex, planeIndex);
 			try {
-				final byte[] tile =
-					getMetadata().store.getTile(zct[0], zct[1], zct[2], x, y, w, h);
+				final byte[] tile = store.getTile(zct[0], zct[1], zct[2], x, y, w, h);
 				plane.setData(tile);
 			}
 			catch (final ServerError e) {
@@ -541,8 +468,30 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public void close() {
-			final Metadata meta = getMetadata();
-			if (meta != null) meta.endSession();
+			if (session != null) session.close();
+			session = null;
+			store = null;
+		}
+
+		private void initSession() throws FormatException {
+			try {
+				// create OMERO session
+				session = new OMEROSession(getMetadata());
+
+				// configure the raw pixels store
+				final long pixelsID = session.getPixelsID();
+				store = session.getSession().createRawPixelsStore();
+				store.setPixelsId(pixelsID, false);
+			}
+			catch (final ServerError exc) {
+				throw new FormatException(exc);
+			}
+			catch (final PermissionDeniedException exc) {
+				throw new FormatException(exc);
+			}
+			catch (final CannotCreateSessionException exc) {
+				throw new FormatException(exc);
+			}
 		}
 
 	}
