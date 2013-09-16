@@ -120,6 +120,42 @@ public class OMEROFormat extends AbstractFormat {
 
 		// -- io.scif.omero.OMEROFormat.Metadata methods --
 
+		public String getName() {
+			return name;
+		}
+
+		public String getServer() {
+			return server;
+		}
+
+		public int getPort() {
+			return port;
+		}
+
+		public String getSessionID() {
+			return sessionID;
+		}
+
+		public String getUser() {
+			return user;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+
+		public boolean isEncrypted() {
+			return encrypted;
+		}
+
+		public long getImageID() {
+			return imageID;
+		}
+
+		public long getPixelsID() {
+			return pixelsID;
+		}
+
 		public void setName(final String name) {
 			this.name = name;
 		}
