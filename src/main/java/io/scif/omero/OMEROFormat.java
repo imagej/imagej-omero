@@ -370,19 +370,14 @@ public class OMEROFormat extends AbstractFormat {
 			final int h) throws FormatException, IOException
 		{
 			final int[] zct = FormatTools.getZCTCoords(this, imageIndex, planeIndex);
-			final byte[] bytes;
 			try {
-				bytes = getMetadata().store.getPlane(zct[0], zct[1], zct[2]);
+				final byte[] tile =
+					getMetadata().store.getTile(zct[0], zct[1], zct[2], x, y, w, h);
+				plane.setData(tile);
 			}
 			catch (final ServerError e) {
 				throw new FormatException(e);
 			}
-
-			// extract desired subplane
-			final RandomAccessInputStream rais =
-				new RandomAccessInputStream(getContext(), bytes);
-			readPlane(rais, imageIndex, x, y, w, h, plane);
-			rais.close();
 
 			return plane;
 		}
