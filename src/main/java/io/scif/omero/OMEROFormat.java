@@ -427,6 +427,9 @@ public class OMEROFormat extends AbstractFormat {
 			final RDouble physSizeT = pix.getTimeIncrement();
 			if (physSizeT != null) meta.setPhysicalSizeT(physSizeT.getValue());
 
+			// parse pixel type
+			meta.setPixelType(pix.getPixelsType().getValue().getValue());
+
 			// terminate OMERO session
 			session.close();
 		}
