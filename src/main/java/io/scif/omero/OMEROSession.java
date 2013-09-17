@@ -31,15 +31,21 @@ import io.scif.Format;
 
 import java.io.Closeable;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
+import omero.RLong;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.api.ServiceFactoryPrx;
+import omero.model.IObject;
 import omero.model.Image;
 import omero.model.Pixels;
+import omero.model.PixelsType;
 
 import org.scijava.plugin.Plugin;
+
+import pojos.ImageData;
 
 /**
  * Helper class for managing OMERO client sessions.
@@ -119,6 +125,19 @@ public class OMEROSession implements Closeable {
 		return store;
 	}
 
+	/** Obtains a raw pixels store for writing to a newly created pixels ID. */
+	public RawPixelsStorePrx createPixels() throws ServerError {
+		// create a new Image which will house the written pixels
+		final ImageData newImage = createImage();
+		if (newImage == null) return null;
+
+		// configure the raw pixels store
+		final RawPixelsStorePrx store = session.createRawPixelsStore();
+		store.setPixelsId(newImage.getDefaultPixels().getId(), false);
+
+		return store;
+	}
+
 	// -- Helper methods --
 
 	private long getPixelsID() throws ServerError {
@@ -137,6 +156,28 @@ public class OMEROSession implements Closeable {
 		return images.get(0).getPixels(0).getId().getValue();
 	}
 
+	private ImageData createImage() throws ServerError {
+		// create a new Image
+		final int sizeX = meta.getSizeX();
+		final int sizeY = meta.getSizeY();
+		final int sizeZ = meta.getSizeZ();
+		final int sizeT = meta.getSizeT();
+		final PixelsType pixelsType = getPixelsType();
+		if (pixelsType == null) return null;
+		final String name = meta.getName();
+		final String description = meta.getName();
+		final RLong id =
+			session.getPixelsService().createImage(sizeX, sizeY, sizeZ, sizeT,
+				Arrays.asList(0), pixelsType, name, description);
+		if (id == null) return null;
+
+		// retrieve the newly created Image
+		final List<Image> results =
+			session.getContainerService().getImages(Image.class.getName(),
+				Arrays.asList(id.getValue()), null);
+		return new ImageData(results.get(0));
+	}
+
 	// -- Closeable methods --
 
 	@Override
@@ -144,6 +185,21 @@ public class OMEROSession implements Closeable {
 		if (client != null) client.__del__();
 		client = null;
 		session = null;
+	}
+
+	// -- Helper methods --
+
+	private PixelsType getPixelsType() throws ServerError {
+		final List<IObject> list =
+			session.getPixelsService().getAllEnumerations(PixelsType.class.getName());
+		final Iterator<IObject> iter = list.iterator();
+		final String pixelType = meta.getPixelType();
+		while (iter.hasNext()) {
+			final PixelsType type = (PixelsType) iter.next();
+			final String value = type.getValue().getValue();
+			if (value.equals(pixelType)) return type;
+		}
+		return null;
 	}
 
 }
