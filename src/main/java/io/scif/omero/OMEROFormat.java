@@ -527,8 +527,9 @@ public class OMEROFormat extends AbstractFormat {
 					log().error(err);
 				}
 			}
-			session = null;
 			store = null;
+			if (session != null) session.close();
+			session = null;
 		}
 
 		private void initSession() throws FormatException {
