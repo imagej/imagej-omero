@@ -27,7 +27,6 @@ package io.scif.omero;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
-import io.scif.Format;
 
 import java.io.Closeable;
 import java.util.Arrays;
@@ -42,9 +41,6 @@ import omero.model.IObject;
 import omero.model.Image;
 import omero.model.Pixels;
 import omero.model.PixelsType;
-
-import org.scijava.plugin.Plugin;
-
 import pojos.ImageData;
 
 /**
@@ -52,7 +48,6 @@ import pojos.ImageData;
  * 
  * @author Curtis Rueden
  */
-@Plugin(type = Format.class)
 public class OMEROSession implements Closeable {
 
 	// -- Fields --
