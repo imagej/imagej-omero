@@ -307,6 +307,7 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public void populateImageMetadata() {
+			// construct dimensional axes
 			final CalibratedAxis xAxis = new DefaultCalibratedAxis(Axes.X);
 			if (physSizeX != null) xAxis.setCalibration(physSizeX);
 			final CalibratedAxis yAxis = new DefaultCalibratedAxis(Axes.Y);
@@ -318,7 +319,6 @@ public class OMEROFormat extends AbstractFormat {
 			final CalibratedAxis tAxis = new DefaultCalibratedAxis(Axes.TIME);
 			if (physSizeT != null) tAxis.setCalibration(physSizeT);
 			final CalibratedAxis[] axes = { xAxis, yAxis, zAxis, cAxis, tAxis };
-
 			final int[] axisLengths = { sizeX, sizeY, sizeZ, sizeC, sizeT };
 
 			// obtain pixel type
@@ -345,6 +345,7 @@ public class OMEROFormat extends AbstractFormat {
 		public void typedParse(final RandomAccessInputStream stream,
 			final Metadata meta) throws IOException, FormatException
 		{
+			// parse metadata from source string
 			// TEMP: Use io.scif.MetadataService instead, once it has been released.
 			final HashMap<String, String> map =
 				FakeFormat.FakeUtils
