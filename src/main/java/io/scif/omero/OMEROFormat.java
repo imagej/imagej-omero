@@ -401,17 +401,11 @@ public class OMEROFormat extends AbstractFormat {
 			final OMEROSession session;
 			final Pixels pix;
 			try {
-				session = new OMEROSession(meta);
+				session = createSession(meta);
 				pix = session.getPixelsInfo();
 			}
-			catch (final ServerError exc) {
-				throw new FormatException(exc);
-			}
-			catch (final PermissionDeniedException exc) {
-				throw new FormatException(exc);
-			}
-			catch (final CannotCreateSessionException exc) {
-				throw new FormatException(exc);
+			catch (final ServerError err) {
+				throw communicationException(err);
 			}
 
 			// parse pixel sizes
@@ -457,8 +451,8 @@ public class OMEROFormat extends AbstractFormat {
 				final byte[] tile = store.getTile(zct[0], zct[1], zct[2], x, y, w, h);
 				plane.setData(tile);
 			}
-			catch (final ServerError e) {
-				throw new FormatException(e);
+			catch (final ServerError err) {
+				throw communicationException(err);
 			}
 
 			return plane;
@@ -473,17 +467,11 @@ public class OMEROFormat extends AbstractFormat {
 
 		private void initSession() throws FormatException {
 			try {
-				session = new OMEROSession(getMetadata());
+				session = createSession(getMetadata());
 				store = session.openPixels();
 			}
-			catch (final ServerError exc) {
-				throw new FormatException(exc);
-			}
-			catch (final PermissionDeniedException exc) {
-				throw new FormatException(exc);
-			}
-			catch (final CannotCreateSessionException exc) {
-				throw new FormatException(exc);
+			catch (final ServerError err) {
+				throw communicationException(err);
 			}
 		}
 
@@ -525,7 +513,7 @@ public class OMEROFormat extends AbstractFormat {
 					store.close();
 				}
 				catch (final ServerError err) {
-					log().error(err);
+					log().error("Error communicating with OMERO", err);
 				}
 			}
 			store = null;
@@ -535,20 +523,41 @@ public class OMEROFormat extends AbstractFormat {
 
 		private void initSession() throws FormatException {
 			try {
-				session = new OMEROSession(getMetadata());
+				session = createSession(getMetadata());
 				store = session.createPixels();
 			}
 			catch (final ServerError err) {
-				throw new FormatException(err);
-			}
-			catch (final PermissionDeniedException exc) {
-				throw new FormatException(exc);
-			}
-			catch (final CannotCreateSessionException exc) {
-				throw new FormatException(exc);
+				throw communicationException(err);
 			}
 		}
 
+	}
+
+	// -- Helper methods --
+
+	private static OMEROSession createSession(final Metadata meta)
+		throws FormatException
+	{
+		try {
+			return new OMEROSession(meta);
+		}
+		catch (final ServerError err) {
+			throw communicationException(err);
+		}
+		catch (final PermissionDeniedException exc) {
+			throw connectionException(exc);
+		}
+		catch (final CannotCreateSessionException exc) {
+			throw connectionException(exc);
+		}
+	}
+
+	private static FormatException communicationException(final Throwable cause) {
+		return new FormatException("Error communicating with OMERO", cause);
+	}
+
+	private static FormatException connectionException(final Throwable cause) {
+		return new FormatException("Error connecting to OMERO", cause);
 	}
 
 }
