@@ -396,16 +396,12 @@ public class OMEROFormat extends AbstractFormat {
 				}
 			}
 
+			// initialize OMERO session
 			final OMEROSession session;
 			final Pixels pix;
 			try {
-				// create OMERO session
 				session = new OMEROSession(meta);
-
-				// access pixels
-				final long pixelsID = session.getPixelsID();
-				meta.setPixelsID(pixelsID);
-				pix = session.getPixels();
+				pix = session.getPixelsInfo();
 			}
 			catch (final ServerError exc) {
 				throw new FormatException(exc);
@@ -436,6 +432,7 @@ public class OMEROFormat extends AbstractFormat {
 			final RDouble physSizeT = pix.getTimeIncrement();
 			if (physSizeT != null) meta.setPhysicalSizeT(physSizeT.getValue());
 
+			// terminate OMERO session
 			session.close();
 		}
 
@@ -475,13 +472,8 @@ public class OMEROFormat extends AbstractFormat {
 
 		private void initSession() throws FormatException {
 			try {
-				// create OMERO session
 				session = new OMEROSession(getMetadata());
-
-				// configure the raw pixels store
-				final long pixelsID = session.getPixelsID();
-				store = session.getSession().createRawPixelsStore();
-				store.setPixelsId(pixelsID, false);
+				store = session.openPixels();
 			}
 			catch (final ServerError exc) {
 				throw new FormatException(exc);

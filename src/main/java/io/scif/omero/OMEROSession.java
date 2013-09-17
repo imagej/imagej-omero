@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import omero.ServerError;
+import omero.api.RawPixelsStorePrx;
 import omero.api.ServiceFactoryPrx;
 import omero.model.Image;
 import omero.model.Pixels;
@@ -106,7 +107,21 @@ public class OMEROSession implements Closeable {
 		return session;
 	}
 
-	public long getPixelsID() throws ServerError {
+	/** Gets an OMERO {@code Pixels} descriptor */
+	public Pixels getPixelsInfo() throws ServerError {
+		return session.getPixelsService().retrievePixDescription(getPixelsID());
+	}
+
+	/** Obtains a raw pixels store for reading from the configured pixels ID. */
+	public RawPixelsStorePrx openPixels() throws ServerError {
+		final RawPixelsStorePrx store = session.createRawPixelsStore();
+		store.setPixelsId(getPixelsID(), false);
+		return store;
+	}
+
+	// -- Helper methods --
+
+	private long getPixelsID() throws ServerError {
 		final long pixelsID = meta.getPixelsID();
 		if (pixelsID != 0) return pixelsID;
 
@@ -120,10 +135,6 @@ public class OMEROSession implements Closeable {
 			throw new IllegalArgumentException("Invalid image ID: " + imageID);
 		}
 		return images.get(0).getPixels(0).getId().getValue();
-	}
-
-	public Pixels getPixels() throws ServerError {
-		return session.getPixelsService().retrievePixDescription(getPixelsID());
 	}
 
 	// -- Closeable methods --
