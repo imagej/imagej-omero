@@ -1,12 +1,20 @@
 #!/usr/bin/env jython
 
 """
-Example ImageJ wrapper script for a command called "HelloWorld"
+ImageJ wrapper script for command:
+HelloWorld
 """
 
-# NB: Make ImageJ startup less verbose.
-import java.lang.System
-java.lang.System.setProperty("scijava.log.level", "warn")
+import imagej.omero.ScriptRunner as ScriptRunner
+import java.lang.System as System
+import java.util.Date as Date
 
-import imagej.omero.server.ScriptRunner
-imagej.omero.server.ScriptRunner().invoke("HelloWorld")
+System.err.println("Before: " + Date().toString())
+
+# NB: Make ImageJ startup less verbose.
+System.setProperty("scijava.log.level", "warn")
+
+runner = ScriptRunner()
+runner.invoke("HelloWorld")
+
+System.err.println("After: " + Date().toString())
