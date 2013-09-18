@@ -28,6 +28,7 @@ import imagej.data.Dataset;
 import imagej.data.DatasetService;
 import imagej.menu.MenuConstants;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.scijava.ItemIO;
@@ -65,7 +66,14 @@ public class OpenFromOMERO extends OMEROCommand {
 			"&password=" + getPassword() + //
 			"&imageID=" + imageID + //
 			".omero";
+
 		try {
+			// TEMP: Until SCIFIO issue #63 is resolved.
+			// https://github.com/scifio/scifio/pull/63
+			final File temp = new File(omeroSource);
+			temp.createNewFile();
+			temp.deleteOnExit();
+
 			dataset = datasetService.open(omeroSource);
 		}
 		catch (IOException exc) {

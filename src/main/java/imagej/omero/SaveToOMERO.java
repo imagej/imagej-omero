@@ -28,6 +28,7 @@ import imagej.data.Dataset;
 import imagej.data.DatasetService;
 import imagej.menu.MenuConstants;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.scijava.log.LogService;
@@ -60,7 +61,14 @@ public class SaveToOMERO extends OMEROCommand {
 			"&user=" + getUser() + //
 			"&password=" + getPassword() + //
 			".omero";
+
 		try {
+			// TEMP: Until SCIFIO issue #63 is resolved.
+			// https://github.com/scifio/scifio/pull/63
+			final File temp = new File(omeroDestination);
+			temp.createNewFile();
+			temp.deleteOnExit();
+
 			datasetService.save(dataset, omeroDestination);
 		}
 		catch (IOException exc) {
