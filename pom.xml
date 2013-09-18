@@ -36,6 +36,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.2</version>
+		</dependency>
+
+		<dependency>
 			<groupId>${scifio.groupId}</groupId>
 			<artifactId>scifio-omero</artifactId>
 			<version>0.1.0</version>
