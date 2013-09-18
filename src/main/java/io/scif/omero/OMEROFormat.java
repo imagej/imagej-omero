@@ -335,6 +335,10 @@ public class OMEROFormat extends AbstractFormat {
 			// TEMP: Until SCIFIO issue #62 is resolved
 			// https://github.com/scifio/scifio/issues/62
 			imageMeta.setBitsPerPixel(FormatTools.getBitsPerPixel(pixType));
+
+			// TEMP: Until SCIFIO issue #64 is resolved
+			// https://github.com/scifio/scifio/issues/64
+			imageMeta.setPlaneCount(sizeZ * sizeC * sizeT);
 		}
 
 	}
