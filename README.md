@@ -1,11 +1,11 @@
-This repository contains code for interoperability between
-[ImageJ](http://developer.imagej.net/) and the
+This project provides interoperability between
+[ImageJ2](http://developer.imagej.net/) and the
 [OMERO server](https://www.openmicroscopy.org/site/support/omero4/).
 
-## ImageJ commands for accessing OMERO pixels
+## ImageJ commands for working with OMERO pixels
 
-This project provides ImageJ commands for accessing pixels from a remote
-OMERO server, as well as uploading ImageJ data to OMERO as new images.
+There are ImageJ commands for accessing pixels from a remote OMERO server,
+as well as uploading image data from ImageJ to OMERO as a new image.
 
 To try it out, drop the `ij-omero` JAR file, along with its dependencies, into
 your ImageJ plugins folder. Launch ImageJ and there will be two new commands:
@@ -26,14 +26,14 @@ The following ImageJ tutorial commands are tested and working:
   an example exercising many different parameter types, providing a good
   illustration of how type conversion works going back and forth between ImageJ
   and OMERO.
-<!---
+<!--
 * [ComputeStats](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/simple-commands/src/main/java/ComputeStats.java):
   an example which takes an image as input and produces numbers.
 * [GradientImage](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/simple-commands/src/main/java/GradientImage.java):
   an example which takes numbers as input and produces an image.
 -->
 
-The code is currently VERY experimental. If you wish to give it a test drive, here are the steps:
+The code is currently VERY experimental. If you wish to give it a test drive, the steps are:
 
 1. Build OMERO from [joshmoore](https://github.com/joshmoore)'s
    [jy-scripts](https://github.com/joshmoore/openmicroscopy/compare/jy-scripts)
@@ -60,7 +60,7 @@ The code is currently VERY experimental. If you wish to give it a test drive, he
 
 7. Create a `jython` launch script _**on your path**_:
 
-    ```shell
+    ```Shell
     #!/bin/sh
     export OMERO_HOME="$HOME/code/ome/openmicroscopy/dist"
     export JYTHON_LIB="$HOME/bin/jython-standalone-2.5.3.jar"
@@ -72,7 +72,7 @@ The code is currently VERY experimental. If you wish to give it a test drive, he
 
 8. Run `jython` and verify the following lines execute without error:
 
-    ```python
+    ```Python
     import imagej.ImageJ
     import HelloWorld
     import WidgetDemo
