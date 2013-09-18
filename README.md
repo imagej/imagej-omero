@@ -48,7 +48,7 @@ The code is currently VERY experimental. If you wish to give it a test drive, th
    interoperability library into `$OMERO_HOME/dist/lib/ImageJ.app/jars`.
 
 4. Download
-   [scifio-omero-0.1.0.jar](http://maven.imagej.net/content/repositories/releases/io/scif/scifio-omero/0.1.0/scifio-omero-0.1.0.jar)
+   [scifio-omero-0.2.0.jar](http://maven.imagej.net/content/repositories/releases/io/scif/scifio-omero/0.2.0/scifio-omero-0.2.0.jar)
    into `$OMERO_HOME/dist/lib/ImageJ.app/jars`.
 
 5. Download the
