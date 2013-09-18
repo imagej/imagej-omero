@@ -21,7 +21,7 @@
  * #L%
  */
 
-package imagej.omero.server;
+package imagej.omero;
 
 import imagej.ImageJ;
 import imagej.command.CommandInfo;

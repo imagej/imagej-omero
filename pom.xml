@@ -9,22 +9,59 @@
 	</parent>
 
 	<groupId>net.imagej</groupId>
-	<artifactId>pom-ij-omero</artifactId>
+	<artifactId>ij-omero</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
-	<packaging>pom</packaging>
 
-	<name>ImageJ/OMERO interoperability modules</name>
+	<name>ImageJ/OMERO interoperability</name>
 	<description>Server- and client-side code for communication between ImageJ and OMERO.</description>
 	<url>http://developer.imagej.net/</url>
 	<inceptionYear>2013</inceptionYear>
 
-	<modules>
-		<module>server</module>
-		<!-- <module>client</module> -->
-	</modules>
+	<dependencies>
+		<dependency>
+			<groupId>${imagej.groupId}</groupId>
+			<artifactId>ij-app</artifactId>
+			<version>${imagej.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>args4j</groupId>
+			<artifactId>args4j</artifactId>
+			<version>2.0.16</version>
+		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>omero-client</artifactId>
+			<version>5.0.0-beta1-256-019d14a-ice34-b3523</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${scifio.groupId}</groupId>
+			<artifactId>scifio-omero</artifactId>
+			<version>0.1.0</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<plugins>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<packageName>imagej.omero.server</packageName>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
 			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
 			</plugin>

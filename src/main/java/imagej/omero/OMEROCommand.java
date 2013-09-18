@@ -33,7 +33,7 @@
  * #L%
  */
 
-package imagej.omero.server;
+package imagej.omero;
 
 import imagej.command.ContextCommand;
 

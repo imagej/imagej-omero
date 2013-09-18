@@ -21,7 +21,7 @@
  * #L%
  */
 
-package imagej.omero.server;
+package imagej.omero;
 
 import imagej.data.Dataset;
 import imagej.module.ModuleItem;
