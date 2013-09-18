@@ -1,6 +1,6 @@
 /*
  * #%L
- * Server- and client-side code for communication between ImageJ and OMERO.
+ * Server- and client-side communication between ImageJ and OMERO.
  * %%
  * Copyright (C) 2013 Board of Regents of the University of
  * Wisconsin-Madison.

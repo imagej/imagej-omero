@@ -13,7 +13,7 @@
 	<version>0.1.0-SNAPSHOT</version>
 
 	<name>ImageJ/OMERO interoperability</name>
-	<description>Server- and client-side code for communication between ImageJ and OMERO.</description>
+	<description>Server- and client-side communication between ImageJ and OMERO.</description>
 	<url>http://developer.imagej.net/</url>
 	<inceptionYear>2013</inceptionYear>
 
