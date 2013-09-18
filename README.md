@@ -26,6 +26,7 @@ The following ImageJ tutorial commands are tested and working:
   an example exercising many different parameter types, providing a good
   illustration of how type conversion works going back and forth between ImageJ
   and OMERO.
+
 <!--
 * [ComputeStats](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/simple-commands/src/main/java/ComputeStats.java):
   an example which takes an image as input and produces numbers.
@@ -60,7 +61,7 @@ The code is currently VERY experimental. If you wish to give it a test drive, th
 
 7. Create a `jython` launch script _**on your path**_:
 
-    ```Shell
+    ```shell
     #!/bin/sh
     export OMERO_HOME="$HOME/code/ome/openmicroscopy/dist"
     export JYTHON_LIB="$HOME/bin/jython-standalone-2.5.3.jar"
@@ -72,7 +73,7 @@ The code is currently VERY experimental. If you wish to give it a test drive, th
 
 8. Run `jython` and verify the following lines execute without error:
 
-    ```Python
+    ```python
     import imagej.ImageJ
     import HelloWorld
     import WidgetDemo
@@ -85,7 +86,7 @@ The code is currently VERY experimental. If you wish to give it a test drive, th
 
 11. `omero script list`
 
-    You should see HelloWorld.jy as an available option.
+    You should see `HelloWorld.jy` as an available option.
 
 12. `omero script params $(omero script list | grep HelloWorld | sed 's/|.*//')`
 
