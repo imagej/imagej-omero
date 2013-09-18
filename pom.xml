@@ -29,6 +29,14 @@
 			<version>5.0.0-beta1-256-019d14a-ice34-b3523</version>
 		</dependency>
 
+		<!-- NB: Actually, SLF4J is a dependency of omero-client. -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.2</version>
+			<scope>runtime</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
