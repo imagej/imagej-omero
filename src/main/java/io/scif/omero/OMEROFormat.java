@@ -88,7 +88,7 @@ public class OMEROFormat extends AbstractFormat {
 		private String server;
 
 		@Field
-		private int port = 4664;
+		private int port = 4064;
 
 		@Field
 		private String sessionID;
