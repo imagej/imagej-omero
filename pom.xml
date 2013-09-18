@@ -28,6 +28,13 @@
 			<artifactId>omero-client</artifactId>
 			<version>5.0.0-beta1-256-019d14a-ice34-b3523</version>
 		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
