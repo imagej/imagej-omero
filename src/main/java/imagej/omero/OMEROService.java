@@ -25,6 +25,9 @@ package imagej.omero;
 
 import imagej.data.Dataset;
 import imagej.module.ModuleItem;
+
+import java.io.IOException;
+
 import omero.RType;
 import omero.grid.Param;
 
@@ -55,13 +58,14 @@ public interface OMEROService extends Service {
 	 * Downloads the pixels at the given ID from OMERO, storing the result into a
 	 * new ImageJ {@link Dataset}.
 	 */
-	Dataset downloadPixels(omero.client client, long id) throws omero.ServerError;
+	Dataset downloadPixels(omero.client client, long id)
+		throws omero.ServerError, IOException;
 
 	/**
 	 * Uploads the given ImageJ {@link Dataset}'s pixels to OMERO, returning the
 	 * new pixels ID on the OMERO server.
 	 */
 	long uploadPixels(omero.client client, Dataset dataset)
-		throws omero.ServerError;
+		throws omero.ServerError, IOException;
 
 }

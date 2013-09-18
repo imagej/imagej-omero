@@ -24,12 +24,15 @@
 package imagej.omero;
 
 import imagej.data.Dataset;
+import imagej.data.DatasetService;
 import imagej.data.display.DatasetView;
 import imagej.data.display.ImageDisplay;
 import imagej.data.display.ImageDisplayService;
 import imagej.display.DisplayService;
 import imagej.module.ModuleItem;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -62,6 +65,9 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Parameter
 	private LogService log;
+
+	@Parameter
+	private DatasetService datasetService;
 
 	@Parameter
 	private DisplayService displayService;
@@ -242,18 +248,41 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Override
 	public Dataset downloadPixels(final omero.client client, final long id)
-		throws omero.ServerError
+		throws omero.ServerError, IOException
 	{
-		// FIXME: Implement this.
-		return null;
+		// TODO: Reuse existing client instead of creating a new connection.
+		// Will need to rethink how SCIFIO conveys source and destination metadata.
+		// The RandomAccessInput/OutputStream design is probably too narrow.
+		final String omeroSource = "imageID=" + id + ".omero";
+
+		// TEMP: Until SCIFIO issue #63 is resolved.
+		// https://github.com/scifio/scifio/pull/63
+		final File temp = new File(omeroSource);
+		temp.createNewFile();
+		temp.deleteOnExit();
+
+		return datasetService.open(omeroSource);
 	}
 
 	@Override
 	public long uploadPixels(final omero.client client, final Dataset dataset)
-		throws omero.ServerError
+		throws omero.ServerError, IOException
 	{
-		// FIXME: Implement this.
-		return 0;
+		// TODO: Reuse existing client instead of creating a new connection.
+		// Will need to rethink how SCIFIO conveys source and destination metadata.
+		// The RandomAccessInput/OutputStream design is probably too narrow.
+		final String omeroDestination = ".omero";
+
+		// TEMP: Until SCIFIO issue #63 is resolved.
+		// https://github.com/scifio/scifio/pull/63
+		final File temp = new File(omeroDestination);
+		temp.createNewFile();
+		temp.deleteOnExit();
+
+		datasetService.save(dataset, omeroDestination);
+
+		// FIXME! Return correct Pixels ID
+		return -1;
 	}
 
 	// -- Helper methods --
