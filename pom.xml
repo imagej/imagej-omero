@@ -23,19 +23,6 @@
 			<artifactId>scifio</artifactId>
 			<version>${scifio.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>ome</groupId>
-			<artifactId>omero-client</artifactId>
-			<version>5.0.0-beta1-256-019d14a-ice34-b3523</version>
-		</dependency>
-
-		<!-- NB: Actually, SLF4J is a dependency of omero-client. -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.2</version>
-			<scope>runtime</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>junit</groupId>
@@ -155,5 +142,38 @@ Wisconsin-Madison.</organizationName>
 			<url>http://maven.imagej.net/content/repositories/snapshots</url>
 		</repository>
 	</repositories>
+
+	<profiles>
+		<profile>
+			<id>omero-4.4.8-ice33</id>
+			<dependencies>
+				<dependency>
+					<groupId>ome</groupId>
+					<artifactId>omero-client</artifactId>
+					<version>4.4.8p1-ice33-b304</version>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>omero-5.0.0-ice34</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>ome</groupId>
+					<artifactId>omero-client</artifactId>
+					<version>5.0.0-beta1-256-019d14a-ice34-b3523</version>
+				</dependency>
+				<!-- NB: SLF4J is a dependency of omero-client. -->
+				<dependency>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-api</artifactId>
+					<version>1.7.2</version>
+					<scope>runtime</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
 
 </project>
