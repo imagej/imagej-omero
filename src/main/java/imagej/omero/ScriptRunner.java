@@ -28,6 +28,8 @@ import imagej.command.CommandInfo;
 import imagej.core.commands.debug.SystemInformation;
 import imagej.module.Module;
 
+import java.io.IOException;
+
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
 
@@ -68,7 +70,8 @@ public class ScriptRunner extends AbstractContextual {
 
 	/** Toplevel invocation entry point from OMERO Jython scripts. */
 	public void invoke(final String command) throws omero.ServerError,
-		Glacier2.CannotCreateSessionException, Glacier2.PermissionDeniedException
+		Glacier2.CannotCreateSessionException, Glacier2.PermissionDeniedException,
+		IOException
 	{
 		ij.log().debug("invoke: " + command);
 

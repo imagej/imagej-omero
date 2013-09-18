@@ -48,11 +48,11 @@ public interface OMEROService extends Service {
 
 	/** Converts an ImageJ parameter value to an OMERO parameter value. */
 	omero.RType toOMERO(omero.client client, Object value)
-		throws omero.ServerError;
+		throws omero.ServerError, IOException;
 
 	/** Converts an OMERO parameter value to an ImageJ value of the given type. */
 	Object toImageJ(omero.client client, omero.RType value, Class<?> type)
-		throws omero.ServerError;
+		throws omero.ServerError, IOException;
 
 	/**
 	 * Downloads the pixels at the given ID from OMERO, storing the result into a

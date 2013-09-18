@@ -31,6 +31,7 @@ import imagej.module.ModuleInfo;
 import imagej.module.ModuleItem;
 import imagej.module.ModuleService;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.Future;
@@ -94,7 +95,7 @@ public class ModuleAdapter extends AbstractContextual {
 	}
 
 	/** Executes the associated ImageJ module as an OMERO script. */
-	public void launch() throws omero.ServerError {
+	public void launch() throws omero.ServerError, IOException {
 		// populate inputs
 		log.debug(info.getTitle() + ": populating inputs");
 		final HashMap<String, Object> inputMap = new HashMap<String, Object>();

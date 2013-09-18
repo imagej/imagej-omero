@@ -144,7 +144,7 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Override
 	public omero.RType toOMERO(final omero.client client, final Object value)
-		throws omero.ServerError
+		throws omero.ServerError, IOException
 	{
 		if (value instanceof Dataset) {
 			// upload pixels to OMERO, returning the resultant pixels ID
@@ -175,7 +175,7 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Override
 	public Object toImageJ(final omero.client client, final omero.RType value,
-		final Class<?> type) throws omero.ServerError
+		final Class<?> type) throws omero.ServerError, IOException
 	{
 		if (value instanceof omero.RCollection) {
 			// collection of objects
@@ -306,7 +306,7 @@ public class DefaultOMEROService extends AbstractService implements
 	 * </ol>
 	 */
 	private <T> T convert(final omero.client client, final Object result,
-		final Class<T> type) throws omero.ServerError
+		final Class<T> type) throws omero.ServerError, IOException
 	{
 		if (result == null) return null;
 		if (type == null) {
