@@ -253,7 +253,8 @@ public class DefaultOMEROService extends AbstractService implements
 		// TODO: Reuse existing client instead of creating a new connection.
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
-		final String omeroSource = "imageID=" + id + ".omero";
+		final String omeroSource =
+			"sessionID=" + client.getSessionId() + "&imageID=" + id + ".omero";
 
 		// TEMP: Until SCIFIO issue #63 is resolved.
 		// https://github.com/scifio/scifio/pull/63
@@ -271,7 +272,8 @@ public class DefaultOMEROService extends AbstractService implements
 		// TODO: Reuse existing client instead of creating a new connection.
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
-		final String omeroDestination = ".omero";
+		final String omeroDestination =
+			"sessionID=" + client.getSessionId() + ".omero";
 
 		// TEMP: Until SCIFIO issue #63 is resolved.
 		// https://github.com/scifio/scifio/pull/63
