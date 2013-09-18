@@ -28,9 +28,6 @@ import imagej.module.ModuleItem;
 
 import java.io.IOException;
 
-import omero.RType;
-import omero.grid.Param;
-
 import org.scijava.service.Service;
 
 /**
@@ -41,10 +38,10 @@ import org.scijava.service.Service;
 public interface OMEROService extends Service {
 
 	/** Converts an ImageJ module parameter to an OMERO job parameter. */
-	Param getJobParam(ModuleItem<?> item);
+	omero.grid.Param getJobParam(ModuleItem<?> item);
 
 	/** Creates an OMERO parameter prototype for the given Java class. */
-	RType prototype(Class<?> type);
+	omero.RType prototype(Class<?> type);
 
 	/** Converts an ImageJ parameter value to an OMERO parameter value. */
 	omero.RType toOMERO(omero.client client, Object value)
