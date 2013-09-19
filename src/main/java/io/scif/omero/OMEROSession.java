@@ -133,6 +133,15 @@ public class OMEROSession implements Closeable {
 		return store;
 	}
 
+	// -- Closeable methods --
+
+	@Override
+	public void close() {
+		if (client != null) client.__del__();
+		client = null;
+		session = null;
+	}
+
 	// -- Helper methods --
 
 	private long getPixelsID() throws ServerError {
@@ -172,17 +181,6 @@ public class OMEROSession implements Closeable {
 				Arrays.asList(id.getValue()), null);
 		return new ImageData(results.get(0));
 	}
-
-	// -- Closeable methods --
-
-	@Override
-	public void close() {
-		if (client != null) client.__del__();
-		client = null;
-		session = null;
-	}
-
-	// -- Helper methods --
 
 	private PixelsType getPixelsType() throws ServerError {
 		final List<IObject> list =
