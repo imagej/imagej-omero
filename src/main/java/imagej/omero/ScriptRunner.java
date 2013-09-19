@@ -69,7 +69,7 @@ public class ScriptRunner extends AbstractContextual {
 		return ij;
 	}
 
-	/** Toplevel invocation entry point from OMERO Jython scripts. */
+	/** Invokes the given ImageJ command as an OMERO script. */
 	public void invoke(final String command) throws omero.ServerError,
 		Glacier2.CannotCreateSessionException, Glacier2.PermissionDeniedException,
 		IOException
