@@ -307,6 +307,11 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public void populateImageMetadata() {
+			// TODO: Consider whether this check is really the right approach.
+			// It is present because otherwise, the uninitialized format-specific
+			// metadata fields overwrite the values populated by the ImgSaver.
+			if (getImageCount() > 0) return; // already populated
+
 			// construct dimensional axes
 			final CalibratedAxis xAxis = new DefaultCalibratedAxis(Axes.X);
 			if (physSizeX != null) xAxis.setCalibration(physSizeX);
