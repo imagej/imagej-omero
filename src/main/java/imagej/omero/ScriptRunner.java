@@ -29,6 +29,7 @@ import imagej.core.commands.debug.SystemInformation;
 import imagej.module.Module;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
@@ -102,6 +103,30 @@ public class ScriptRunner extends AbstractContextual {
 		finally {
 			c.__del__();
 		}
+	}
+
+	// -- Main method --
+
+	/** Simple entry point for executing ImageJ commands as scripts. */
+	public static void main(final String... args) throws Exception {
+		final String command = args[0];
+
+		System.err.println("Before: " + new Date());
+
+		// NB: Make ImageJ startup less verbose.
+		System.setProperty("scijava.log.level", "warn");
+
+		// execute command
+		final ScriptRunner scriptRunner = new ScriptRunner();
+		scriptRunner.invoke(command);
+
+		// clean up resources
+		scriptRunner.getContext().dispose();
+
+		System.err.println("After: " + new Date());
+
+		// shut down the JVM
+		System.exit(0);
 	}
 
 }
