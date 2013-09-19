@@ -27,6 +27,7 @@ package io.scif.omero;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
+import io.scif.FormatException;
 
 import java.io.Closeable;
 import java.util.Arrays;
@@ -121,10 +122,9 @@ public class OMEROSession implements Closeable {
 	}
 
 	/** Obtains a raw pixels store for writing to a newly created pixels ID. */
-	public RawPixelsStorePrx createPixels() throws ServerError {
+	public RawPixelsStorePrx createPixels() throws ServerError, FormatException {
 		// create a new Image which will house the written pixels
 		final ImageData newImage = createImage();
-		if (newImage == null) return null;
 
 		// configure the raw pixels store
 		final RawPixelsStorePrx store = session.createRawPixelsStore();
@@ -160,20 +160,19 @@ public class OMEROSession implements Closeable {
 		return images.get(0).getPixels(0).getId().getValue();
 	}
 
-	private ImageData createImage() throws ServerError {
+	private ImageData createImage() throws ServerError, FormatException {
 		// create a new Image
 		final int sizeX = meta.getSizeX();
 		final int sizeY = meta.getSizeY();
 		final int sizeZ = meta.getSizeZ();
 		final int sizeT = meta.getSizeT();
 		final PixelsType pixelsType = getPixelsType();
-		if (pixelsType == null) return null;
 		final String name = meta.getName();
 		final String description = meta.getName();
 		final RLong id =
 			session.getPixelsService().createImage(sizeX, sizeY, sizeZ, sizeT,
 				Arrays.asList(0), pixelsType, name, description);
-		if (id == null) return null;
+		if (id == null) throw new FormatException("Cannot create image");
 
 		// retrieve the newly created Image
 		final List<Image> results =
@@ -182,7 +181,7 @@ public class OMEROSession implements Closeable {
 		return new ImageData(results.get(0));
 	}
 
-	private PixelsType getPixelsType() throws ServerError {
+	private PixelsType getPixelsType() throws ServerError, FormatException {
 		final List<IObject> list =
 			session.getPixelsService().getAllEnumerations(PixelsType.class.getName());
 		final Iterator<IObject> iter = list.iterator();
@@ -192,7 +191,7 @@ public class OMEROSession implements Closeable {
 			final String value = type.getValue().getValue();
 			if (value.equals(pixelType)) return type;
 		}
-		return null;
+		throw new FormatException("Invalid pixel type: " + pixelType);
 	}
 
 }
