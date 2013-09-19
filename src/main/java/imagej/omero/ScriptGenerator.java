@@ -1,0 +1,142 @@
+/*
+ * #%L
+ * Server- and client-side communication between ImageJ and OMERO.
+ * %%
+ * Copyright (C) 2013 Board of Regents of the University of
+ * Wisconsin-Madison.
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 2 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-2.0.html>.
+ * #L%
+ */
+
+package imagej.omero;
+
+import imagej.Identifiable;
+import imagej.ImageJ;
+import imagej.module.Module;
+import imagej.module.ModuleInfo;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Date;
+
+import org.scijava.AbstractContextual;
+import org.scijava.Context;
+import org.scijava.MenuPath;
+
+/**
+ * Generates Jython stubs for running ImageJ {@link Module}s as OMERO scripts.
+ * 
+ * @author Curtis Rueden
+ * @see "https://www.openmicroscopy.org/site/support/omero4/developers/Modules/Scripts.html"
+ */
+public class ScriptGenerator extends AbstractContextual {
+
+	// -- Instance fields --
+
+	/** The ImageJ application gateway. */
+	private final ImageJ ij;
+
+	// -- Constructors --
+
+	public ScriptGenerator() {
+		this(new ImageJ());
+	}
+
+	public ScriptGenerator(final Context context) {
+		this(new ImageJ(context));
+	}
+
+	public ScriptGenerator(final ImageJ ij) {
+		this.ij = ij;
+		setContext(ij.getContext());
+	}
+
+	// -- ScriptRunner methods --
+
+	/** Generates OMERO script stubs for all available ImageJ modules. */
+	public void generateAll(final File dir) throws IOException {
+		if (!dir.isDirectory()) {
+			throw new IllegalArgumentException("Invalid directory: " + dir);
+		}
+		for (final ModuleInfo info : ij.module().getModules()) {
+			if (!(info instanceof Identifiable)) continue;
+			if (!info.canRunHeadless()) continue;
+			generate(info, dir);
+		}
+	}
+
+	/** Generates an OMERO script stub for the given ImageJ module. */
+	public void generate(final ModuleInfo info, final File dir)
+		throws IOException
+	{
+		// validate arguments
+		if (!(info instanceof Identifiable)) {
+			throw new IllegalArgumentException("Unidentifable module: " + info);
+		}
+		if (!dir.isDirectory()) {
+			throw new IllegalArgumentException("Invalid directory: " + dir);
+		}
+
+		// sanitize identifier
+		final String id = ((Identifiable) info).getIdentifier();
+		final String escapedID = id.replaceAll("\n", "\\\\n");
+
+		// write the stub
+		final String filename = formatFilename(info);
+		final File stubFile = new File(dir, filename);
+		final PrintWriter out = new PrintWriter(new FileWriter(stubFile));
+		out.println("#!/usr/bin/env jython");
+		out.println("import imagej.omero.ScriptRunner, sys");
+		out.println("id = \"" + escapedID + "\"");
+		out.println("imagej.omero.ScriptRunner.main(id)");
+		out.close();
+	}
+
+	// -- Main method --
+
+	/** Entry point for generating OMERO script stubs. */
+	public static void main(final String... args) throws Exception {
+		final File dir = new File(args.length == 0 ? "." : args[0]);
+
+		System.err.println(new Date() + ": generating scripts");
+
+		// NB: Make ImageJ startup less verbose.
+		System.setProperty("scijava.log.level", "warn");
+
+		// generate script stubs
+		final ScriptGenerator scriptGenerator = new ScriptGenerator();
+		scriptGenerator.generateAll(dir);
+
+		// clean up resources
+		scriptGenerator.getContext().dispose();
+
+		System.err.println(new Date() + ": generation completed");
+
+		// shut down the JVM, "just in case"
+		System.exit(0);
+	}
+
+	// -- Helper methods --
+
+	private String formatFilename(final ModuleInfo info) {
+		final MenuPath menuPath = info.getMenuPath();
+		if (menuPath == null || menuPath.isEmpty()) return info.getTitle() + ".jy";
+		return menuPath.getMenuString().replaceAll("[ /\\\\]", "_") + ".jy";
+	}
+
+}
