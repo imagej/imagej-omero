@@ -119,7 +119,7 @@ public class ScriptRunner extends AbstractContextual {
 			commandArg.endsWith(".jy") ? commandArg.length() - 3 : commandArg.length();
 		final String command = commandArg.substring(start + 1, end);
 
-		System.err.println("Before: " + new Date());
+		System.err.println(new Date() + ": executing command: " + command);
 
 		// NB: Make ImageJ startup less verbose.
 		System.setProperty("scijava.log.level", "warn");
@@ -131,7 +131,7 @@ public class ScriptRunner extends AbstractContextual {
 		// clean up resources
 		scriptRunner.getContext().dispose();
 
-		System.err.println("After: " + new Date());
+		System.err.println(new Date() + ": execution completed");
 
 		// shut down the JVM
 		System.exit(0);
