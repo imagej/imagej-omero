@@ -109,7 +109,15 @@ public class ScriptRunner extends AbstractContextual {
 
 	/** Simple entry point for executing ImageJ commands as scripts. */
 	public static void main(final String... args) throws Exception {
-		final String command = args[0];
+		final String commandArg = args[0];
+
+		// strip directory prefix and .jy suffix, if present
+		final int slash = commandArg.indexOf("/");
+		final int backslash = commandArg.indexOf("\\");
+		final int start = Math.max(slash, backslash);
+		final int end =
+			commandArg.endsWith(".jy") ? commandArg.length() - 3 : commandArg.length();
+		final String command = commandArg.substring(start + 1, end);
 
 		System.err.println("Before: " + new Date());
 
