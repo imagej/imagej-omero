@@ -79,7 +79,7 @@ The code is currently VERY experimental. If you wish to give it a test drive, th
     import WidgetDemo
     ```
 
-9. Download [HelloWorld.jy](https://github.com/imagej/imagej-omero/blob/master/server/HelloWorld.jy)
+9. Download [HelloWorld.jy](https://github.com/imagej/imagej-omero/blob/master/HelloWorld.jy)
    into `$OMERO_HOME/lib/scripts/imagej` (create the folder).
 
 10. `omero admin start` (if you haven't already)
@@ -93,8 +93,9 @@ The code is currently VERY experimental. If you wish to give it a test drive, th
 13. `omero script launch $(omero script list | grep HelloWorld | sed 's/|.*//')`
 
 14. To test `WidgetDemo` or any other ImageJ2 command, just copy
-    `HelloWorld.jy` to e.g. `WidgetDemo.jy` and make the relevant edits to call
-    the desired command instead.
+    `HelloWorld.jy` to e.g. `WidgetDemo.jy`. The script's name must equal
+    the fully qualified class name of the desired ImageJ2 command, with
+    ".jy" extension.
 
 ## See also
 
