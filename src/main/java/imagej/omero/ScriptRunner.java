@@ -24,8 +24,8 @@
 package imagej.omero;
 
 import imagej.ImageJ;
-import imagej.command.CommandInfo;
 import imagej.module.Module;
+import imagej.module.ModuleInfo;
 
 import java.io.IOException;
 import java.util.Date;
@@ -68,17 +68,21 @@ public class ScriptRunner extends AbstractContextual {
 		return ij;
 	}
 
-	/** Invokes the given ImageJ command as an OMERO script. */
-	public void invoke(final String command) throws omero.ServerError,
+	/** Invokes the given ImageJ module identifier as an OMERO script. */
+	public void invoke(final String id) throws omero.ServerError,
 		Glacier2.CannotCreateSessionException, Glacier2.PermissionDeniedException,
 		IOException
 	{
-		// look up the requested command (FIXME: support non-command modules too)
-		final CommandInfo info = ij.command().getCommand(command);
-		if (info == null) {
-			throw new IllegalArgumentException("No such command: " + command);
-		}
+		// look for a module matching the given identifier
+		final ModuleInfo info = ModuleUtils.findModule(ij.module(), id);
+		invoke(info);
+	}
 
+	/** Invokes the given ImageJ module as an OMERO script. */
+	public void invoke(final ModuleInfo info) throws omero.ServerError,
+		Glacier2.CannotCreateSessionException, Glacier2.PermissionDeniedException,
+		IOException
+	{
 		// initialize OMERO client session
 		final omero.client c = new omero.client();
 
@@ -100,7 +104,7 @@ public class ScriptRunner extends AbstractContextual {
 
 	// -- Main method --
 
-	/** Simple entry point for executing ImageJ commands as scripts. */
+	/** Simple entry point for executing ImageJ modules as scripts. */
 	public static void main(final String... args) throws Exception {
 		System.err.println(new Date() + ": initializing script runner");
 
@@ -110,10 +114,10 @@ public class ScriptRunner extends AbstractContextual {
 		// initialize script runner
 		final ScriptRunner scriptRunner = new ScriptRunner();
 
-		// execute commands
-		for (final String command : args) {
-			System.err.println(new Date() + ": executing: " + command);
-			scriptRunner.invoke(command);
+		// execute modules
+		for (final String id : args) {
+			System.err.println(new Date() + ": executing: " + id);
+			scriptRunner.invoke(id);
 		}
 
 		// clean up resources
