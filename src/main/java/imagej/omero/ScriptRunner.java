@@ -25,7 +25,6 @@ package imagej.omero;
 
 import imagej.ImageJ;
 import imagej.command.CommandInfo;
-import imagej.core.commands.debug.SystemInformation;
 import imagej.module.Module;
 
 import java.io.IOException;
@@ -74,12 +73,6 @@ public class ScriptRunner extends AbstractContextual {
 		Glacier2.CannotCreateSessionException, Glacier2.PermissionDeniedException,
 		IOException
 	{
-		ij.log().debug("invoke: " + command);
-
-		// dump system properties, for debugging purposes
-		ij.log().debug("System properties:");
-		ij.log().debug(SystemInformation.getSystemProperties());
-
 		// look up the requested command (FIXME: support non-command modules too)
 		final CommandInfo info = ij.command().getCommand(command);
 		if (info == null) {
