@@ -28,12 +28,15 @@ package io.scif.omero;
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
 import io.scif.FormatException;
+import io.scif.ImageMetadata;
+import io.scif.util.FormatTools;
 
 import java.io.Closeable;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import net.imglib2.meta.Axes;
 import omero.RLong;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
@@ -162,11 +165,17 @@ public class OMEROSession implements Closeable {
 
 	private ImageData createImage() throws ServerError, FormatException {
 		// create a new Image
-		final int sizeX = meta.getSizeX();
-		final int sizeY = meta.getSizeY();
-		final int sizeZ = meta.getSizeZ();
-		final int sizeT = meta.getSizeT();
-		final PixelsType pixelsType = getPixelsType();
+		final ImageMetadata imageMeta = meta.get(0);
+		final int xLen = imageMeta.getAxisLength(Axes.X);
+		final int yLen = imageMeta.getAxisLength(Axes.Y);
+		final int zLen = imageMeta.getAxisLength(Axes.Z);
+		final int tLen = imageMeta.getAxisLength(Axes.TIME);
+		final int sizeX = xLen == 0 ? 1 : xLen;
+		final int sizeY = yLen == 0 ? 1 : yLen;
+		final int sizeZ = zLen == 0 ? 1 : zLen;
+		final int sizeT = tLen == 0 ? 1 : tLen;
+		final int pixelType = imageMeta.getPixelType();
+		final PixelsType pixelsType = getPixelsType(pixelType);
 		final String name = meta.getName();
 		final String description = meta.getName();
 		final RLong id =
@@ -181,11 +190,18 @@ public class OMEROSession implements Closeable {
 		return new ImageData(results.get(0));
 	}
 
-	private PixelsType getPixelsType() throws ServerError, FormatException {
+	private PixelsType getPixelsType(int pixelType) throws ServerError,
+		FormatException
+	{
+		return getPixelsType(FormatTools.getPixelTypeString(pixelType));
+	}
+
+	private PixelsType getPixelsType(final String pixelType) throws ServerError,
+		FormatException
+	{
 		final List<IObject> list =
 			session.getPixelsService().getAllEnumerations(PixelsType.class.getName());
 		final Iterator<IObject> iter = list.iterator();
-		final String pixelType = meta.getPixelType();
 		while (iter.hasNext()) {
 			final PixelsType type = (PixelsType) iter.next();
 			final String value = type.getValue().getValue();
