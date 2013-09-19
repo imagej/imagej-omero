@@ -26,15 +26,12 @@ The following ImageJ tutorial commands are tested and working:
   an example exercising many different parameter types, providing a good
   illustration of how type conversion works going back and forth between ImageJ
   and OMERO.
-
-<!--
 * [ComputeStats](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/simple-commands/src/main/java/ComputeStats.java):
   an example which takes an image as input and produces numbers.
 * [GradientImage](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/simple-commands/src/main/java/GradientImage.java):
   an example which takes numbers as input and produces an image.
--->
 
-The code is currently VERY experimental. If you wish to give it a test drive, the steps are:
+The code is currently very experimental. If you wish to give it a test drive, the steps are:
 
 1. Build OMERO from [joshmoore](https://github.com/joshmoore)'s
    [jy-scripts](https://github.com/joshmoore/openmicroscopy/compare/jy-scripts)
@@ -48,7 +45,7 @@ The code is currently VERY experimental. If you wish to give it a test drive, th
    interoperability library into `$OMERO_HOME/dist/lib/ImageJ.app/jars`.
 
 4. Download
-   [scifio-omero-0.2.0.jar](http://maven.imagej.net/content/repositories/releases/io/scif/scifio-omero/0.2.0/scifio-omero-0.2.0.jar)
+   [scifio-omero-0.2.1.jar](http://maven.imagej.net/content/repositories/releases/io/scif/scifio-omero/0.2.1/scifio-omero-0.2.1.jar)
    into `$OMERO_HOME/dist/lib/ImageJ.app/jars`.
 
 5. Download the
@@ -71,30 +68,30 @@ The code is currently VERY experimental. If you wish to give it a test drive, th
     java -cp "$JYTHON_CLASSPATH" org.python.util.jython $@
     ```
 
-8. Run `jython` and verify the following lines execute without error:
+8. To generate the scripts, launch `jython`:
 
-    ```python
-    import imagej.ImageJ
-    import HelloWorld
-    import WidgetDemo
+    ```shell
+    (export CLASSPATH="$OMERO_HOME/lib/server/*" && jython)
     ```
 
-9. Download [HelloWorld.jy](https://github.com/imagej/imagej-omero/blob/master/HelloWorld.jy)
-   into `$OMERO_HOME/lib/scripts/imagej` (create the folder).
+   And then execute:
 
-10. `omero admin start` (if you haven't already)
+    ```python
+    import os, imagej.omero.ScriptGenerator as sg
+    scriptDir = os.getenv('OMERO_HOME') + '/lib/scripts/imagej'
+    os.mkdir(scriptDir)
+    sg.main(scriptDir)
+    ```
 
-11. `omero script list`
+9. `omero admin start` (if you haven't already)
 
-    You should see `HelloWorld.jy` as an available option.
+10. `omero script list`
 
-12. `omero script params $(omero script list | grep HelloWorld | sed 's/|.*//')`
+    You should see all the ImageJ modules as available options.
 
-13. `omero script launch $(omero script list | grep HelloWorld | sed 's/|.*//')`
+11. `omero script params $(omero script list | grep HelloWorld | sed 's/|.*//')`
 
-14. To test `WidgetDemo` or any other ImageJ2 command, just copy
-    `HelloWorld.jy` to e.g. `WidgetDemo.jy` and make the relevant edit
-    to call the desired command instead.
+12. `omero script launch $(omero script list | grep HelloWorld | sed 's/|.*//')`
 
 ## See also
 
