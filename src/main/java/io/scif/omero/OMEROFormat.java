@@ -38,12 +38,13 @@ import io.scif.Format;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
 import io.scif.Plane;
+import io.scif.SCIFIO;
 import io.scif.formats.FakeFormat;
 import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 
 import net.imglib2.meta.Axes;
 import net.imglib2.meta.CalibratedAxis;
@@ -354,57 +355,8 @@ public class OMEROFormat extends AbstractFormat {
 		public void typedParse(final RandomAccessInputStream stream,
 			final Metadata meta) throws IOException, FormatException
 		{
-			// parse metadata from source string
-			// TEMP: Use io.scif.MetadataService instead, once it has been released.
-			final HashMap<String, String> map =
-				FakeFormat.FakeUtils
-					.extractFakeInfo(getContext(), stream.getFileName());
-
-			for (final String key : map.keySet()) {
-				final String value = map.get(key);
-				if (key.equals("name")) {
-					meta.setName(value);
-				}
-				else if (key.equals("server")) {
-					meta.setServer(value);
-				}
-				else if (key.equals("port")) {
-					try {
-						meta.setPort(Integer.parseInt(value));
-					}
-					catch (final NumberFormatException exc) {
-						log().warn("Invalid port: " + value, exc);
-					}
-				}
-				else if (key.equals("sessionID")) {
-					meta.setSessionID(value);
-				}
-				else if (key.equals("user")) {
-					meta.setUser(value);
-				}
-				else if (key.equals("password")) {
-					meta.setPassword(value);
-				}
-				else if (key.equals("encrypted")) {
-					meta.setEncrypted(Boolean.parseBoolean(value));
-				}
-				else if (key.equals("imageID")) {
-					try {
-						meta.setImageID(Long.parseLong(value));
-					}
-					catch (final NumberFormatException exc) {
-						log().warn("Invalid image ID: " + value, exc);
-					}
-				}
-				else if (key.equals("pixelsID")) {
-					try {
-						meta.setPixelsID(Integer.parseInt(value));
-					}
-					catch (final NumberFormatException exc) {
-						log().warn("Invalid pixels ID: " + value, exc);
-					}
-				}
-			}
+			// parse OMERO credentials from source string
+			parseCredentials(scifio(), stream.getFileName(), meta);
 
 			// initialize OMERO session
 			final OMEROSession session;
@@ -442,6 +394,7 @@ public class OMEROFormat extends AbstractFormat {
 			// terminate OMERO session
 			session.close();
 		}
+
 
 	}
 
@@ -535,7 +488,14 @@ public class OMEROFormat extends AbstractFormat {
 
 		private void initSession() throws FormatException {
 			try {
-				session = createSession(getMetadata());
+				final Metadata meta = getMetadata();
+
+				// parse OMERO credentials from destination string
+				// HACK: Get destination string from the metadata's dataset name.
+				// This is set in the method: AbstractWriter#setDest(String, int).
+				parseCredentials(scifio(), meta.getDatasetName(), meta);
+
+				session = createSession(meta);
 				store = session.createPixels();
 			}
 			catch (final ServerError err) {
@@ -546,6 +506,60 @@ public class OMEROFormat extends AbstractFormat {
 	}
 
 	// -- Helper methods --
+
+	private static void parseCredentials(final SCIFIO scifio,
+		final String string, final Metadata meta)
+	{
+		// TEMP: Use io.scif.MetadataService instead, once it has been released.
+		final Map<String, String> map =
+			FakeFormat.FakeUtils.extractFakeInfo(scifio.getContext(), string);
+
+		for (final String key : map.keySet()) {
+			final String value = map.get(key);
+			if (key.equals("name")) {
+				meta.setName(value);
+			}
+			else if (key.equals("server")) {
+				meta.setServer(value);
+			}
+			else if (key.equals("port")) {
+				try {
+					meta.setPort(Integer.parseInt(value));
+				}
+				catch (final NumberFormatException exc) {
+					scifio.log().warn("Invalid port: " + value, exc);
+				}
+			}
+			else if (key.equals("sessionID")) {
+				meta.setSessionID(value);
+			}
+			else if (key.equals("user")) {
+				meta.setUser(value);
+			}
+			else if (key.equals("password")) {
+				meta.setPassword(value);
+			}
+			else if (key.equals("encrypted")) {
+				meta.setEncrypted(Boolean.parseBoolean(value));
+			}
+			else if (key.equals("imageID")) {
+				try {
+					meta.setImageID(Long.parseLong(value));
+				}
+				catch (final NumberFormatException exc) {
+					scifio.log().warn("Invalid image ID: " + value, exc);
+				}
+			}
+			else if (key.equals("pixelsID")) {
+				try {
+					meta.setPixelsID(Integer.parseInt(value));
+				}
+				catch (final NumberFormatException exc) {
+					scifio.log().warn("Invalid pixels ID: " + value, exc);
+				}
+			}
+		}
+	}
 
 	private static OMEROSession createSession(final Metadata meta)
 		throws FormatException
