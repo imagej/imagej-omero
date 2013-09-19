@@ -1,20 +1,3 @@
 #!/usr/bin/env jython
-
-"""
-ImageJ wrapper script for command:
-HelloWorld
-"""
-
-import imagej.omero.ScriptRunner as ScriptRunner
-import java.lang.System as System
-import java.util.Date as Date
-
-System.err.println("Before: " + Date().toString())
-
-# NB: Make ImageJ startup less verbose.
-System.setProperty("scijava.log.level", "warn")
-
-runner = ScriptRunner()
-runner.invoke("HelloWorld")
-
-System.err.println("After: " + Date().toString())
+import imagej.omero.ScriptRunner, sys
+imagej.omero.ScriptRunner.main(sys.argv)
