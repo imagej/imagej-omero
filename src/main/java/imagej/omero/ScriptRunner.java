@@ -109,29 +109,24 @@ public class ScriptRunner extends AbstractContextual {
 
 	/** Simple entry point for executing ImageJ commands as scripts. */
 	public static void main(final String... args) throws Exception {
-		final String commandArg = args[0];
-
-		// strip directory prefix and .jy suffix, if present
-		final int slash = commandArg.indexOf("/");
-		final int backslash = commandArg.indexOf("\\");
-		final int start = Math.max(slash, backslash);
-		final int end =
-			commandArg.endsWith(".jy") ? commandArg.length() - 3 : commandArg.length();
-		final String command = commandArg.substring(start + 1, end);
-
-		System.err.println(new Date() + ": executing command: " + command);
+		System.err.println(new Date() + ": initializing script runner");
 
 		// NB: Make ImageJ startup less verbose.
 		System.setProperty("scijava.log.level", "warn");
 
-		// execute command
+		// initialize script runner
 		final ScriptRunner scriptRunner = new ScriptRunner();
-		scriptRunner.invoke(command);
+
+		// execute commands
+		for (final String command : args) {
+			System.err.println(new Date() + ": executing: " + command);
+			scriptRunner.invoke(command);
+		}
 
 		// clean up resources
 		scriptRunner.getContext().dispose();
 
-		System.err.println(new Date() + ": execution completed");
+		System.err.println(new Date() + ": executions completed");
 
 		// shut down the JVM
 		System.exit(0);
