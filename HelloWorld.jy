@@ -1,3 +1,0 @@
-#!/usr/bin/env jython
-import imagej.omero.ScriptRunner, sys
-imagej.omero.ScriptRunner.main("HelloWorld")
