@@ -1,6 +1,6 @@
 #!/bin/sh
 export JYTHON_DIR="$(dirname "$0")"
-export JYTHON_LIB="$JYTHON_DIR/jython-standalone-"*.jar
+export JYTHON_LIB=$(echo "$JYTHON_DIR/jython-standalone-"*.jar)
 export OMERO_JARS="$OMERO_HOME/lib/server/*"
 export IMAGEJ_JARS="$OMERO_HOME/lib/ImageJ.app/jars/*"
 export IMAGEJ_PLUGINS="$OMERO_HOME/lib/ImageJ.app/plugins/*"
