@@ -89,13 +89,13 @@ The installer performs the following steps:
 *   List parameters of `HelloWorld` command:
 
     ```shell
-    omero script params $(omero script list | grep 'Hello,_World' | sed 's/|.*//')
+    omero script params $(omero script list | grep Hello | sed 's/|.*//')
     ```
 
 *   Execute the `HelloWorld` command:
 
     ```shell
-    omero script launch $(omero script list | grep 'Hello,_World' | sed 's/|.*//')
+    omero script launch $(omero script list | grep Hello | sed 's/|.*//')
     ```
 
 *   Repeat with any other desired commands.
