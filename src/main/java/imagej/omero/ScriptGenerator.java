@@ -135,8 +135,21 @@ public class ScriptGenerator extends AbstractContextual {
 
 	private String formatFilename(final ModuleInfo info) {
 		final MenuPath menuPath = info.getMenuPath();
-		if (menuPath == null || menuPath.isEmpty()) return info.getTitle() + ".jy";
-		return menuPath.getMenuString().replaceAll("[ /\\\\]", "_") + ".jy";
+
+		String s;
+		if (menuPath == null || menuPath.isEmpty()) s = info.getTitle();
+		else s = menuPath.getMenuString();
+
+		// replace undesirable characters (space, slash and backslash)
+		s = s.replaceAll("[ /\\\\]", "_");
+
+		// remove ellipsis if present
+		if (s.endsWith("...")) s = s.substring(0, s.length() - 3);
+
+		// add Jython file extension
+		s = s + ".jy";
+
+		return s;
 	}
 
 }
