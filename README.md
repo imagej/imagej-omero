@@ -54,32 +54,23 @@ The code is currently very experimental. If you wish to give it a test drive, th
     [pre-built standalone version of Jython](http://jython.org/downloads.html).
 
 *   Download the [Jython launch script](bin/jython) and place in the same
-    folder as `jython-standalone-2.5.3.jar`.
+    folder as the `jython-standalone` JAR file. Add this folder to your `PATH`.
 
 ### Set up ImageJ2
 
-*   Download [ImageJ2](http://developer.imagej.net/downloads) and unpack into
-    `$OMERO_HOME/lib` (it will create a subfolder called `ImageJ.app`).
+Download the [ImageJ-OMERO installer](bin/imagej-omero), and run it:
 
-*   Download the
-    [ij-omero](http://jenkins.imagej.net/job/ImageJ-OMERO/lastSuccessfulBuild/artifact/target/ij-omero-0.1.0-SNAPSHOT.jar)
-    interoperability library into `$OMERO_HOME/lib/ImageJ.app/jars`.
+```shell
+sh imagej-omero
+```
 
-*   Download the
-    [scifio-omero](http://maven.imagej.net/content/repositories/releases/io/scif/scifio-omero/0.2.1/scifio-omero-0.2.1.jar)
-    helper library into `$OMERO_HOME/lib/ImageJ.app/jars`.
+The installer performs the following steps:
 
-*   Download the
-    [simple-commands](http://jenkins.imagej.net/job/ImageJ-tutorials/lastSuccessfulBuild/artifact/simple-commands/target/simple-commands-1.0.0-SNAPSHOT.jar)
-    and/or
-    [widget-demo](http://jenkins.imagej.net/job/ImageJ-tutorials/lastSuccessfulBuild/artifact/widget-demo/target/widget-demo-1.0.0-SNAPSHOT.jar)
-    tutorial plugins into `$OMERO_HOME/lib/ImageJ.app/plugins`.
-
-*   Download the [ImageJ script generator](bin/genScripts.jy), and run it:
-
-    ```shell
-    jython genScripts.jy
-    ```
+*   Installs ImageJ2 into `$OMERO_HOME/lib/ImageJ.app`.
+*   Installs `ij-omero` and `scifio-omero` into `ImageJ.app/jars`.
+*   Installs `simple-commands` and `widget-demo` into `ImageJ.app/plugins`.
+*   Installs OMERO script wrappers for all available ImageJ commands into
+    `$OMERO_HOME/lib/scripts/imagej`.
 
 ### Take it for a spin
 

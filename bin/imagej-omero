@@ -1,0 +1,57 @@
+#!/bin/sh
+
+JENKINS="http://jenkins.imagej.net/job"
+A="lastSuccessfulBuild/artifact"
+MAVEN="http://maven.imagej.net/content/repositories/releases"
+
+IJ_DIR="$OMERO_HOME/lib/ImageJ.app"
+
+echo
+echo "Downloading and installing ImageJ..."
+
+IJ_APP="imagej-2.0.0-SNAPSHOT-application.zip"
+
+curl -s "$JENKINS/ImageJ/$A/app/target/$IJ_APP" > "$OMERO_HOME/lib/$IJ_APP"
+(
+	cd "$OMERO_HOME/lib" && \\
+	unzip -q "$IJ_APP" && \\
+	rm "$IJ_APP"
+)
+
+echo
+echo "Downloading and installing ImageJ-OMERO..."
+
+IJ_OMERO="ij-omero-0.1.0-SNAPSHOT.jar"
+SCIFIO_OMERO="scifio-omero-0.2.1.jar"
+
+curl -s "$JENKINS/ImageJ-OMERO/$A/target/$IJ_OMERO" > "$IJ_DIR/jars/$IJ_OMERO"
+curl -s "$MAVEN/io/scif/scifio-omero/0.2.1/$SCIFIO_OMERO" \
+	> "$IJ_DIR/jars/$SCIFIO_OMERO"
+
+echo
+echo "Downloading and installing tutorial commands..."
+
+TUTORIALS="$JENKINS/ImageJ-tutorials/$A"
+SIMPLE_COMMANDS="simple-commands-1.0.0-SNAPSHOT.jar"
+WIDGET_DEMO="widget-demo-1.0.0-SNAPSHOT.jar"
+
+curl -s "$TUTORIALS/simple-commands/target/$SIMPLE_COMMANDS" \
+	> "$IJ_DIR/plugins/$SIMPLE_COMMANDS"
+curl -s "$TUTORIALS/widget-demo/target/$WIDGET_DEMO" \
+	> "$IJ_DIR/plugins/$WIDGET_DEMO"
+
+echo
+echo "Generating ImageJ scripts..."
+
+GEN_SCRIPT="genScripts.jy"
+GEN_SCRIPT_URL="https://raw.github.com/imagej/imagej-omero/master/bin/$GEN_SCRIPT"
+GEN_SCRIPT_PATH="$OMERO_HOME/lib/$GEN_SCRIPT"
+IJ_SCRIPT_DIR="$OMERO_HOME/lib/scripts/imagej"
+GEN_SCRIPT_CMD="jython \"$GEN_SCRIPT_PATH\" \"$IJ_SCRIPT_DIR\""
+
+curl -s "$GEN_SCRIPT_URL" > "$GEN_SCRIPT_PATH"
+$GEN_SCRIPT_CMD
+
+echo
+echo "To regenerate scripts, run:"
+echo "    $GEN_SCRIPT_CMD"
