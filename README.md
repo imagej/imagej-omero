@@ -2,7 +2,7 @@ This project provides interoperability between
 [ImageJ2](http://developer.imagej.net/) and the
 [OMERO server](https://www.openmicroscopy.org/site/support/omero4/).
 
-## ImageJ commands for working with OMERO pixels
+## ImageJ commands for working with OMERO
 
 There are ImageJ commands for accessing pixels from a remote OMERO server,
 as well as uploading image data from ImageJ to OMERO as a new image.
@@ -18,7 +18,7 @@ your ImageJ plugins folder. Launch ImageJ and there will be two new commands:
 This project enables execution of ImageJ commands on the server side as OMERO
 scripts.
 
-The following ImageJ tutorial commands are tested and working:
+The following ImageJ commands are tested and working:
 
 * [HelloWorld](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/simple-commands/src/main/java/HelloWorld.java):
   a basic example with one string input, and one string output.
@@ -33,65 +33,82 @@ The following ImageJ tutorial commands are tested and working:
 
 The code is currently very experimental. If you wish to give it a test drive, the steps are:
 
-1. Build OMERO from [joshmoore](https://github.com/joshmoore)'s
-   [jy-scripts](https://github.com/joshmoore/openmicroscopy/compare/jy-scripts)
-   branch.
+1. Set up OMERO:
 
-2. Download [ImageJ2](http://developer.imagej.net/downloads) and unpack into
-   `$OMERO_HOME/dist/lib` (it will create a subfolder called `ImageJ.app`).
+   * Build OMERO from [joshmoore](https://github.com/joshmoore)'s
+     [jy-scripts](https://github.com/joshmoore/openmicroscopy/compare/jy-scripts)
+     branch:
 
-3. Download the
-   [ij-omero](http://jenkins.imagej.net/job/ImageJ-OMERO/lastSuccessfulBuild/artifact/target/ij-omero-0.1.0-SNAPSHOT.jar)
-   interoperability library into `$OMERO_HOME/dist/lib/ImageJ.app/jars`.
+      ```shell
+      git clone git://github.com/joshmoore/openmicroscopy
+      cd openmicroscopy
+      ./build.py
+      ```
 
-4. Download
-   [scifio-omero-0.2.1.jar](http://maven.imagej.net/content/repositories/releases/io/scif/scifio-omero/0.2.1/scifio-omero-0.2.1.jar)
-   into `$OMERO_HOME/dist/lib/ImageJ.app/jars`.
+   * Set your `OMERO_HOME` environment variable to point to the `dist` folder
+     of your OMERO build.
 
-5. Download the
-   [simple-commands](http://jenkins.imagej.net/job/ImageJ-tutorials/lastSuccessfulBuild/artifact/simple-commands/target/simple-commands-1.0.0-SNAPSHOT.jar)
-   and/or
-   [widget-demo](http://jenkins.imagej.net/job/ImageJ-tutorials/lastSuccessfulBuild/artifact/widget-demo/target/widget-demo-1.0.0-SNAPSHOT.jar)
-   tutorial plugins into `$OMERO_HOME/dist/lib/ImageJ.app/plugins`.
+2. Set up Jython:
 
-6. Download the latest [pre-built standalone version of Jython](http://jython.org/downloads.html).
+   * Download the latest
+     [pre-built standalone version of Jython](http://jython.org/downloads.html).
 
-7. Create a `jython` launch script _**on your path**_:
+   * Download the [Jython launch script](bin/jython) and place in the same
+     folder as `jython-standalone-2.5.3.jar`.
 
-    ```shell
-    #!/bin/sh
-    export OMERO_HOME="$HOME/code/ome/openmicroscopy/dist"
-    export JYTHON_LIB="$HOME/bin/jython-standalone-2.5.3.jar"
-    export IMAGEJ_JARS="$OMERO_HOME/lib/ImageJ.app/jars/*"
-    export IMAGEJ_PLUGINS="$OMERO_HOME/lib/ImageJ.app/plugins/*"
-    export JYTHON_CLASSPATH="$JYTHON_LIB:$IMAGEJ_JARS:$IMAGEJ_PLUGINS:$CLASSPATH"
-    java -cp "$JYTHON_CLASSPATH" org.python.util.jython $@
-    ```
+3. Set up ImageJ2:
 
-8. To generate the scripts, launch `jython`:
+   * Download [ImageJ2](http://developer.imagej.net/downloads) and unpack into
+     `$OMERO_HOME/lib` (it will create a subfolder called `ImageJ.app`).
 
-    ```shell
-    (export CLASSPATH="$OMERO_HOME/lib/server/*" && jython)
-    ```
+   * Download the
+     [ij-omero](http://jenkins.imagej.net/job/ImageJ-OMERO/lastSuccessfulBuild/artifact/target/ij-omero-0.1.0-SNAPSHOT.jar)
+     interoperability library into `$OMERO_HOME/lib/ImageJ.app/jars`.
 
-   And then execute:
+   * Download the
+     [scifio-omero](http://maven.imagej.net/content/repositories/releases/io/scif/scifio-omero/0.2.1/scifio-omero-0.2.1.jar)
+     helper library into `$OMERO_HOME/lib/ImageJ.app/jars`.
 
-    ```python
-    import os, imagej.omero.ScriptGenerator as sg
-    scriptDir = os.getenv('OMERO_HOME') + '/lib/scripts/imagej'
-    os.mkdir(scriptDir)
-    sg.main(scriptDir)
-    ```
+   * Download the
+     [simple-commands](http://jenkins.imagej.net/job/ImageJ-tutorials/lastSuccessfulBuild/artifact/simple-commands/target/simple-commands-1.0.0-SNAPSHOT.jar)
+     and/or
+     [widget-demo](http://jenkins.imagej.net/job/ImageJ-tutorials/lastSuccessfulBuild/artifact/widget-demo/target/widget-demo-1.0.0-SNAPSHOT.jar)
+     tutorial plugins into `$OMERO_HOME/lib/ImageJ.app/plugins`.
 
-9. `omero admin start` (if you haven't already)
+   * Download the [ImageJ script generator](bin/genScripts.jy), and run it:
 
-10. `omero script list`
+        ```shell
+        jython genScripts.jy
+        ```
 
-    You should see all the ImageJ modules as available options.
+4. Take it for a spin:
 
-11. `omero script params $(omero script list | grep HelloWorld | sed 's/|.*//')`
+   * Fire up OMERO:
 
-12. `omero script launch $(omero script list | grep HelloWorld | sed 's/|.*//')`
+       ```shell
+       omero admin start
+       ```
+
+   * List available scripts:
+
+       ```shell
+       omero script list
+       ```
+
+   * List parameters of `HelloWorld` command:
+
+        ```shell
+        omero script params $(omero script list | grep 'Hello,_World' | sed 's/|.*//')
+        ```
+
+   * Execute the `HelloWorld` command:
+
+        ```shell
+        omero script launch $(omero script list | grep 'Hello,_World' | sed 's/|.*//')
+        ```
+
+   * Repeat with any other desired commands.
+     Also try from OMERO.web and OMERO.insight!
 
 ## See also
 
