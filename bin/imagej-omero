@@ -6,52 +6,62 @@ MAVEN="http://maven.imagej.net/content/repositories/releases"
 
 IJ_DIR="$OMERO_HOME/lib/ImageJ.app"
 
-echo
-echo "Downloading and installing ImageJ..."
+# -- Download and install ImageJ --
 
 IJ_APP="imagej-2.0.0-SNAPSHOT-application.zip"
 
+echo "-> downloading $IJ_APP"
 curl -s "$JENKINS/ImageJ/$A/app/target/$IJ_APP" > "$OMERO_HOME/lib/$IJ_APP"
+echo "-> extracting $IJ_APP"
 (
-	cd "$OMERO_HOME/lib" && \\
-	unzip -q "$IJ_APP" && \\
+	cd "$OMERO_HOME/lib" &&
+	unzip -q "$IJ_APP" &&
 	rm "$IJ_APP"
 )
 
-echo
-echo "Downloading and installing ImageJ-OMERO..."
+# -- Download and install ImageJ-OMERO --
 
 IJ_OMERO="ij-omero-0.1.0-SNAPSHOT.jar"
 SCIFIO_OMERO="scifio-omero-0.2.1.jar"
 
+echo "-> downloading $IJ_OMERO"
 curl -s "$JENKINS/ImageJ-OMERO/$A/target/$IJ_OMERO" > "$IJ_DIR/jars/$IJ_OMERO"
+echo "-> downloading $SCIFIO_OMERO"
 curl -s "$MAVEN/io/scif/scifio-omero/0.2.1/$SCIFIO_OMERO" \
 	> "$IJ_DIR/jars/$SCIFIO_OMERO"
 
-echo
-echo "Downloading and installing tutorial commands..."
+# -- Download and install tutorial commands --
 
 TUTORIALS="$JENKINS/ImageJ-tutorials/$A"
 SIMPLE_COMMANDS="simple-commands-1.0.0-SNAPSHOT.jar"
 WIDGET_DEMO="widget-demo-1.0.0-SNAPSHOT.jar"
 
+echo "-> downloading $SIMPLE_COMMANDS"
 curl -s "$TUTORIALS/simple-commands/target/$SIMPLE_COMMANDS" \
 	> "$IJ_DIR/plugins/$SIMPLE_COMMANDS"
+echo "-> downloading $WIDGET_DEMO"
 curl -s "$TUTORIALS/widget-demo/target/$WIDGET_DEMO" \
 	> "$IJ_DIR/plugins/$WIDGET_DEMO"
 
-echo
-echo "Generating ImageJ scripts..."
+# -- Generate ImageJ scripts --
 
 GEN_SCRIPT="genScripts.jy"
 GEN_SCRIPT_URL="https://raw.github.com/imagej/imagej-omero/master/bin/$GEN_SCRIPT"
 GEN_SCRIPT_PATH="$OMERO_HOME/lib/$GEN_SCRIPT"
-IJ_SCRIPT_DIR="$OMERO_HOME/lib/scripts/imagej"
-GEN_SCRIPT_CMD="jython \"$GEN_SCRIPT_PATH\" \"$IJ_SCRIPT_DIR\""
+GEN_SCRIPT_CMD="jython $GEN_SCRIPT scripts/imagej"
 
+echo "-> downloading $GEN_SCRIPT"
 curl -s "$GEN_SCRIPT_URL" > "$GEN_SCRIPT_PATH"
-$GEN_SCRIPT_CMD
+
+echo "-> generating OMERO scripts"
+(
+	cd "$OMERO_HOME/lib" &&
+	$GEN_SCRIPT_CMD > /dev/null
+	echo "$(ls scripts/imagej/* | wc -l) scripts generated."
+)
 
 echo
 echo "To regenerate scripts, run:"
+echo "    cd $OMERO_HOME/lib"
+echo "    rm -rf scripts/imagej/*"
 echo "    $GEN_SCRIPT_CMD"
