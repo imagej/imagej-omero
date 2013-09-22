@@ -144,7 +144,45 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Override
 	public omero.RType toOMERO(final Object value) {
-		// try generic conversion method
+		if (value == null) return null;
+
+		// NB: Unfortunately, omero.rtypes.rtype is not smart enough
+		// to recurse into data structures, so we do it ourselves!
+		if (value.getClass().isArray()) {
+			final omero.RType[] val = new omero.RType[Array.getLength(value)];
+			for (int i=0; i<val.length; i++) {
+				val[i] = toOMERO(Array.get(value, i));
+			}
+			return omero.rtypes.rarray(val);
+		}
+		if (value instanceof List) {
+			final List<?> list = (List<?>) value;
+			final omero.RType[] val = new omero.RType[list.size()];
+			for (int i=0; i<val.length; i++) {
+				val[i] = toOMERO(list.get(i));
+			}
+			return omero.rtypes.rlist(val);
+		}
+		if (value instanceof Map) {
+			final Map<?, ?> map = (Map<?, ?>) value;
+			final HashMap<String, omero.RType> val =
+				new HashMap<String, omero.RType>();
+			for (Object key : map.keySet()) {
+				val.put(key.toString(), toOMERO(map.get(key)));
+			}
+			return omero.rtypes.rmap(val);
+		}
+		if (value instanceof Set) {
+			final Set<?> set = (Set<?>) value;
+			final omero.RType[] val = new omero.RType[set.size()];
+			int index = 0;
+			for (final Object element : set) {
+				val[index++] = toOMERO(element);
+			}
+			return omero.rtypes.rset(val);
+		}
+
+		// try generic OMEROification routine
 		try {
 			return omero.rtypes.rtype(value);
 		}
