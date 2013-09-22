@@ -36,7 +36,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-/** An ImageJ command for uploading pixels to an OMERO server. */
+/** An ImageJ command for uploading images to an OMERO server. */
 @Plugin(type = Command.class, label = "Export to OMERO", menu = {
 	@Menu(label = MenuConstants.FILE_LABEL, weight = MenuConstants.FILE_WEIGHT,
 		mnemonic = MenuConstants.FILE_MNEMONIC),

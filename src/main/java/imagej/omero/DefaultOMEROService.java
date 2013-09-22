@@ -94,7 +94,7 @@ public class DefaultOMEROService extends AbstractService implements
 			DatasetView.class.isAssignableFrom(type) ||
 			ImageDisplay.class.isAssignableFrom(type))
 		{
-			// use a pixels ID
+			// use an image ID
 			return omero.rtypes.rlong(0);
 		}
 
@@ -147,9 +147,9 @@ public class DefaultOMEROService extends AbstractService implements
 		throws omero.ServerError, IOException
 	{
 		if (value instanceof Dataset) {
-			// upload pixels to OMERO, returning the resultant pixels ID
-			final long id = uploadPixels(client, (Dataset) value);
-			return toOMERO(client, id);
+			// upload image to OMERO, returning the resultant image ID
+			final long imageID = uploadImage(client, (Dataset) value);
+			return toOMERO(client, imageID);
 		}
 		else if (value instanceof DatasetView) {
 			final DatasetView datasetView = (DatasetView) value;
@@ -247,7 +247,7 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public Dataset downloadPixels(final omero.client client, final long id)
+	public Dataset downloadImage(final omero.client client, final long imageID)
 		throws omero.ServerError, IOException
 	{
 		// TODO: Reuse existing client instead of creating a new connection.
@@ -255,7 +255,7 @@ public class DefaultOMEROService extends AbstractService implements
 		// The RandomAccessInput/OutputStream design is probably too narrow.
 		final String omeroSource =
 			"server=localhost&port=4064" + // FIXME: Eliminate hardcoded values!
-			"&sessionID=" + client.getSessionId() + "&imageID=" + id + ".omero";
+			"&sessionID=" + client.getSessionId() + "&imageID=" + imageID + ".omero";
 
 		// TEMP: Until SCIFIO issue #63 is resolved.
 		// https://github.com/scifio/scifio/pull/63
@@ -267,7 +267,7 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public long uploadPixels(final omero.client client, final Dataset dataset)
+	public long uploadImage(final omero.client client, final Dataset dataset)
 		throws omero.ServerError, IOException
 	{
 		// TODO: Reuse existing client instead of creating a new connection.
@@ -285,7 +285,7 @@ public class DefaultOMEROService extends AbstractService implements
 
 		datasetService.save(dataset, omeroDestination);
 
-		// FIXME! Return correct Pixels ID
+		// FIXME! Return correct Image ID
 		return -1;
 	}
 
@@ -304,9 +304,9 @@ public class DefaultOMEROService extends AbstractService implements
 	 * such types back to ImageJ's expected type for the parameter.</li>
 	 * <li>ImageJ's image types (i.e., {@link Dataset}, {@link DatasetView} and
 	 * {@link ImageDisplay}) are mapped to {@code long} since OMERO communicates
-	 * about images using pixel IDs. Work must be done to download pixels from a
-	 * specified ID and converting the result to the appropriate ImageJ image type
-	 * such as {@link Dataset}.</li>
+	 * about images using image IDs. Work must be done to download the image from
+	 * a specified ID and convert the result to the appropriate type of ImageJ
+	 * object such as {@link Dataset}.</li>
 	 * </ol>
 	 */
 	private <T> T convert(final omero.client client, final Object result,
@@ -320,13 +320,13 @@ public class DefaultOMEROService extends AbstractService implements
 			return typedResult;
 		}
 
-		// special case for converting an OMERO pixels ID to an ImageJ image type
+		// special case for converting an OMERO image ID to an ImageJ image type
 		if (ClassUtils.isNumber(result.getClass())) {
 			if (Dataset.class.isAssignableFrom(type)) {
-				final long id = ((Number) result).longValue();
+				final long imageID = ((Number) result).longValue();
 				// TODO: Consider consequences of this cast more carefully.
 				@SuppressWarnings("unchecked")
-				final T dataset = (T) downloadPixels(client, id);
+				final T dataset = (T) downloadImage(client, imageID);
 				return dataset;
 			}
 			if (DatasetView.class.isAssignableFrom(type)) {

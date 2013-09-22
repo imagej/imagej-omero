@@ -52,17 +52,17 @@ public interface OMEROService extends Service {
 		throws omero.ServerError, IOException;
 
 	/**
-	 * Downloads the pixels at the given ID from OMERO, storing the result into a
-	 * new ImageJ {@link Dataset}.
+	 * Downloads the image with the given image ID from OMERO, storing the result
+	 * into a new ImageJ {@link Dataset}.
 	 */
-	Dataset downloadPixels(omero.client client, long id)
+	Dataset downloadImage(omero.client client, long imageID)
 		throws omero.ServerError, IOException;
 
 	/**
-	 * Uploads the given ImageJ {@link Dataset}'s pixels to OMERO, returning the
-	 * new pixels ID on the OMERO server.
+	 * Uploads the given ImageJ {@link Dataset}'s image to OMERO, returning the
+	 * new image ID on the OMERO server.
 	 */
-	long uploadPixels(omero.client client, Dataset dataset)
+	long uploadImage(omero.client client, Dataset dataset)
 		throws omero.ServerError, IOException;
 
 }

@@ -4,7 +4,7 @@ This project provides interoperability between
 
 ## ImageJ commands for working with OMERO
 
-There are ImageJ commands for accessing pixels from a remote OMERO server,
+There are ImageJ commands for accessing images from a remote OMERO server,
 as well as uploading image data from ImageJ to OMERO as a new image.
 
 To try it out, drop the `ij-omero` JAR file, along with its dependencies, into
@@ -105,4 +105,4 @@ The installer performs the following steps:
 
 This project makes use of the
 [scifio-omero](https://github.com/scifio/scifio-omero) library for reading and
-writing OMERO pixels using the [SCIFIO](http://scif.io/) library.
+writing OMERO images using the [SCIFIO](http://scif.io/) library.

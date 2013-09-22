@@ -37,7 +37,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-/** An ImageJ command for retrieving pixels from an OMERO server on demand. */
+/** An ImageJ command for retrieving images from an OMERO server on demand. */
 @Plugin(type = Command.class, label = "Import from OMERO", menu = {
 	@Menu(label = MenuConstants.FILE_LABEL, weight = MenuConstants.FILE_WEIGHT,
 		mnemonic = MenuConstants.FILE_MNEMONIC),
