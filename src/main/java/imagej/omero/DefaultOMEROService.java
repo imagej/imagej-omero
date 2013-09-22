@@ -309,34 +309,34 @@ public class DefaultOMEROService extends AbstractService implements
 	 * object such as {@link Dataset}.</li>
 	 * </ol>
 	 */
-	private <T> T convert(final omero.client client, final Object result,
+	private <T> T convert(final omero.client client, final Object value,
 		final Class<T> type) throws omero.ServerError, IOException
 	{
-		if (result == null) return null;
+		if (value == null) return null;
 		if (type == null) {
 			// no type given; try a simple cast
 			@SuppressWarnings("unchecked")
-			final T typedResult = (T) result;
+			final T typedResult = (T) value;
 			return typedResult;
 		}
 
 		// special case for converting an OMERO image ID to an ImageJ image type
-		if (ClassUtils.isNumber(result.getClass())) {
+		if (ClassUtils.isNumber(value.getClass())) {
 			if (Dataset.class.isAssignableFrom(type)) {
-				final long imageID = ((Number) result).longValue();
+				final long imageID = ((Number) value).longValue();
 				// TODO: Consider consequences of this cast more carefully.
 				@SuppressWarnings("unchecked")
 				final T dataset = (T) downloadImage(client, imageID);
 				return dataset;
 			}
 			if (DatasetView.class.isAssignableFrom(type)) {
-				final Dataset dataset = convert(client, result, Dataset.class);
+				final Dataset dataset = convert(client, value, Dataset.class);
 				@SuppressWarnings("unchecked")
 				final T dataView = (T) imageDisplayService.createDataView(dataset);
 				return dataView;
 			}
 			if (ImageDisplay.class.isAssignableFrom(type)) {
-				final Dataset dataset = convert(client, result, Dataset.class);
+				final Dataset dataset = convert(client, value, Dataset.class);
 				@SuppressWarnings("unchecked")
 				final T display = (T) displayService.createDisplay(dataset);
 				return display;
@@ -344,9 +344,9 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 
 		// use SciJava Common's automagical conversion routine
-		final T converted = ClassUtils.convert(result, type);
+		final T converted = ClassUtils.convert(value, type);
 		if (converted == null) {
-			log.error("Cannot convert: " + result.getClass().getName() + " to " +
+			log.error("Cannot convert: " + value.getClass().getName() + " to " +
 				type.getName());
 		}
 		return converted;
