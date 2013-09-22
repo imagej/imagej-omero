@@ -185,7 +185,14 @@ public class ModuleAdapter extends AbstractContextual {
 		}
 		final Manifest m = Manifest.getManifest(c);
 		if (m == null) return null;
-		return m.getImplementationVersion();
+		final String version = m.getImplementationVersion();
+		if (version == null) return null;
+		if (version.endsWith("-SNAPSHOT")) {
+			// append commit hash to differentiate between development versions
+			final String build = m.getImplementationBuild();
+			return build == null ? version : version + "-" + build;
+		}
+		return version;
 	}
 
 	// -- Helper methods --
