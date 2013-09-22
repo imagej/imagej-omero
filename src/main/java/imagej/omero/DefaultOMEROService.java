@@ -83,7 +83,14 @@ public class DefaultOMEROService extends AbstractService implements
 		param.optional = !item.isRequired();
 		param.prototype = prototype(item.getType());
 		param.description = item.getDescription();
-		// TODO: populate param.values, param.min and param.max
+		final List<?> choices = item.getChoices();
+		if (choices != null && !choices.isEmpty()) {
+			param.values = (omero.RList) toOMERO(choices);
+		}
+		final Object min = item.getMinimumValue();
+		if (min != null) param.min = toOMERO(min);
+		final Object max = item.getMaximumValue();
+		if (max != null) param.max = toOMERO(max);
 		return param;
 	}
 
