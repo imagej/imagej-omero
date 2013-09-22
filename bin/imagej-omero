@@ -56,7 +56,7 @@ curl -s "$GEN_SCRIPT_URL" > "$GEN_SCRIPT_PATH"
 echo "-> generating OMERO scripts"
 (
 	cd "$OMERO_HOME/lib" &&
-	$GEN_SCRIPT_CMD > /dev/null
+	$GEN_SCRIPT_CMD > /dev/null &&
 	echo "$(ls scripts/imagej/* | wc -l) scripts generated."
 )
 
