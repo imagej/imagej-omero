@@ -24,6 +24,8 @@
 package imagej.omero;
 
 import imagej.data.Dataset;
+import imagej.data.display.DatasetView;
+import imagej.data.display.ImageDisplay;
 import imagej.module.ModuleItem;
 
 import java.io.IOException;
@@ -43,11 +45,26 @@ public interface OMEROService extends Service {
 	/** Creates an OMERO parameter prototype for the given Java class. */
 	omero.RType prototype(Class<?> type);
 
-	/** Converts an ImageJ parameter value to an OMERO parameter value. */
+	/**
+	 * Converts an ImageJ parameter value to an OMERO parameter value.
+	 * <p>
+	 * If the given object is an image type (i.e., {@link Dataset},
+	 * {@link DatasetView} or {@link ImageDisplay}) then the {@link #uploadImage}
+	 * method will be used transparently to convert the object into an OMERO image
+	 * ID.
+	 * </p>
+	 */
 	omero.RType toOMERO(omero.client client, Object value)
 		throws omero.ServerError, IOException;
 
-	/** Converts an OMERO parameter value to an ImageJ value of the given type. */
+	/**
+	 * Converts an OMERO parameter value to an ImageJ value of the given type.
+	 * <p>
+	 * If the requested type is an image type (i.e., {@link Dataset},
+	 * {@link DatasetView} or {@link ImageDisplay}) then the
+	 * {@link #downloadImage} method will be used transparently to convert the
+	 * OMERO image ID into such an object.
+	 */
 	Object toImageJ(omero.client client, omero.RType value, Class<?> type)
 		throws omero.ServerError, IOException;
 
