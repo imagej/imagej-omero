@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# imagej-omero: Adds ImageJ capabilities to your OMERO installation.
+
 JENKINS="http://jenkins.imagej.net/job"
 A="lastSuccessfulBuild/artifact"
 MAVEN="http://maven.imagej.net/content/repositories/releases"
