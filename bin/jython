@@ -10,4 +10,4 @@ export OMERO_JARS="$OMERO_HOME/lib/server/*"
 export IMAGEJ_JARS="$OMERO_HOME/lib/ImageJ.app/jars/*"
 export IMAGEJ_PLUGINS="$OMERO_HOME/lib/ImageJ.app/plugins/*"
 export CP="$JYTHON_LIB:$OMERO_JARS:$IMAGEJ_JARS:$IMAGEJ_PLUGINS:$CLASSPATH"
-java -cp "$CP" org.python.util.jython $@
+java -Djava.awt.headless=true -cp "$CP" org.python.util.jython $@
