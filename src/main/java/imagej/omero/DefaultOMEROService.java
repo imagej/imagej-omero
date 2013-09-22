@@ -143,6 +143,18 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
+	public omero.RType toOMERO(final Object value) {
+		// try generic conversion method
+		try {
+			return omero.rtypes.rtype(value);
+		}
+		catch (final omero.ClientError err) {
+			// default case: convert to string
+			return omero.rtypes.rstring(value.toString());
+		}
+	}
+
+	@Override
 	public omero.RType toOMERO(final omero.client client, final Object value)
 		throws omero.ServerError, IOException
 	{
@@ -151,26 +163,17 @@ public class DefaultOMEROService extends AbstractService implements
 			final long imageID = uploadImage(client, (Dataset) value);
 			return toOMERO(client, imageID);
 		}
-		else if (value instanceof DatasetView) {
+		if (value instanceof DatasetView) {
 			final DatasetView datasetView = (DatasetView) value;
 			// TODO: Verify whether any view-specific metadata can be preserved.
 			return toOMERO(client, datasetView.getData());
 		}
-		else if (value instanceof ImageDisplay) {
+		if (value instanceof ImageDisplay) {
 			final ImageDisplay imageDisplay = (ImageDisplay) value;
 			// TODO: Support more aspects of image displays; e.g., multiple datasets.
 			return toOMERO(client, imageDisplayService.getActiveDataset(imageDisplay));
 		}
-		else {
-			// try generic conversion method
-			try {
-				return omero.rtypes.rtype(value);
-			}
-			catch (final omero.ClientError err) {
-				// default case: convert to string
-				return omero.rtypes.rstring(value.toString());
-			}
-		}
+		return toOMERO(value);
 	}
 
 	@Override

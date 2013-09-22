@@ -48,6 +48,15 @@ public interface OMEROService extends Service {
 	/**
 	 * Converts an ImageJ parameter value to an OMERO parameter value.
 	 * <p>
+	 * This method only handles basic types, not image types; see
+	 * {@link #toOMERO(omero.client, Object)} for details.
+	 * </p>
+	 */
+	omero.RType toOMERO(Object value);
+
+	/**
+	 * Converts an ImageJ parameter value to an OMERO parameter value.
+	 * <p>
 	 * If the given object is an image type (i.e., {@link Dataset},
 	 * {@link DatasetView} or {@link ImageDisplay}) then the {@link #uploadImage}
 	 * method will be used transparently to convert the object into an OMERO image
