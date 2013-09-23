@@ -50,7 +50,7 @@ curl -s "$TUTORIALS/widget-demo/target/$WIDGET_DEMO" \
 GEN_SCRIPT="genScripts.jy"
 GEN_SCRIPT_URL="https://raw.github.com/imagej/imagej-omero/master/bin/$GEN_SCRIPT"
 GEN_SCRIPT_PATH="$OMERO_HOME/lib/$GEN_SCRIPT"
-GEN_SCRIPT_CMD="jython $GEN_SCRIPT scripts/imagej"
+GEN_SCRIPT_CMD="jython $GEN_SCRIPT"
 
 echo "-> downloading $GEN_SCRIPT"
 curl -s "$GEN_SCRIPT_URL" > "$GEN_SCRIPT_PATH"
