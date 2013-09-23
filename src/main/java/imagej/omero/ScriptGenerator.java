@@ -69,13 +69,15 @@ public class ScriptGenerator extends AbstractContextual {
 	// -- ScriptRunner methods --
 
 	/** Generates OMERO script stubs for all available ImageJ modules. */
-	public void generateAll(final File dir) throws IOException {
+	public void generateAll(final File dir, final boolean headlessOnly)
+		throws IOException
+	{
 		if (!dir.isDirectory()) {
 			throw new IllegalArgumentException("Invalid directory: " + dir);
 		}
 		for (final ModuleInfo info : ij.module().getModules()) {
 			if (!(info instanceof Identifiable)) continue;
-			if (!info.canRunHeadless()) continue;
+			if (headlessOnly && !info.canRunHeadless()) continue;
 			generate(info, dir);
 		}
 	}
@@ -111,7 +113,13 @@ public class ScriptGenerator extends AbstractContextual {
 
 	/** Entry point for generating OMERO script stubs. */
 	public static void main(final String... args) throws Exception {
-		final File dir = new File(args.length == 0 ? "." : args[0]);
+		// parse arguments
+		boolean headlessOnly = true;
+		File dir = null;
+		for (final String arg : args) {
+			if ("--all".equals(arg)) headlessOnly = false;
+			else dir = new File(arg);
+		}
 
 		System.err.println(new Date() + ": generating scripts");
 
@@ -120,7 +128,7 @@ public class ScriptGenerator extends AbstractContextual {
 
 		// generate script stubs
 		final ScriptGenerator scriptGenerator = new ScriptGenerator();
-		scriptGenerator.generateAll(dir);
+		scriptGenerator.generateAll(dir, headlessOnly);
 
 		// clean up resources
 		scriptGenerator.getContext().dispose();
