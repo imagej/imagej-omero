@@ -124,10 +124,11 @@ public class ModuleAdapter extends AbstractContextual {
 		log.debug(info.getTitle() + ": populating inputs");
 		final HashMap<String, Object> inputMap = new HashMap<String, Object>();
 		for (final String name : client.getInputKeys()) {
-			final Class<?> type = getInput(name).getType();
+			final ModuleItem<?> input = getInput(name);
+			final Class<?> type = input.getType();
 			final Object value =
 				omeroService.toImageJ(client, client.getInput(name), type);
-			inputMap.put(name, value);
+			inputMap.put(input.getName(), value);
 		}
 
 		// execute ImageJ module
