@@ -516,52 +516,7 @@ public class OMEROFormat extends AbstractFormat {
 		// TODO: Use scifio.metadata() instead, once it has been released.
 		final Map<String, String> map =
 			scifio.get(MetadataService.class).parse(noExt, "&");
-
-		for (final String key : map.keySet()) {
-			final String value = map.get(key);
-			if (key.equals("name")) {
-				meta.setName(value);
-			}
-			else if (key.equals("server")) {
-				meta.setServer(value);
-			}
-			else if (key.equals("port")) {
-				try {
-					meta.setPort(Integer.parseInt(value));
-				}
-				catch (final NumberFormatException exc) {
-					scifio.log().warn("Invalid port: " + value, exc);
-				}
-			}
-			else if (key.equals("sessionID")) {
-				meta.setSessionID(value);
-			}
-			else if (key.equals("user")) {
-				meta.setUser(value);
-			}
-			else if (key.equals("password")) {
-				meta.setPassword(value);
-			}
-			else if (key.equals("encrypted")) {
-				meta.setEncrypted(Boolean.parseBoolean(value));
-			}
-			else if (key.equals("imageID")) {
-				try {
-					meta.setImageID(Long.parseLong(value));
-				}
-				catch (final NumberFormatException exc) {
-					scifio.log().warn("Invalid image ID: " + value, exc);
-				}
-			}
-			else if (key.equals("pixelsID")) {
-				try {
-					meta.setPixelsID(Integer.parseInt(value));
-				}
-				catch (final NumberFormatException exc) {
-					scifio.log().warn("Invalid pixels ID: " + value, exc);
-				}
-			}
-		}
+		scifio.get(MetadataService.class).populate(meta, map);
 	}
 
 	private static OMEROSession createSession(final Metadata meta)
