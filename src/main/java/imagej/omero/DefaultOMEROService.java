@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.scijava.log.LogService;
+import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.service.AbstractService;
@@ -74,6 +75,9 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Parameter
 	private ImageDisplayService imageDisplayService;
+
+	@Parameter
+	private ObjectService objectService;
 
 	// -- OMEROService methods --
 
@@ -368,6 +372,18 @@ public class DefaultOMEROService extends AbstractService implements
 			@SuppressWarnings("unchecked")
 			final T typedResult = (T) value;
 			return typedResult;
+		}
+
+		// First, we look for registered objects of the requested type whose
+		// toString() value matches the given string. This allows known sorts of
+		// objects to be requested by name, including SingletonPlugin types like
+		// CalculatorOp and ThresholdMethod.
+		if (value instanceof String) {
+			final String s = (String) value;
+			final List<T> objects = objectService.getObjects(type);
+			for (final T object : objects) {
+				if (s.equals(object.toString())) return object;
+			}
 		}
 
 		// special case for converting an OMERO image ID to an ImageJ image type
