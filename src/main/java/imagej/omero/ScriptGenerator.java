@@ -86,7 +86,7 @@ public class ScriptGenerator extends AbstractContextual {
 	{
 		// validate arguments
 		if (!(info instanceof Identifiable)) {
-			throw new IllegalArgumentException("Unidentifable module: " + info);
+			throw new IllegalArgumentException("Unidentifiable module: " + info);
 		}
 		if (!dir.isDirectory()) {
 			throw new IllegalArgumentException("Invalid directory: " + dir);
