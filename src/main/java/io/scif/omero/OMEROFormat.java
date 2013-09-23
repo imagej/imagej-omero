@@ -37,9 +37,9 @@ import io.scif.Field;
 import io.scif.Format;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
+import io.scif.MetadataService;
 import io.scif.Plane;
 import io.scif.SCIFIO;
-import io.scif.formats.FakeFormat;
 import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
 
@@ -510,9 +510,12 @@ public class OMEROFormat extends AbstractFormat {
 	private static void parseCredentials(final SCIFIO scifio,
 		final String string, final Metadata meta)
 	{
-		// TEMP: Use io.scif.MetadataService instead, once it has been released.
+		// strip extension
+		final String noExt = string.substring(0, string.lastIndexOf("."));
+
+		// TODO: Use scifio.metadata() instead, once it has been released.
 		final Map<String, String> map =
-			FakeFormat.FakeUtils.extractFakeInfo(scifio.getContext(), string);
+			scifio.get(MetadataService.class).parse(noExt, "&");
 
 		for (final String key : map.keySet()) {
 			final String value = map.get(key);
