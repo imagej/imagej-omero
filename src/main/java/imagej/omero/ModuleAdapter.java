@@ -25,6 +25,9 @@ package imagej.omero;
 
 import imagej.command.Command;
 import imagej.command.CommandService;
+import imagej.data.Dataset;
+import imagej.data.display.DatasetView;
+import imagej.data.display.ImageDisplay;
 import imagej.module.Module;
 import imagej.module.ModuleException;
 import imagej.module.ModuleInfo;
@@ -52,6 +55,13 @@ import org.scijava.util.Manifest;
  */
 public class ModuleAdapter extends AbstractContextual {
 
+	/**
+	 * A name used when there is a single image input or output.
+	 * Parameters with this name are handled specially by OMERO clients such as
+	 * OMERO.web and OMERO.insight.
+	 */
+	private static final String IMAGE_NAME = "Image_ID";
+
 	// -- Parameters --
 
 	@Parameter
@@ -74,6 +84,18 @@ public class ModuleAdapter extends AbstractContextual {
 	/** The OMERO client to use when communicating about a job. */
 	private final omero.client client;
 
+	/**
+	 * The single image input parameter for the module, or null if there are no
+	 * input image parameters or more than one.
+	 */
+	private final ModuleItem<?> imageInput;
+
+	/**
+	 * The single image output parameter for the module, or null if there are no
+	 * output image parameters or more than one.
+	 */
+	private final ModuleItem<?> imageOutput;
+
 	// -- Constructor --
 
 	public ModuleAdapter(final Context context, final ModuleInfo info,
@@ -82,6 +104,8 @@ public class ModuleAdapter extends AbstractContextual {
 		setContext(context);
 		this.info = info;
 		this.client = client;
+		imageInput = getSingleImage(info.inputs());
+		imageOutput = getSingleImage(info.outputs());
 	}
 
 	// -- ModuleAdapter methods --
@@ -100,7 +124,7 @@ public class ModuleAdapter extends AbstractContextual {
 		log.debug(info.getTitle() + ": populating inputs");
 		final HashMap<String, Object> inputMap = new HashMap<String, Object>();
 		for (final String name : client.getInputKeys()) {
-			final Class<?> type = info.getInput(name).getType();
+			final Class<?> type = getInput(name).getType();
 			final Object value =
 				omeroService.toImageJ(client, client.getInput(name), type);
 			inputMap.put(name, value);
@@ -116,7 +140,7 @@ public class ModuleAdapter extends AbstractContextual {
 		for (final ModuleItem<?> item : module.getInfo().outputs()) {
 			final omero.RType value =
 				omeroService.toOMERO(client, item.getValue(module));
-			client.setOutput(item.getName(), value);
+			client.setOutput(getOutputName(item), value);
 		}
 
 		log.debug(info.getTitle() + ": completed execution");
@@ -148,7 +172,7 @@ public class ModuleAdapter extends AbstractContextual {
 			final omero.grid.Param param = omeroService.getJobParam(item);
 			if (param != null) {
 				param.grouping = pad(inputIndex++, inputDigits);
-				params.inputs.put(item.getName(), param);
+				params.inputs.put(getInputName(item), param);
 			}
 		}
 
@@ -159,7 +183,7 @@ public class ModuleAdapter extends AbstractContextual {
 			final omero.grid.Param param = omeroService.getJobParam(item);
 			if (param != null) {
 				param.grouping = pad(outputIndex++, outputDigits);
-				params.outputs.put(item.getName(), param);
+				params.outputs.put(getOutputName(item), param);
 			}
 		}
 
@@ -197,6 +221,50 @@ public class ModuleAdapter extends AbstractContextual {
 
 	// -- Helper methods --
 
+	/**
+	 * Gets the module input with the given name.
+	 * <p>
+	 * Includes special case handling for renaming single image inputs to
+	 * {@link #IMAGE_NAME} to make OMERO clients happy.
+	 * </p>
+	 */
+	private ModuleItem<?> getInput(final String name) {
+		if (name.equals(IMAGE_NAME) && imageInput != null) return imageInput;
+		return info.getInput(name);
+	}
+
+	/**
+	 * Gets the name of the given module input.
+	 * <p>
+	 * Includes special case handling for renaming single image inputs to
+	 * {@link #IMAGE_NAME} to make OMERO clients happy.
+	 * </p>
+	 */
+	private String getInputName(final ModuleItem<?> item) {
+		return getName(item, imageInput);
+	}
+
+	/**
+	 * Gets the name of the given module output.
+	 * <p>
+	 * Includes special case handling for renaming single image outputs to
+	 * {@link #IMAGE_NAME} to make OMERO clients happy.
+	 * </p>
+	 */
+	private String getOutputName(final ModuleItem<?> item) {
+		return getName(item, imageOutput);
+	}
+
+	/** Helper method for {@link #getInputName} and {@link #getOutputName}. */
+	private String
+		getName(final ModuleItem<?> item, final ModuleItem<?> imageItem)
+	{
+		if (imageItem != null && item.getName().equals(imageItem.getName())) {
+			return IMAGE_NAME;
+		}
+		return item.getName();
+	}
+
 	/** Counts the number of elements iterated by the given {@link Iterable}. */
 	private int count(final Iterable<?> iterable) {
 		if (iterable == null) return -1;
@@ -207,6 +275,27 @@ public class ModuleAdapter extends AbstractContextual {
 			count++;
 		}
 		return count;
+	}
+
+	/**
+	 * Scans the given list of parameters for a single item of image type (i.e., a
+	 * {@link Dataset}, {@link DatasetView} or {@link ImageDisplay}). This is
+	 * useful so that such items can be assigned a special name for the benefit of
+	 * OMERO clients.
+	 */
+	private ModuleItem<?> getSingleImage(final Iterable<ModuleItem<?>> items) {
+		ModuleItem<?> imageItem = null;
+		for (final ModuleItem<?> item : items) {
+			final Class<?> type = item.getType();
+			if (Dataset.class.isAssignableFrom(type) ||
+					DatasetView.class.isAssignableFrom(type) ||
+					ImageDisplay.class.isAssignableFrom(type))
+			{
+				if (imageItem == null) imageItem = item;
+				else return null; // multiple image parameters
+			}
+		}
+		return imageItem;
 	}
 
 	/**
