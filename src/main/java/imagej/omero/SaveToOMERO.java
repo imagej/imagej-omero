@@ -56,7 +56,8 @@ public class SaveToOMERO extends OMEROCommand {
 	@Override
 	public void run() {
 		final String omeroDestination =
-			"server=" + getServer() + //
+			"name=" + dataset.getName() + //
+			"&server=" + getServer() + //
 			"&port=" + getPort() + //
 			"&user=" + getUser() + //
 			"&password=" + getPassword() + //
