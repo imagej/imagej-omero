@@ -39,7 +39,8 @@ public abstract class OMEROCommand extends ContextCommand {
 	@Parameter
 	private String user;
 
-	@Parameter
+	// TEMP: Use TextWidget.PASSWORD_STYLE constant once it is released.
+	@Parameter(style = "password")
 	private String password;
 
 	// -- OMEROCommand methods --
