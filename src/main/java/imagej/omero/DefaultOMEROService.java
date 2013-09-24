@@ -308,8 +308,7 @@ public class DefaultOMEROService extends AbstractService implements
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
 		final String omeroSource =
-			"server=localhost&port=4064" + // FIXME: Eliminate hardcoded values!
-			"&sessionID=" + client.getSessionId() + "&imageID=" + imageID + ".omero";
+			credentials(client) + "&imageID=" + imageID + ".omero";
 
 		// TEMP: Until SCIFIO issue #63 is resolved.
 		// https://github.com/scifio/scifio/pull/63
@@ -328,9 +327,7 @@ public class DefaultOMEROService extends AbstractService implements
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
 		final String omeroDestination =
-			"name=" + dataset.getName() + //
-			"&server=localhost&port=4064" + // FIXME: Eliminate hardcoded values!
-			"&sessionID=" + client.getSessionId() + ".omero";
+			"name=" + dataset.getName() + "&" + credentials(client) + ".omero";
 
 		// TEMP: Until SCIFIO issue #63 is resolved.
 		// https://github.com/scifio/scifio/pull/63
@@ -345,6 +342,16 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	// -- Helper methods --
+
+	/**
+	 * Generates an OMERO source string fragment with credentials matching the
+	 * given client.
+	 */
+	private String credentials(final omero.client client) {
+		return "server=" + client.getProperty("omero.host") + //
+			"&port=" + client.getProperty("omero.port") + //
+			"&sessionID=" + client.getSessionId();
+	}
 
 	/**
 	 * Converts the given POJO to the specified type (if given).
