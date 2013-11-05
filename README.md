@@ -38,18 +38,17 @@ If you wish to give it a test drive, the steps are:
 
 ### Set up OMERO
 
-*   Build OMERO from [joshmoore](https://github.com/joshmoore)'s
-    [jy-scripts](https://github.com/joshmoore/openmicroscopy/compare/jy-scripts)
-    branch:
+*   Download and unpack the latest
+    [OMERO 5.0.0-beta2 development build](http://hudson.openmicroscopy.org.uk/job/OMERO-trunk-ice34/lastSuccessfulBuild/artifact/src/target/).
+    (Or if you prefer, you can build the `develop` branch from source.)
 
-    ```shell
-    git clone git://github.com/joshmoore/openmicroscopy
-    cd openmicroscopy
-    ./build.py
-    ```
+*   Follow the
+    [OMERO installation instructions](http://www.openmicroscopy.org/site/support/omero4/sysadmins/unix/server-installation.html)
+    to install prerequisites and configure your OMERO database,
+    if you have not already done so.
 
-*   Set your `OMERO_HOME` environment variable to point to the `dist` folder
-    of your OMERO build.
+*   Set your `OMERO_HOME` environment variable to point to your OMERO
+    installation.
 
 ### Set up Jython
 
