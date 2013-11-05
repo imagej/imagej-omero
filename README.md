@@ -31,7 +31,10 @@ The following ImageJ commands are tested and working:
 * [GradientImage](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/simple-commands/src/main/java/GradientImage.java):
   an example which takes numbers as input and produces an image.
 
-The code is currently very experimental. If you wish to give it a test drive, the steps are:
+Translation of some complex data types is not yet implemented. In particular,
+ImageJ results tables are not translated to and from OMERO.tables structures.
+
+If you wish to give it a test drive, the steps are:
 
 ### Set up OMERO
 
