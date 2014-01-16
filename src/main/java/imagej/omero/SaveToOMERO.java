@@ -2,7 +2,7 @@
  * #%L
  * Server- and client-side communication between ImageJ and OMERO.
  * %%
- * Copyright (C) 2013 Board of Regents of the University of
+ * Copyright (C) 2013 - 2014 Board of Regents of the University of
  * Wisconsin-Madison.
  * %%
  * This program is free software: you can redistribute it and/or modify
