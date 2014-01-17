@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>1.79</version>
+		<version>1.126</version>
 		<relativePath />
 	</parent>
 
@@ -58,23 +58,12 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<artifactId>maven-source-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>buildnumber-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>license-maven-plugin</artifactId>
 				<configuration>
 					<licenseName>gpl_v2</licenseName>
 					<organizationName>Board of Regents of the University of
 Wisconsin-Madison.</organizationName>
-					<projectName>${project.description}</projectName>
-					<addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
-					<canUpdateDescription>true</canUpdateDescription>
-					<canUpdateCopyright>true</canUpdateCopyright>
 				</configuration>
 			</plugin>
 		</plugins>
