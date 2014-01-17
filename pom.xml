@@ -69,7 +69,6 @@
 				<artifactId>license-maven-plugin</artifactId>
 				<configuration>
 					<licenseName>gpl_v2</licenseName>
-					<inceptionYear>2013</inceptionYear>
 					<organizationName>Board of Regents of the University of
 Wisconsin-Madison.</organizationName>
 					<projectName>${project.description}</projectName>
