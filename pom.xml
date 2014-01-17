@@ -112,8 +112,8 @@ Wisconsin-Madison.</organizationName>
 	</developers>
 
 	<issueManagement>
-		<system>Trac</system>
-		<url>http://trac.imagej.net/</url>
+		<system>GitHub Issues</system>
+		<url>https://github.com/imagej/imagej-omero/issues</url>
 	</issueManagement>
 
 	<ciManagement>
