@@ -118,7 +118,7 @@ Wisconsin-Madison.</organizationName>
 
 	<ciManagement>
 		<system>Jenkins</system>
-		<url>http://jenkins.imagej.net/</url>
+		<url>http://jenkins.imagej.net/job/ImageJ-OMERO/</url>
 	</ciManagement>
 
 	<mailingLists>
