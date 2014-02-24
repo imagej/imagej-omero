@@ -52,6 +52,7 @@ import org.scijava.plugin.Plugin;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.util.ClassUtils;
+import org.scijava.util.ConversionUtils;
 
 /**
  * Default ImageJ service for managing OMERO data conversion.
@@ -113,7 +114,7 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 
 		// primitive types
-		final Class<?> saneType = ClassUtils.getNonprimitiveType(type);
+		final Class<?> saneType = ConversionUtils.getNonprimitiveType(type);
 		if (Boolean.class.isAssignableFrom(saneType)) {
 			return omero.rtypes.rbool(false);
 		}
@@ -363,8 +364,8 @@ public class DefaultOMEROService extends AbstractService implements
 	 * <ol>
 	 * <li>Many ImageJ types (such as {@link imagej.util.ColorRGB}) are mapped to
 	 * {@link String} for use with OMERO. We lean on the SciJava Common
-	 * {@link ClassUtils#convert(Object, Class)} method to handle conversion of
-	 * such types back to ImageJ's expected type for the parameter.</li>
+	 * {@link ConversionUtils#convert(Object, Class)} method to handle conversion
+	 * of such types back to ImageJ's expected type for the parameter.</li>
 	 * <li>ImageJ's image types (i.e., {@link Dataset}, {@link DatasetView} and
 	 * {@link ImageDisplay}) are mapped to {@code long} since OMERO communicates
 	 * about images using image IDs. Work must be done to download the image from
@@ -419,7 +420,7 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 
 		// use SciJava Common's automagical conversion routine
-		final T converted = ClassUtils.convert(value, type);
+		final T converted = ConversionUtils.convert(value, type);
 		if (converted == null) {
 			log.error("Cannot convert: " + value.getClass().getName() + " to " +
 				type.getName());
