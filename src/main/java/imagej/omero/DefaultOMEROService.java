@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.scijava.Optional;
 import org.scijava.log.LogService;
 import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
@@ -59,7 +60,7 @@ import org.scijava.util.ClassUtils;
  */
 @Plugin(type = Service.class)
 public class DefaultOMEROService extends AbstractService implements
-	OMEROService
+	OMEROService, Optional
 {
 
 	// -- Parameters --
