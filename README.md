@@ -38,13 +38,7 @@ If you wish to give it a test drive, the steps are:
 
 ### Set up OMERO
 
-*   Download and unpack the latest
-    [OMERO 5.0.0-beta2 development build](http://hudson.openmicroscopy.org.uk/job/OMERO-trunk-ice34/lastSuccessfulBuild/artifact/src/target/).
-    (Or if you prefer, you can build the `develop` branch from source.)
-
-*   Follow the
-    [OMERO installation instructions](http://www.openmicroscopy.org/site/support/omero4/sysadmins/unix/server-installation.html)
-    to install prerequisites and configure your OMERO database,
+*   [Install OMERO 5](http://www.openmicroscopy.org/site/support/omero5/sysadmins/unix/server-installation.html)
     if you have not already done so.
 
 *   Set your `OMERO_HOME` environment variable to point to your OMERO
