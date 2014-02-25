@@ -56,7 +56,7 @@ public class OMEROSession implements Closeable {
 
 	// -- Fields --
 
-	private OMEROFormat.Metadata meta;
+	private final OMEROFormat.Metadata meta;
 	private omero.client client;
 	private ServiceFactoryPrx session;
 
@@ -107,7 +107,7 @@ public class OMEROSession implements Closeable {
 	public omero.client getClient() {
 		return client;
 	}
-	
+
 	public ServiceFactoryPrx getSession() {
 		return session;
 	}
@@ -155,8 +155,8 @@ public class OMEROSession implements Closeable {
 		final long imageID = meta.getImageID();
 		if (imageID == 0) return 0;
 		final List<Image> images =
-				session.getContainerService().getImages("Image",
-					Arrays.asList(imageID), null);
+			session.getContainerService().getImages("Image", Arrays.asList(imageID),
+				null);
 		if (images == null || images.isEmpty()) {
 			throw new IllegalArgumentException("Invalid image ID: " + imageID);
 		}
@@ -191,7 +191,7 @@ public class OMEROSession implements Closeable {
 		return new ImageData(results.get(0));
 	}
 
-	private PixelsType getPixelsType(int pixelType) throws ServerError,
+	private PixelsType getPixelsType(final int pixelType) throws ServerError,
 		FormatException
 	{
 		return getPixelsType(FormatTools.getPixelTypeString(pixelType));
