@@ -18,7 +18,7 @@
 	<inceptionYear>2013</inceptionYear>
 
 	<properties>
-		<scifio.version>0.7.0</scifio.version>
+		<scifio.version>0.8.0</scifio.version>
 	</properties>
 
 	<dependencies>

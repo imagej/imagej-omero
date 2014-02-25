@@ -37,8 +37,8 @@ import io.scif.Field;
 import io.scif.Format;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
+import io.scif.MetadataService;
 import io.scif.Plane;
-import io.scif.SCIFIO;
 import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
 
@@ -55,6 +55,7 @@ import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.model.Pixels;
 
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 /**
@@ -343,12 +344,15 @@ public class OMEROFormat extends AbstractFormat {
 
 	public static class Parser extends AbstractParser<Metadata> {
 
+		@Parameter
+		private MetadataService metadataService;
+
 		@Override
 		public void typedParse(final RandomAccessInputStream stream,
 			final Metadata meta) throws IOException, FormatException
 		{
 			// parse OMERO credentials from source string
-			parseCredentials(scifio(), stream.getFileName(), meta);
+			parseCredentials(metadataService, stream.getFileName(), meta);
 
 			// initialize OMERO session
 			final OMEROSession session;
@@ -445,6 +449,9 @@ public class OMEROFormat extends AbstractFormat {
 
 	public static class Writer extends AbstractWriter<Metadata> {
 
+		@Parameter
+		private MetadataService metadataService;
+
 		private OMEROSession session;
 		private RawPixelsStorePrx store;
 
@@ -498,7 +505,7 @@ public class OMEROFormat extends AbstractFormat {
 				// parse OMERO credentials from destination string
 				// HACK: Get destination string from the metadata's dataset name.
 				// This is set in the method: AbstractWriter#setDest(String, int).
-				parseCredentials(scifio(), meta.getDatasetName(), meta);
+				parseCredentials(metadataService, meta.getDatasetName(), meta);
 
 				session = createSession(meta);
 				store = session.createPixels();
@@ -512,14 +519,14 @@ public class OMEROFormat extends AbstractFormat {
 
 	// -- Helper methods --
 
-	private static void parseCredentials(final SCIFIO scifio,
+	private static void parseCredentials(final MetadataService metadataService,
 		final String string, final Metadata meta)
 	{
 		// strip extension
 		final String noExt = string.substring(0, string.lastIndexOf("."));
 
-		final Map<String, Object> map = scifio.metadata().parse(noExt, "&");
-		scifio.metadata().populate(meta, map);
+		final Map<String, Object> map = metadataService.parse(noExt, "&");
+		metadataService.populate(meta, map);
 	}
 
 	private static OMEROSession createSession(final Metadata meta)
