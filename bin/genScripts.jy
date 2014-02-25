@@ -1,5 +1,5 @@
-import os, imagej.omero.ScriptGenerator as sg
+import os, sys, imagej.omero.ScriptGenerator as sg
 scriptDir = os.getenv('OMERO_HOME') + '/lib/scripts/imagej'
 if not os.path.isdir(scriptDir):
 	os.mkdir(scriptDir)
-sg.main(scriptDir)
+sg.main([scriptDir] + sys.argv[1:])
