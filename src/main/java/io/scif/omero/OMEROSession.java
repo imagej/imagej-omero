@@ -166,10 +166,11 @@ public class OMEROSession implements Closeable {
 	private ImageData createImage() throws ServerError, FormatException {
 		// create a new Image
 		final ImageMetadata imageMeta = meta.get(0);
-		final int xLen = imageMeta.getAxisLength(Axes.X);
-		final int yLen = imageMeta.getAxisLength(Axes.Y);
-		final int zLen = imageMeta.getAxisLength(Axes.Z);
-		final int tLen = imageMeta.getAxisLength(Axes.TIME);
+		// FIXME: Check before casting.
+		final int xLen = (int) imageMeta.getAxisLength(Axes.X);
+		final int yLen = (int) imageMeta.getAxisLength(Axes.Y);
+		final int zLen = (int) imageMeta.getAxisLength(Axes.Z);
+		final int tLen = (int) imageMeta.getAxisLength(Axes.TIME);
 		final int sizeX = xLen == 0 ? 1 : xLen;
 		final int sizeY = yLen == 0 ? 1 : yLen;
 		final int sizeZ = zLen == 0 ? 1 : zLen;

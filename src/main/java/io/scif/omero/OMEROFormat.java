@@ -325,7 +325,7 @@ public class OMEROFormat extends AbstractFormat {
 			final CalibratedAxis tAxis = new DefaultCalibratedAxis(Axes.TIME);
 			if (physSizeT != null) tAxis.setCalibration(physSizeT);
 			final CalibratedAxis[] axes = { xAxis, yAxis, zAxis, cAxis, tAxis };
-			final int[] axisLengths = { sizeX, sizeY, sizeZ, sizeC, sizeT };
+			final long[] axisLengths = { sizeX, sizeY, sizeZ, sizeC, sizeT };
 
 			// obtain pixel type
 			final int pixType = FormatTools.pixelTypeFromString(pixelType);
@@ -341,10 +341,6 @@ public class OMEROFormat extends AbstractFormat {
 			// TEMP: Until SCIFIO issue #62 is resolved
 			// https://github.com/scifio/scifio/issues/62
 			imageMeta.setBitsPerPixel(FormatTools.getBitsPerPixel(pixType));
-
-			// TEMP: Until SCIFIO issue #64 is resolved
-			// https://github.com/scifio/scifio/issues/64
-			imageMeta.setPlaneCount(sizeZ * sizeC * sizeT);
 		}
 
 	}
@@ -395,7 +391,6 @@ public class OMEROFormat extends AbstractFormat {
 			session.close();
 		}
 
-
 	}
 
 	public static class Reader extends ByteArrayReader<Metadata> {
@@ -404,16 +399,26 @@ public class OMEROFormat extends AbstractFormat {
 		private RawPixelsStorePrx store;
 
 		@Override
-		public ByteArrayPlane openPlane(final int imageIndex, final int planeIndex,
-			final ByteArrayPlane plane, final int x, final int y, final int w,
-			final int h) throws FormatException, IOException
+		public ByteArrayPlane openPlane(final int imageIndex,
+			final long planeIndex, final ByteArrayPlane plane, final long[] planeMin,
+			final long[] planeMax) throws FormatException, IOException
 		{
 			// TODO: Consider whether to reuse OMERO session from the parsing step.
 			if (session == null) initSession();
 
-			final int[] zct = FormatTools.getZCTCoords(this, imageIndex, planeIndex);
+			final long[] pos =
+				FormatTools.rasterToPosition(imageIndex, planeIndex, this);
+			// FIXME: Check before array access, and before casting.
+			final int z = (int) pos[0];
+			final int c = (int) pos[1];
+			final int t = (int) pos[2];
 			try {
-				final byte[] tile = store.getTile(zct[0], zct[1], zct[2], x, y, w, h);
+				// FIXME: Check before array access, and before casting.
+				final int x = (int) planeMin[0];
+				final int y = (int) planeMin[1];
+				final int w = (int) (planeMax[0] - planeMin[0] + 1);
+				final int h = (int) (planeMax[1] - planeMin[1] + 1);
+				final byte[] tile = store.getTile(z, c, t, x, y, w, h);
 				plane.setData(tile);
 			}
 			catch (final ServerError err) {
@@ -448,18 +453,22 @@ public class OMEROFormat extends AbstractFormat {
 		private RawPixelsStorePrx store;
 
 		@Override
-		public void savePlane(final int imageIndex, final int planeIndex,
-			final Plane plane, final int x, final int y, final int w, final int h)
+		public void savePlane(final int imageIndex, final long planeIndex,
+			final Plane plane, final long[] planeMin, final long[] planeMax)
 			throws FormatException, IOException
 		{
 			// TODO: Consider whether to reuse OMERO session from somewhere else.
 			if (session == null) initSession();
 
 			final byte[] bytes = plane.getBytes();
-			final int[] zct =
-				FormatTools.getZCTCoords(getMetadata(), imageIndex, planeIndex);
+			final long[] pos =
+				FormatTools.rasterToPosition(imageIndex, planeIndex, getMetadata());
+			// FIXME: Check before array access, and before casting.
+			final int z = (int) pos[0];
+			final int c = (int) pos[1];
+			final int t = (int) pos[2];
 			try {
-				store.setPlane(bytes, zct[0], zct[1], zct[2]);
+				store.setPlane(bytes, z, c, t);
 			}
 			catch (final ServerError err) {
 				throw new FormatException("Error writing to OMERO: imageIndex=" +
@@ -514,7 +523,7 @@ public class OMEROFormat extends AbstractFormat {
 		final String noExt = string.substring(0, string.lastIndexOf("."));
 
 		// TODO: Use scifio.metadata() instead, once it has been released.
-		final Map<String, String> map =
+		final Map<String, Object> map =
 			scifio.get(MetadataService.class).parse(noExt, "&");
 		scifio.get(MetadataService.class).populate(meta, map);
 	}
