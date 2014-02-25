@@ -24,7 +24,6 @@
 package imagej.omero;
 
 import imagej.command.Command;
-import imagej.command.CommandService;
 import imagej.data.Dataset;
 import imagej.data.display.DatasetView;
 import imagej.data.display.ImageDisplay;
@@ -69,9 +68,6 @@ public class ModuleAdapter extends AbstractContextual {
 
 	@Parameter
 	private OMEROService omeroService;
-
-	@Parameter
-	private CommandService commandService;
 
 	@Parameter
 	private ModuleService moduleService;
@@ -133,7 +129,7 @@ public class ModuleAdapter extends AbstractContextual {
 
 		// execute ImageJ module
 		log.debug(info.getTitle() + ": executing module");
-		final Future<Module> future = commandService.run(info, inputMap);
+		final Future<Module> future = moduleService.run(info, true, inputMap);
 		final Module module = moduleService.waitFor(future);
 
 		// populate outputs
