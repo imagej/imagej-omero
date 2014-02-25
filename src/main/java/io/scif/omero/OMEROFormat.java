@@ -48,7 +48,8 @@ import java.util.Map;
 
 import net.imglib2.meta.Axes;
 import net.imglib2.meta.CalibratedAxis;
-import net.imglib2.meta.DefaultCalibratedAxis;
+import net.imglib2.meta.axis.DefaultLinearAxis;
+import net.imglib2.meta.axis.LinearAxis;
 import omero.RDouble;
 import omero.RInt;
 import omero.ServerError;
@@ -314,16 +315,16 @@ public class OMEROFormat extends AbstractFormat {
 			if (getImageCount() > 0) return; // already populated
 
 			// construct dimensional axes
-			final CalibratedAxis xAxis = new DefaultCalibratedAxis(Axes.X);
-			if (physSizeX != null) xAxis.setCalibration(physSizeX);
-			final CalibratedAxis yAxis = new DefaultCalibratedAxis(Axes.Y);
-			if (physSizeY != null) yAxis.setCalibration(physSizeY);
-			final CalibratedAxis zAxis = new DefaultCalibratedAxis(Axes.Z);
-			if (physSizeZ != null) zAxis.setCalibration(physSizeZ);
-			final CalibratedAxis cAxis = new DefaultCalibratedAxis(Axes.CHANNEL);
-			if (physSizeC != null) cAxis.setCalibration(physSizeC);
-			final CalibratedAxis tAxis = new DefaultCalibratedAxis(Axes.TIME);
-			if (physSizeT != null) tAxis.setCalibration(physSizeT);
+			final LinearAxis xAxis = new DefaultLinearAxis(Axes.X);
+			if (physSizeX != null) xAxis.setScale(physSizeX);
+			final LinearAxis yAxis = new DefaultLinearAxis(Axes.Y);
+			if (physSizeY != null) yAxis.setScale(physSizeY);
+			final LinearAxis zAxis = new DefaultLinearAxis(Axes.Z);
+			if (physSizeZ != null) zAxis.setScale(physSizeZ);
+			final LinearAxis cAxis = new DefaultLinearAxis(Axes.CHANNEL);
+			if (physSizeC != null) cAxis.setScale(physSizeC);
+			final LinearAxis tAxis = new DefaultLinearAxis(Axes.TIME);
+			if (physSizeT != null) tAxis.setScale(physSizeT);
 			final CalibratedAxis[] axes = { xAxis, yAxis, zAxis, cAxis, tAxis };
 			final long[] axisLengths = { sizeX, sizeY, sizeZ, sizeC, sizeT };
 
