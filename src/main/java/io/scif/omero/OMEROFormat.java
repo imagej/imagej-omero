@@ -338,10 +338,6 @@ public class OMEROFormat extends AbstractFormat {
 			imageMeta.setPixelType(pixType);
 			imageMeta.setMetadataComplete(true);
 			imageMeta.setOrderCertain(true);
-
-			// TEMP: Until SCIFIO issue #62 is resolved
-			// https://github.com/scifio/scifio/issues/62
-			imageMeta.setBitsPerPixel(FormatTools.getBitsPerPixel(pixType));
 		}
 
 	}
