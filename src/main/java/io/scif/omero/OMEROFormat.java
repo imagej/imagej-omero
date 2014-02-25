@@ -39,6 +39,7 @@ import io.scif.FormatException;
 import io.scif.ImageMetadata;
 import io.scif.MetadataService;
 import io.scif.Plane;
+import io.scif.config.SCIFIOConfig;
 import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
 
@@ -74,8 +75,10 @@ public class OMEROFormat extends AbstractFormat {
 		return "OMERO";
 	}
 
+	// -- AbstractFormat methods --
+
 	@Override
-	public String[] getSuffixes() {
+	protected String[] makeSuffixArray() {
 		return new String[] { "omero" };
 	}
 
@@ -349,7 +352,8 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public void typedParse(final RandomAccessInputStream stream,
-			final Metadata meta) throws IOException, FormatException
+			final Metadata meta, final SCIFIOConfig config) throws IOException,
+			FormatException
 		{
 			// parse OMERO credentials from source string
 			parseCredentials(metadataService, stream.getFileName(), meta);
@@ -401,7 +405,8 @@ public class OMEROFormat extends AbstractFormat {
 		@Override
 		public ByteArrayPlane openPlane(final int imageIndex,
 			final long planeIndex, final ByteArrayPlane plane, final long[] planeMin,
-			final long[] planeMax) throws FormatException, IOException
+			final long[] planeMax, final SCIFIOConfig config) throws FormatException,
+			IOException
 		{
 			// TODO: Consider whether to reuse OMERO session from the parsing step.
 			if (session == null) initSession();
@@ -435,6 +440,12 @@ public class OMEROFormat extends AbstractFormat {
 			store = null;
 		}
 
+		@Override
+		protected String[] createDomainArray() {
+			// FIXME: Decide on the proper domains to report here.
+			return new String[] { FormatTools.LM_DOMAIN };
+		}
+
 		private void initSession() throws FormatException {
 			try {
 				session = createSession(getMetadata());
@@ -456,7 +467,7 @@ public class OMEROFormat extends AbstractFormat {
 		private RawPixelsStorePrx store;
 
 		@Override
-		public void savePlane(final int imageIndex, final long planeIndex,
+		public void writePlane(final int imageIndex, final long planeIndex,
 			final Plane plane, final long[] planeMin, final long[] planeMax)
 			throws FormatException, IOException
 		{
@@ -496,6 +507,11 @@ public class OMEROFormat extends AbstractFormat {
 			store = null;
 			if (session != null) session.close();
 			session = null;
+		}
+
+		@Override
+		protected String[] makeCompressionTypes() {
+			return new String[0];
 		}
 
 		private void initSession() throws FormatException {
