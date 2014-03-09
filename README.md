@@ -1,6 +1,6 @@
 This project provides interoperability between
-[ImageJ2](http://developer.imagej.net/) and the
-[OMERO server](https://www.openmicroscopy.org/site/support/omero4/).
+[ImageJ](http://developer.imagej.net/) and the
+[OMERO server](https://www.openmicroscopy.org/site/support/omero5/).
 
 ## ImageJ commands for working with OMERO
 
