@@ -310,7 +310,7 @@ public class DefaultOMEROService extends AbstractService implements
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
 		final String omeroSource =
-			credentials(client) + "&imageID=" + imageID + ".omero";
+			"omero:" + credentials(client) + "&imageID=" + imageID;
 
 		// TEMP: Until SCIFIO issue #63 is resolved.
 		// https://github.com/scifio/scifio/pull/63
@@ -329,7 +329,7 @@ public class DefaultOMEROService extends AbstractService implements
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
 		final String omeroDestination =
-			"name=" + dataset.getName() + "&" + credentials(client) + ".omero";
+			"omero:name=" + dataset.getName() + "&" + credentials(client);
 
 		// TEMP: Until SCIFIO issue #63 is resolved.
 		// https://github.com/scifio/scifio/pull/63
