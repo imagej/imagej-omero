@@ -27,7 +27,6 @@ import imagej.ImageJ;
 import imagej.module.Module;
 import imagej.module.ModuleInfo;
 
-import java.io.IOException;
 import java.util.Date;
 
 import org.scijava.AbstractContextual;
@@ -69,20 +68,14 @@ public class ScriptRunner extends AbstractContextual {
 	}
 
 	/** Invokes the given ImageJ module identifier as an OMERO script. */
-	public void invoke(final String id) throws omero.ServerError,
-		Glacier2.CannotCreateSessionException, Glacier2.PermissionDeniedException,
-		IOException
-	{
+	public void invoke(final String id) {
 		// look for a module matching the given identifier
 		final ModuleInfo info = ModuleUtils.findModule(ij.module(), id);
 		invoke(info);
 	}
 
 	/** Invokes the given ImageJ module as an OMERO script. */
-	public void invoke(final ModuleInfo info) throws omero.ServerError,
-		Glacier2.CannotCreateSessionException, Glacier2.PermissionDeniedException,
-		IOException
-	{
+	public void invoke(final ModuleInfo info) {
 		// initialize OMERO client session
 		final omero.client c = new omero.client();
 
@@ -96,6 +89,9 @@ public class ScriptRunner extends AbstractContextual {
 			final String parse = c.getProperty("omero.scripts.parse");
 			if (!parse.isEmpty()) adaptedModule.params();
 			else adaptedModule.launch();
+		}
+		catch (final Throwable t) {
+			ij.log().error(t);
 		}
 		finally {
 			c.__del__();
