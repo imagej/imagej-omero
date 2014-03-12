@@ -68,14 +68,14 @@ public class ScriptRunner extends AbstractContextual {
 	}
 
 	/** Invokes the given ImageJ module identifier as an OMERO script. */
-	public void invoke(final String id) {
+	public boolean invoke(final String id) {
 		// look for a module matching the given identifier
 		final ModuleInfo info = ModuleUtils.findModule(ij.module(), id);
-		invoke(info);
+		return invoke(info);
 	}
 
 	/** Invokes the given ImageJ module as an OMERO script. */
-	public void invoke(final ModuleInfo info) {
+	public boolean invoke(final ModuleInfo info) {
 		// initialize OMERO client session
 		final omero.client c = new omero.client();
 
@@ -92,10 +92,12 @@ public class ScriptRunner extends AbstractContextual {
 		}
 		catch (final Throwable t) {
 			ij.log().error(t);
+			return false;
 		}
 		finally {
 			c.__del__();
 		}
+		return true;
 	}
 
 	// -- Main method --
@@ -111,9 +113,11 @@ public class ScriptRunner extends AbstractContextual {
 		final ScriptRunner scriptRunner = new ScriptRunner();
 
 		// execute modules
+		int failed = 0;
 		for (final String id : args) {
 			System.err.println(new Date() + ": executing: " + id);
-			scriptRunner.invoke(id);
+			final boolean success = scriptRunner.invoke(id);
+			if (!success) failed++;
 		}
 
 		// clean up resources
@@ -122,7 +126,7 @@ public class ScriptRunner extends AbstractContextual {
 		System.err.println(new Date() + ": executions completed");
 
 		// shut down the JVM
-		System.exit(0);
+		System.exit(failed);
 	}
 
 }
