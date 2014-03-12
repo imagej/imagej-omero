@@ -37,6 +37,7 @@ import java.util.Date;
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
 import org.scijava.MenuPath;
+import org.scijava.UIDetails;
 
 /**
  * Generates Jython stubs for running ImageJ {@link Module}s as OMERO scripts.
@@ -76,9 +77,7 @@ public class ScriptGenerator extends AbstractContextual {
 			throw new IllegalArgumentException("Invalid directory: " + dir);
 		}
 		for (final ModuleInfo info : ij.module().getModules()) {
-			if (!(info instanceof Identifiable)) continue;
-			if (headlessOnly && !info.canRunHeadless()) continue;
-			generate(info, dir);
+			if (isValid(info, headlessOnly)) generate(info, dir);
 		}
 	}
 
@@ -158,6 +157,13 @@ public class ScriptGenerator extends AbstractContextual {
 		s = s + ".jy";
 
 		return s;
+	}
+
+	private boolean isValid(final ModuleInfo info, final boolean headlessOnly) {
+		if (!(info instanceof Identifiable)) return false;
+		if (headlessOnly && !info.canRunHeadless()) return false;
+		if (!UIDetails.APPLICATION_MENU_ROOT.equals(info.getMenuRoot())) return false;
+		return true;
 	}
 
 }
