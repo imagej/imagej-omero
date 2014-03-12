@@ -36,7 +36,7 @@ curl -s "http://maven.imagej.net/service/local/repositories/snapshots/content/or
 # -- Download and install ImageJ-OMERO --
 
 IJ_OMERO="ij-omero-0.1.0-SNAPSHOT.jar"
-SCIFIO_OMERO="scifio-omero-0.2.1.jar"
+SCIFIO_OMERO="scifio-omero-0.3.0-SNAPSHOT.jar"
 
 echo "-> downloading $IJ_OMERO"
 curl -s "$JENKINS/ImageJ-OMERO/$A/target/$IJ_OMERO" > "$IJ_DIR/jars/$IJ_OMERO"
