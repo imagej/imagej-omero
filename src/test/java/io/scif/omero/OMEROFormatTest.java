@@ -25,8 +25,11 @@
 
 package io.scif.omero;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import io.scif.Checker;
+import io.scif.FormatException;
 import io.scif.SCIFIO;
 
 import org.junit.Test;
@@ -45,11 +48,14 @@ public class OMEROFormatTest {
 		assertEquals("OMERO", omeroFormat.getFormatName());
 	}
 
-	/** Tests {@link OMEROFormat#getSuffixes()}. */
+	/** Tests the {@link OMEROFormat.Checker}. */
 	@Test
-	public void testGetSuffixes() {
+	public void testChecker() throws FormatException {
 		final OMEROFormat omeroFormat = getFormat();
-		assertArrayEquals(new String[] { "omero" }, omeroFormat.getSuffixes());
+		final Checker checker = omeroFormat.createChecker();
+		assertFalse(checker.isFormat("asdf.omero"));
+		assertTrue(checker.isFormat("omero:asdf"));
+		assertTrue(omeroFormat.getSuffixes().length == 0);
 	}
 
 	// -- Helper methods --
