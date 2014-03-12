@@ -548,10 +548,10 @@ public class OMEROFormat extends AbstractFormat {
 	private static void parseCredentials(final MetadataService metadataService,
 		final String string, final Metadata meta)
 	{
-		// strip extension
-		final String noExt = string.substring(0, string.lastIndexOf("."));
+		// strip prefix
+		final String noPrefix = string.replaceFirst("^omero:", "");
 
-		final Map<String, Object> map = metadataService.parse(noExt, "&");
+		final Map<String, Object> map = metadataService.parse(noPrefix, "&");
 		metadataService.populate(meta, map);
 	}
 
