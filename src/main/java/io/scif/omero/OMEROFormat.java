@@ -432,8 +432,8 @@ public class OMEROFormat extends AbstractFormat {
 				// FIXME: Check before array access, and before casting.
 				final int x = (int) planeMin[0];
 				final int y = (int) planeMin[1];
-				final int w = (int) (planeMax[0] - planeMin[0] + 1);
-				final int h = (int) (planeMax[1] - planeMin[1] + 1);
+				final int w = (int) (planeMax[0] - planeMin[0]);
+				final int h = (int) (planeMax[1] - planeMin[1]);
 				final byte[] tile = store.getTile(z, c, t, x, y, w, h);
 				plane.setData(tile);
 			}
