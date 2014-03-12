@@ -424,9 +424,9 @@ public class OMEROFormat extends AbstractFormat {
 			final long[] pos =
 				FormatTools.rasterToPosition(imageIndex, planeIndex, this);
 			// FIXME: Check before array access, and before casting.
-			final int z = (int) pos[0];
-			final int c = (int) pos[1];
-			final int t = (int) pos[2];
+			final int z = value(pos, 0);
+			final int c = value(pos, 1);
+			final int t = value(pos, 2);
 			try {
 				// FIXME: Check before array access, and before casting.
 				final int x = (int) planeMin[0];
@@ -441,6 +441,10 @@ public class OMEROFormat extends AbstractFormat {
 			}
 
 			return plane;
+		}
+
+		private int value(long[] pos, int i) {
+			return pos.length > i ? (int) pos[i] : 1;
 		}
 
 		@Override
