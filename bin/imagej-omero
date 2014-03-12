@@ -28,6 +28,11 @@ else
 	)
 fi
 
+# -- Download and install SciJava SLF4J logging --
+
+echo "-> downloading SciJava SLF4J logging"
+curl -s "http://maven.imagej.net/service/local/repositories/snapshots/content/org/scijava/scijava-log-slf4j/1.0.0-SNAPSHOT/scijava-log-slf4j-1.0.0.jar" > "$IJ_DIR/jars/scijava-log-slf4j-1.0.0.jar"
+
 # -- Download and install ImageJ-OMERO --
 
 IJ_OMERO="ij-omero-0.1.0-SNAPSHOT.jar"
