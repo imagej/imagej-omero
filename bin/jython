@@ -1,8 +1,15 @@
 #!/bin/sh
 if [ -z "$OMERO_HOME" ]
 then
-	echo "OMERO_HOME not set!"
-	exit 1
+	if [ -z "$PYTHONPATH" ]
+	then
+		echo "Neither OMERO_HOME nor PYTHONPATH is set."
+		exit 1
+	fi
+	# HACK: Extract OMERO_HOME from the Python path.
+	# OMERO 5.0.0 passes $OMERO_HOME/lib/python to the environment.
+	export OMERO_HOME="${PYTHONPATH#*:}"
+	export OMERO_HOME="${OMERO_HOME%*/lib/python}"
 fi
 export JYTHON_DIR="$(dirname "$0")"
 export JYTHON_LIB=$(echo "$JYTHON_DIR/jython-standalone-"*.jar)
