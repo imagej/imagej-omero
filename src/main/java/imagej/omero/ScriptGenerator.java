@@ -36,6 +36,7 @@ import java.util.Date;
 
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
+import org.scijava.MenuEntry;
 import org.scijava.MenuPath;
 import org.scijava.UIDetails;
 
@@ -98,8 +99,8 @@ public class ScriptGenerator extends AbstractContextual {
 		final String escapedID = id.replaceAll("\n", "\\\\n");
 
 		// write the stub
-		final String filename = formatFilename(info);
-		final File stubFile = new File(dir, filename);
+		final File stubFile = formatFilename(dir, info);
+		stubFile.getParentFile().mkdirs();
 		final PrintWriter out = new PrintWriter(new FileWriter(stubFile));
 		out.println("#!/usr/bin/env jython");
 		out.println("import imagej.omero.ScriptRunner, sys");
@@ -140,21 +141,35 @@ public class ScriptGenerator extends AbstractContextual {
 
 	// -- Helper methods --
 
-	private String formatFilename(final ModuleInfo info) {
+	private File formatFilename(File dir, final ModuleInfo info) {
 		final MenuPath menuPath = info.getMenuPath();
 
-		String s;
-		if (menuPath == null || menuPath.isEmpty()) s = info.getTitle();
-		else s = menuPath.getMenuString();
+		if (menuPath == null || menuPath.isEmpty())
+		{
+			return new File(dir, sanitize(info.getTitle()) + ".jy");
+		}
+
+		File rv = null;
+		for (final MenuEntry menu : menuPath) {
+			final String n = sanitize(menu.getName());
+			if (rv == null) {
+				rv = new File(dir, n);
+			}
+			else {
+				rv = new File(rv, n);
+			}
+		}
+		return rv == null ? null : new File(rv.getParent(), rv.getName() + ".jy");
+
+	}
+
+	private String sanitize(final String str) {
 
 		// replace undesirable characters (space, slash and backslash)
-		s = s.replaceAll("[ /\\\\]", "_");
+		String s = str.replaceAll("[ /\\\\]", "_");
 
 		// remove ellipsis if present
 		if (s.endsWith("...")) s = s.substring(0, s.length() - 3);
-
-		// add Jython file extension
-		s = s + ".jy";
 
 		return s;
 	}
