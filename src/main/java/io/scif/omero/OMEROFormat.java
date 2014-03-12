@@ -422,19 +422,14 @@ public class OMEROFormat extends AbstractFormat {
 			// TODO: Consider whether to reuse OMERO session from the parsing step.
 			if (session == null) initSession();
 
-			final long[] pos =
-				FormatTools.rasterToPosition(imageIndex, planeIndex, this);
-			// FIXME: Check before array access, and before casting.
-			final int z = value(pos, 0);
-			final int c = value(pos, 1);
-			final int t = value(pos, 2);
+			final int[] zct = zct(imageIndex, planeIndex, getMetadata());
 			try {
 				// FIXME: Check before array access, and before casting.
 				final int x = (int) planeMin[0];
 				final int y = (int) planeMin[1];
 				final int w = (int) (planeMax[0] - planeMin[0]);
 				final int h = (int) (planeMax[1] - planeMin[1]);
-				final byte[] tile = store.getTile(z, c, t, x, y, w, h);
+				final byte[] tile = store.getTile(zct[0], zct[1], zct[2], x, y, w, h);
 				plane.setData(tile);
 			}
 			catch (final ServerError err) {
@@ -442,10 +437,6 @@ public class OMEROFormat extends AbstractFormat {
 			}
 
 			return plane;
-		}
-
-		private int value(long[] pos, int i) {
-			return pos.length > i ? (int) pos[i] : 1;
 		}
 
 		@Override
@@ -490,14 +481,9 @@ public class OMEROFormat extends AbstractFormat {
 			if (session == null) initSession();
 
 			final byte[] bytes = plane.getBytes();
-			final long[] pos =
-				FormatTools.rasterToPosition(imageIndex, planeIndex, getMetadata());
-			// FIXME: Check before array access, and before casting.
-			final int z = (int) pos[0];
-			final int c = (int) pos[1];
-			final int t = (int) pos[2];
+			final int[] zct = zct(imageIndex, planeIndex, getMetadata());
 			try {
-				store.setPlane(bytes, z, c, t);
+				store.setPlane(bytes, zct[0], zct[1], zct[2]);
 			}
 			catch (final ServerError err) {
 				throw new FormatException("Error writing to OMERO: imageIndex=" +
@@ -548,6 +534,22 @@ public class OMEROFormat extends AbstractFormat {
 
 	}
 
+	// -- Utility methods --
+
+	public static int[] zct(final int imageIndex, final long planeIndex,
+		final Metadata metadata)
+	{
+		final long[] pos =
+			FormatTools.rasterToPosition(imageIndex, planeIndex, metadata);
+		final int zIndex = metadata.get(imageIndex).getAxisIndex(Axes.Z);
+		final int tIndex = metadata.get(imageIndex).getAxisIndex(Axes.TIME);
+		final int cIndex = metadata.get(imageIndex).getAxisIndex(Axes.CHANNEL);
+		final int z = value(pos, zIndex);
+		final int c = value(pos, tIndex);
+		final int t = value(pos, cIndex);
+		return new int[] { z, c, t };
+	}
+
 	// -- Helper methods --
 
 	private static void parseCredentials(final MetadataService metadataService,
@@ -584,6 +586,15 @@ public class OMEROFormat extends AbstractFormat {
 
 	private static FormatException connectionException(final Throwable cause) {
 		return new FormatException("Error connecting to OMERO", cause);
+	}
+
+	private static int value(final long[] pos, final int i) {
+		if (i < 0 || i >= pos.length) return 0;
+		final long value = pos[i];
+		if (value > Integer.MAX_VALUE) {
+			throw new IllegalArgumentException("Index too large: " + value);
+		}
+		return (int) value;
 	}
 
 }
