@@ -27,6 +27,7 @@ package io.scif.omero;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
+import io.scif.AbstractChecker;
 import io.scif.AbstractFormat;
 import io.scif.AbstractMetadata;
 import io.scif.AbstractParser;
@@ -79,10 +80,19 @@ public class OMEROFormat extends AbstractFormat {
 
 	@Override
 	protected String[] makeSuffixArray() {
-		return new String[] { "omero" };
+		return new String[0];
 	}
 
 	// -- Nested classes --
+
+	public static class Checker extends AbstractChecker {
+
+		@Override
+		public boolean isFormat(final String name, final SCIFIOConfig config) {
+			return name != null && name.startsWith("omero:");
+		}
+
+	}
 
 	public static class Metadata extends AbstractMetadata {
 
