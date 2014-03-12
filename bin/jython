@@ -1,9 +1,8 @@
 #!/bin/sh
 if [ -z "$OMERO_HOME" ]
 then
-	export OMERO_HOME="$HOME/apps/OMERO.server-5.0.0-rc2-ice35-b14"
-#	echo "OMERO_HOME not set!"
-#	exit 1
+	echo "OMERO_HOME not set!"
+	exit 1
 fi
 export JYTHON_DIR="$(dirname "$0")"
 export JYTHON_LIB=$(echo "$JYTHON_DIR/jython-standalone-"*.jar)
