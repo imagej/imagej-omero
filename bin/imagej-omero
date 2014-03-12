@@ -14,14 +14,19 @@ IJ_DIR="$OMERO_HOME/lib/ImageJ.app"
 
 IJ_APP="imagej-2.0.0-SNAPSHOT-application.zip"
 
-echo "-> downloading $IJ_APP"
-curl -s "$JENKINS/ImageJ/$A/app/target/$IJ_APP" > "$OMERO_HOME/lib/$IJ_APP"
-echo "-> extracting $IJ_APP"
-(
-	cd "$OMERO_HOME/lib" &&
-	unzip -q "$IJ_APP" &&
-	rm "$IJ_APP"
-)
+if [ -d "$OMERO_HOME/lib/ImageJ.app" ]
+then
+	echo "ImageJ installation already exists; skipping."
+else
+	echo "-> downloading $IJ_APP"
+	curl -s "$JENKINS/ImageJ/$A/app/target/$IJ_APP" > "$OMERO_HOME/lib/$IJ_APP"
+	echo "-> extracting $IJ_APP"
+	(
+		cd "$OMERO_HOME/lib" &&
+		unzip -q "$IJ_APP" &&
+		rm "$IJ_APP"
+	)
+fi
 
 # -- Download and install ImageJ-OMERO --
 
