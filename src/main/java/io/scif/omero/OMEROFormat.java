@@ -80,7 +80,7 @@ public class OMEROFormat extends AbstractFormat {
 
 	@Override
 	protected String[] makeSuffixArray() {
-		return new String[0];
+		return new String[] { "omero" };
 	}
 
 	// -- Nested classes --
@@ -89,7 +89,8 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public boolean isFormat(final String name, final SCIFIOConfig config) {
-			return name != null && name.startsWith("omero:");
+			if (name != null && name.startsWith("omero:")) return true;
+			return super.isFormat(name, config);
 		}
 
 	}
@@ -552,10 +553,11 @@ public class OMEROFormat extends AbstractFormat {
 	private static void parseCredentials(final MetadataService metadataService,
 		final String string, final Metadata meta)
 	{
-		// strip prefix
-		final String noPrefix = string.replaceFirst("^omero:", "");
+		// strip omero prefix and/or suffix
+		final String clean =
+			string.replaceFirst("^omero:", "").replaceFirst("\\.omero$", "");
 
-		final Map<String, Object> map = metadataService.parse(noPrefix, "&");
+		final Map<String, Object> map = metadataService.parse(clean, "&");
 		metadataService.populate(meta, map);
 	}
 

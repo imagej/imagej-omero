@@ -53,9 +53,10 @@ public class OMEROFormatTest {
 	public void testChecker() throws FormatException {
 		final OMEROFormat omeroFormat = getFormat();
 		final Checker checker = omeroFormat.createChecker();
-		assertFalse(checker.isFormat("asdf.omero"));
+		assertFalse(checker.isFormat("asdf"));
+		assertTrue(checker.isFormat("asdf.omero"));
 		assertTrue(checker.isFormat("omero:asdf"));
-		assertTrue(omeroFormat.getSuffixes().length == 0);
+		assertEquals("omero", omeroFormat.getSuffixes()[0]);
 	}
 
 	// -- Helper methods --
