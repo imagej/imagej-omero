@@ -95,5 +95,5 @@ echo "-> generating OMERO scripts"
 echo
 echo "To regenerate scripts, run:"
 echo "    cd $OMERO_HOME/lib"
-echo "    rm -rf scripts/imagej/*"
+echo "    rm -rf scripts/imagej"
 echo "    $GEN_SCRIPT_CMD"
