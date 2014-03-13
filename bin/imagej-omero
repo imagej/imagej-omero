@@ -43,6 +43,14 @@ fi
 echo "-> downloading SciJava SLF4J logging"
 curl -s "http://maven.imagej.net/service/local/repositories/snapshots/content/org/scijava/scijava-log-slf4j/1.0.0-SNAPSHOT/scijava-log-slf4j-1.0.0.jar" > "$IJ_DIR/jars/scijava-log-slf4j-1.0.0.jar"
 
+# -- Replace SCIFIO with development version --
+
+SCIFIO="scifio-0.9.5-SNAPSHOT.jar"
+
+echo "-> downloading $SCIFIO"
+rm "$IJ_DIR/jars/scifio-[0-9]*.jar"
+curl -s "$JENKINS/SCIFIO/$A/target/$SCIFIO" > "$IJ_DIR/jars/$SCIFIO"
+
 # -- Download and install ImageJ-OMERO --
 
 IJ_OMERO="ij-omero-0.1.0-SNAPSHOT.jar"
