@@ -23,15 +23,20 @@
 
 package imagej.omero;
 
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 import imagej.data.Dataset;
 import imagej.data.DatasetService;
 import imagej.data.display.DatasetView;
 import imagej.data.display.ImageDisplay;
 import imagej.data.display.ImageDisplayService;
+import imagej.data.table.Column;
+import imagej.data.table.DoubleColumn;
 import imagej.data.table.Table;
 import imagej.display.DisplayService;
 import imagej.module.ModuleItem;
 import io.scif.omero.OMEROCredentials;
+import io.scif.omero.OMEROSession;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +50,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import omero.ServerError;
+import omero.grid.TablePrx;
 
 import org.scijava.Optional;
 import org.scijava.log.LogService;
@@ -346,11 +354,76 @@ public class DefaultOMEROService extends AbstractService implements
 		return -1;
 	}
 
-	@Override
-	public void uploadTable(final OMEROCredentials credentials,
-		final Table<?, ?> table)
+	// FIXME add to interface
+	public <C extends Column<T>, T> void uploadTable(final OMEROCredentials credentials,
+		final String name, final Table<C, T> imagejTable) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException
 	{
-		throw new UnsupportedOperationException("Not yet implemented");
+		final OMEROSession session = new OMEROSession(credentials);
+		try {
+			final TablePrx t =
+					session.getClient().getSession().sharedResources().newTable(1, name);
+			if (t == null) {
+				throw new omero.ServerError(null, null, "Could not create table");
+			}
+			final omero.grid.Column[] columns =
+				new omero.grid.Column[imagejTable.getColumnCount()];
+			// 
+			for (int c = 0; c < columns.length; c++) {
+				columns[c] = createOMEROColumn(imagejTable.get(c), c);
+			}
+			t.initialize(columns);
+			// TODO: Can reuse OMERO column structs (from 0 index every time)
+			// to append rows in batches, in case there are too many.
+			// If we do this, we can report progress better.
+			for (int c = 0; c < columns.length; c++) {
+				populateOMEROColumn(imagejTable.get(c), columns[c]);
+			}
+			t.addData(columns);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	private omero.grid.Column createOMEROColumn(Column<?> imagejColumn, int index) {
+		// FIXME: need ImageJ to remember type of column via a getType() method
+		// For now, we hardcode.
+		omero.grid.Column omeroColumn;
+		if (imagejColumn instanceof DoubleColumn) {
+			omeroColumn = new omero.grid.DoubleColumn();
+		}
+		else {
+			final Class<?> type = imagejColumn.get(0).getClass();
+			throw new UnsupportedOperationException("Not yet implemented");
+			/* TODO:
+			BoolColumn
+			DoubleArrayColumn
+			DoubleColumn
+			FileColumn
+			FloatArrayColumn
+			ImageColumn
+			LongArrayColumn
+			LongColumn
+			MaskColumn
+			PlateColumn
+			RoiColumn
+			StringColumn
+			WellColumn
+			*/
+		}
+		omeroColumn.name = imagejColumn.getHeader();
+		if (omeroColumn.name == null) omeroColumn.name = "" + index;
+		return omeroColumn;
+	}
+
+	private void populateOMEROColumn(final Column<?> imagejColumn, final omero.grid.Column omeroColumn) {
+		if (imagejColumn instanceof DoubleColumn) {
+			final DoubleColumn doubleColumn = (DoubleColumn) imagejColumn;
+			final omero.grid.DoubleColumn omeroDColumn =
+				(omero.grid.DoubleColumn) omeroColumn;
+			omeroDColumn.values = doubleColumn.getArray();
+		}
 	}
 
 	// -- Helper methods --
