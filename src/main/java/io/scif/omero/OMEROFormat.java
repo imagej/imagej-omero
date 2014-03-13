@@ -57,6 +57,7 @@ import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.model.Pixels;
 
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -101,22 +102,7 @@ public class OMEROFormat extends AbstractFormat {
 		private String name;
 
 		@Field
-		private String server;
-
-		@Field
-		private int port = 4064;
-
-		@Field
-		private String sessionID;
-
-		@Field
-		private String user;
-
-		@Field
-		private String password;
-
-		@Field
-		private boolean encrypted;
+		private OMEROCredentials credentials;
 
 		@Field(label = "Image ID")
 		private long imageID;
@@ -163,28 +149,8 @@ public class OMEROFormat extends AbstractFormat {
 			return name;
 		}
 
-		public String getServer() {
-			return server;
-		}
-
-		public int getPort() {
-			return port;
-		}
-
-		public String getSessionID() {
-			return sessionID;
-		}
-
-		public String getUser() {
-			return user;
-		}
-
-		public String getPassword() {
-			return password;
-		}
-
-		public boolean isEncrypted() {
-			return encrypted;
+		public OMEROCredentials getCredentials() {
+			return credentials;
 		}
 
 		public long getImageID() {
@@ -243,28 +209,8 @@ public class OMEROFormat extends AbstractFormat {
 			this.name = name;
 		}
 
-		public void setServer(final String server) {
-			this.server = server;
-		}
-
-		public void setPort(final int port) {
-			this.port = port;
-		}
-
-		public void setSessionID(final String sessionID) {
-			this.sessionID = sessionID;
-		}
-
-		public void setUser(final String user) {
-			this.user = user;
-		}
-
-		public void setPassword(final String password) {
-			this.password = password;
-		}
-
-		public void setEncrypted(final boolean encrypted) {
-			this.encrypted = encrypted;
+		public void setCredentials(final OMEROCredentials credentials) {
+			this.credentials = credentials;
 		}
 
 		public void setImageID(final long imageID) {
@@ -367,14 +313,14 @@ public class OMEROFormat extends AbstractFormat {
 			FormatException
 		{
 			// parse OMERO credentials from source string
-			parseCredentials(metadataService, stream.getFileName(), meta);
+			parseArguments(metadataService, stream.getFileName(), meta);
 
 			// initialize OMERO session
 			final OMEROSession session;
 			final Pixels pix;
 			try {
 				session = createSession(meta);
-				pix = session.getPixelsInfo();
+				pix = session.getPixelsInfo(meta);
 			}
 			catch (final ServerError err) {
 				throw communicationException(err);
@@ -455,7 +401,7 @@ public class OMEROFormat extends AbstractFormat {
 		private void initSession() throws FormatException {
 			try {
 				session = createSession(getMetadata());
-				store = session.openPixels();
+				store = session.openPixels(getMetadata());
 			}
 			catch (final ServerError err) {
 				throw communicationException(err);
@@ -468,6 +414,9 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Parameter
 		private MetadataService metadataService;
+
+		@Parameter
+		private LogService log;
 
 		private OMEROSession session;
 		private RawPixelsStorePrx store;
@@ -483,6 +432,11 @@ public class OMEROFormat extends AbstractFormat {
 			final byte[] bytes = plane.getBytes();
 			final int[] zct = zct(imageIndex, planeIndex, getMetadata());
 			try {
+				log.info("writePlane: bytes = " + bytes.length);
+				log.info("writePlane: z = " + zct[0] + " c = " + zct[1] + " t = " + zct[2]);
+				log.info("writePlane: w = " + plane.getImageMetadata().getAxisLength(0));
+				log.info("writePlane: h = " + plane.getImageMetadata().getAxisLength(1));
+				log.info("writePlane: num planar = " + plane.getImageMetadata().getPlanarAxisCount());
 				store.setPlane(bytes, zct[0], zct[1], zct[2]);
 			}
 			catch (final ServerError err) {
@@ -522,10 +476,10 @@ public class OMEROFormat extends AbstractFormat {
 				// parse OMERO credentials from destination string
 				// HACK: Get destination string from the metadata's dataset name.
 				// This is set in the method: AbstractWriter#setDest(String, int).
-				parseCredentials(metadataService, meta.getDatasetName(), meta);
+				parseArguments(metadataService, meta.getDatasetName(), meta);
 
 				session = createSession(meta);
-				store = session.createPixels();
+				store = session.createPixels(meta);
 			}
 			catch (final ServerError err) {
 				throw communicationException(err);
@@ -552,7 +506,7 @@ public class OMEROFormat extends AbstractFormat {
 
 	// -- Helper methods --
 
-	private static void parseCredentials(final MetadataService metadataService,
+	private static void parseArguments(final MetadataService metadataService,
 		final String string, final Metadata meta)
 	{
 		// strip omero prefix and/or suffix
@@ -560,6 +514,11 @@ public class OMEROFormat extends AbstractFormat {
 			string.replaceFirst("^omero:", "").replaceFirst("\\.omero$", "");
 
 		final Map<String, Object> map = metadataService.parse(clean, "&");
+		final OMEROCredentials credentials = new OMEROCredentials();
+		// populate OMERO credentials
+		metadataService.populate(credentials, map);
+		meta.setCredentials(credentials);
+		// populate other metadata: image ID, etc.
 		metadataService.populate(meta, map);
 	}
 
@@ -567,7 +526,7 @@ public class OMEROFormat extends AbstractFormat {
 		throws FormatException
 	{
 		try {
-			return new OMEROSession(meta);
+			return new OMEROSession(meta.getCredentials());
 		}
 		catch (final ServerError err) {
 			throw communicationException(err);

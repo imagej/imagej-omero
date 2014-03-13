@@ -56,45 +56,45 @@ public class OMEROSession implements Closeable {
 
 	// -- Fields --
 
-	private final OMEROFormat.Metadata meta;
 	private omero.client client;
 	private ServiceFactoryPrx session;
 
 	// -- Constructors --
 
-	public OMEROSession(final OMEROFormat.Metadata meta) throws ServerError,
+	public OMEROSession(final OMEROCredentials credentials) throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException
 	{
-		this(meta, null);
+		this(credentials, null);
 	}
 
-	public OMEROSession(final OMEROFormat.Metadata meta, final omero.client c)
+	public OMEROSession(final OMEROCredentials credentials, final omero.client c)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException
 	{
-		this.meta = meta;
-
 		// initialize the client
 		if (c == null) {
-			if (meta.getServer() != null) {
-				client = new omero.client(meta.getServer(), meta.getPort());
+			if (credentials.getServer() != null) {
+				client = new omero.client(credentials.getServer(), credentials.getPort());
 			}
 			else client = new omero.client();
 		}
 		else client = c;
 
 		// initialize the session (i.e., log in)
-		final String sessionID = meta.getSessionID();
+		final String sessionID = credentials.getSessionID();
 		if (sessionID != null) {
 			session = client.createSession(sessionID, sessionID);
 		}
-		else if (meta.getUser() != null && meta.getPassword() != null) {
-			session = client.createSession(meta.getUser(), meta.getPassword());
+		else if (credentials.getUser() != null && credentials.getPassword() != null) {
+			final String user = credentials.getUser();
+			final String password = credentials.getPassword();
+			session = client.createSession(user, password);
+			credentials.setSessionID(client.getSessionId());
 		}
 		else {
 			session = client.createSession();
 		}
 
-		if (!meta.isEncrypted()) {
+		if (!credentials.isEncrypted()) {
 			client = client.createClient(false);
 			session = client.getSession();
 		}
@@ -113,21 +113,27 @@ public class OMEROSession implements Closeable {
 	}
 
 	/** Gets an OMERO {@code Pixels} descriptor */
-	public Pixels getPixelsInfo() throws ServerError {
-		return session.getPixelsService().retrievePixDescription(getPixelsID());
+	public Pixels getPixelsInfo(final OMEROFormat.Metadata meta)
+		throws ServerError
+	{
+		return session.getPixelsService().retrievePixDescription(getPixelsID(meta));
 	}
 
 	/** Obtains a raw pixels store for reading from the configured pixels ID. */
-	public RawPixelsStorePrx openPixels() throws ServerError {
+	public RawPixelsStorePrx openPixels(final OMEROFormat.Metadata meta)
+		throws ServerError
+	{
 		final RawPixelsStorePrx store = session.createRawPixelsStore();
-		store.setPixelsId(getPixelsID(), false);
+		store.setPixelsId(getPixelsID(meta), false);
 		return store;
 	}
 
 	/** Obtains a raw pixels store for writing to a newly created pixels ID. */
-	public RawPixelsStorePrx createPixels() throws ServerError, FormatException {
+	public RawPixelsStorePrx createPixels(final OMEROFormat.Metadata meta)
+		throws ServerError, FormatException
+	{
 		// create a new Image which will house the written pixels
-		final ImageData newImage = createImage();
+		final ImageData newImage = createImage(meta);
 
 		// configure the raw pixels store
 		final RawPixelsStorePrx store = session.createRawPixelsStore();
@@ -147,7 +153,7 @@ public class OMEROSession implements Closeable {
 
 	// -- Helper methods --
 
-	private long getPixelsID() throws ServerError {
+	private long getPixelsID(final OMEROFormat.Metadata meta) throws ServerError {
 		final long pixelsID = meta.getPixelsID();
 		if (pixelsID != 0) return pixelsID;
 
@@ -163,7 +169,9 @@ public class OMEROSession implements Closeable {
 		return images.get(0).getPixels(0).getId().getValue();
 	}
 
-	private ImageData createImage() throws ServerError, FormatException {
+	private ImageData createImage(final OMEROFormat.Metadata meta)
+		throws ServerError, FormatException
+	{
 		// create a new Image
 		final ImageMetadata imageMeta = meta.get(0);
 		// FIXME: Check before casting.
