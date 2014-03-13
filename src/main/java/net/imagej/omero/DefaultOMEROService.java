@@ -50,9 +50,15 @@ import net.imagej.display.ImageDisplayService;
 import net.imagej.legacy.LegacyService;
 import net.imagej.patcher.LegacyInjector;
 import net.imagej.table.Column;
+import net.imagej.table.DoubleColumn;
+import net.imagej.table.GenericColumn;
+import net.imagej.table.GenericTable;
+import net.imagej.table.ResultsTable;
 import net.imagej.table.Table;
 import omero.ServerError;
 import omero.grid.TablePrx;
+import omero.model.OriginalFile;
+import omero.model.OriginalFileI;
 
 import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
@@ -407,6 +413,77 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 		// FIXME: Return the actual table ID.
 		return -1;
+	}
+
+	@Override
+	public Table<?, ?> downloadTable(final OMEROCredentials credentials,
+		final long tableID) throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException
+	{
+		final OMEROSession session = new OMEROSession(credentials);
+		TablePrx tableService = null;
+		try {
+			final OriginalFile tableFile = new OriginalFileI(tableID, false);
+			tableService =
+				session.getClient().getSession().sharedResources().openTable(tableFile);
+			if (tableService == null) {
+				throw new omero.ServerError(null, null, "Could not open table");
+			}
+			final long rawRowCount = tableService.getNumberOfRows();
+			if (rawRowCount > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException("Table too large: " + rawRowCount +
+					" rows");
+			}
+			final int rowCount = (int) rawRowCount;
+			final omero.grid.Column[] omeroColumns = tableService.getHeaders();
+
+			final Table<?, ?> imageJTable =
+				TableUtils.createImageJTable(omeroColumns);
+			final int colCount = tableService.getHeaders().length;
+
+			final int batchSize = 24 * 1024;
+			int currentRow = 0;
+			final Column<?>[] imageJColumns = new Column<?>[colCount];
+			while (currentRow < rowCount) {
+				final long[] colIndices = new long[colCount];
+				for (int c = 0; c < colIndices.length; c++)
+					colIndices[c] = c;
+				final int rowsLeft = rowCount - currentRow;
+				final int rowsToRead = Math.min(batchSize, rowsLeft);
+				final omero.grid.Data data =
+					tableService.read(colIndices, currentRow, currentRow + rowsToRead);
+				assert (colCount == data.columns.length);
+				for (int c = 0; c < colCount; c++) {
+					if (imageJColumns[c] == null) {
+						imageJColumns[c] = TableUtils.createImageJColumn(data.columns[c]);
+						imageJColumns[c].setSize(rowCount);
+						// FIXME generics
+						if (imageJTable instanceof GenericTable) {
+							((GenericTable) imageJTable).add((GenericColumn) imageJColumns[c]);
+						}
+						else if (imageJTable instanceof ResultsTable) {
+							((ResultsTable) imageJTable).add((DoubleColumn) imageJColumns[c]);
+						}
+						else throw new IllegalStateException("You did something wrong");
+					}
+					// TODO: add fill API to ImageJ Column interface
+					TableUtils.populateImageJColumn(data.columns[c], imageJColumns[c],
+						currentRow);
+				}
+				currentRow += rowsToRead;
+			}
+			return imageJTable;
+		}
+		finally {
+			try {
+				if (tableService != null) {
+					tableService.close();
+				}
+			}
+			finally {
+				session.close();
+			}
+		}
 	}
 
 	// -- Helper methods --
