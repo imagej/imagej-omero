@@ -80,20 +80,17 @@ curl -s "$TUTORIALS/widget-demo/target/$WIDGET_DEMO" \
 GEN_SCRIPT="genScripts.jy"
 GEN_SCRIPT_URL="https://raw.github.com/imagej/imagej-omero/master/bin/$GEN_SCRIPT"
 GEN_SCRIPT_PATH="$OMERO_HOME/lib/$GEN_SCRIPT"
-GEN_SCRIPT_CMD="jython $GEN_SCRIPT"
+GEN_SCRIPT_CMD="jython $GEN_SCRIPT_PATH"
 
 echo "-> downloading $GEN_SCRIPT"
 curl -s "$GEN_SCRIPT_URL" > "$GEN_SCRIPT_PATH"
 
 echo "-> generating OMERO scripts"
 (
-	cd "$OMERO_HOME/lib" &&
 	$GEN_SCRIPT_CMD > /dev/null &&
-	echo "$(ls scripts/imagej/* | wc -l) scripts generated."
+	echo "$(ls "$OMERO_HOME/scripts/imagej/*" | wc -l) scripts generated."
 )
 
 echo
 echo "To regenerate scripts, run:"
-echo "    cd $OMERO_HOME/lib"
-echo "    rm -rf scripts/imagej"
 echo "    $GEN_SCRIPT_CMD"
