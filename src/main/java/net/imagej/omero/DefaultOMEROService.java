@@ -25,6 +25,8 @@
 
 package net.imagej.omero;
 
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 import ij.ImagePlus;
 import io.scif.Metadata;
 import io.scif.services.DatasetIOService;
@@ -47,6 +49,10 @@ import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
 import net.imagej.legacy.LegacyService;
 import net.imagej.patcher.LegacyInjector;
+import net.imagej.table.Column;
+import net.imagej.table.Table;
+import omero.ServerError;
+import omero.grid.TablePrx;
 
 import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
@@ -359,6 +365,47 @@ public class DefaultOMEROService extends AbstractService implements
 			final OMEROFormat.Metadata omeroMeta = (OMEROFormat.Metadata) metadata;
 			return omeroMeta.getImageID();
 		}
+		return -1;
+	}
+
+	@Override
+	public long uploadTable(final OMEROCredentials credentials,
+		final String name, final Table<?, ?> imageJTable) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException
+	{
+		final OMEROSession session = new OMEROSession(credentials);
+		TablePrx tableService = null;
+		try {
+			tableService =
+				session.getClient().getSession().sharedResources().newTable(1, name);
+			if (tableService == null) {
+				throw new omero.ServerError(null, null, "Could not create table");
+			}
+			final omero.grid.Column[] columns =
+				new omero.grid.Column[imageJTable.getColumnCount()];
+			for (int c = 0; c < columns.length; c++) {
+				columns[c] = TableUtils.createOMEROColumn(imageJTable.get(c), c);
+			}
+			tableService.initialize(columns);
+			// TODO: Can reuse OMERO column structs (from 0 index every time)
+			// to append rows in batches, in case there are too many.
+			// If we do this, we can report progress better.
+			for (int c = 0; c < columns.length; c++) {
+				TableUtils.populateOMEROColumn(imageJTable.get(c), columns[c]);
+			}
+			tableService.addData(columns);
+		}
+		finally {
+			try {
+				if (tableService != null) {
+					tableService.close();
+				}
+			}
+			finally {
+				session.close();
+			}
+		}
+		// FIXME: Return the actual table ID.
 		return -1;
 	}
 

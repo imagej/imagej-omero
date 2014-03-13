@@ -25,11 +25,17 @@
 
 package net.imagej.omero;
 
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
+
 import java.io.IOException;
 
 import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+import net.imagej.table.Column;
+import net.imagej.table.Table;
+import omero.ServerError;
 
 import org.scijava.module.ModuleItem;
 import org.scijava.service.Service;
@@ -92,5 +98,13 @@ public interface OMEROService extends Service {
 	 */
 	long uploadImage(omero.client client, Dataset dataset)
 		throws omero.ServerError, IOException;
+
+	/**
+	 * Uploads an ImageJ table to OMERO, returning the new table ID on the OMERO
+	 * server.
+	 */
+	long uploadTable(OMEROCredentials credentials, String name,
+		Table<?, ?> imageJTable) throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException;
 
 }
