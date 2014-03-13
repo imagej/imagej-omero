@@ -45,7 +45,7 @@ curl -s "http://maven.imagej.net/service/local/repositories/snapshots/content/or
 
 # -- Replace SCIFIO with development version --
 
-SCIFIO="scifio-0.9.5-SNAPSHOT.jar"
+SCIFIO="scifio-0.10.2-SNAPSHOT.jar"
 
 echo "-> downloading $SCIFIO"
 rm "$IJ_DIR/jars/scifio-[0-9]*.jar"
