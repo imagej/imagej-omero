@@ -28,8 +28,10 @@ import imagej.data.DatasetService;
 import imagej.data.display.DatasetView;
 import imagej.data.display.ImageDisplay;
 import imagej.data.display.ImageDisplayService;
+import imagej.data.table.Table;
 import imagej.display.DisplayService;
 import imagej.module.ModuleItem;
+import io.scif.omero.OMEROCredentials;
 
 import java.io.File;
 import java.io.IOException;
@@ -342,6 +344,13 @@ public class DefaultOMEROService extends AbstractService implements
 
 		// FIXME! Return correct Image ID
 		return -1;
+	}
+
+	@Override
+	public void uploadTable(final OMEROCredentials credentials,
+		final Table<?, ?> table)
+	{
+		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
 	// -- Helper methods --
