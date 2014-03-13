@@ -4,6 +4,16 @@
 
 set -e
 
+# -- Sanity checks --
+
+if [ ! -d "$OMERO_HOME/lib" ]
+then
+	echo "Please set OMERO_HOME to a valid OMERO installation."
+	exit 1
+fi
+
+# -- Constants --
+
 JENKINS="http://jenkins.imagej.net/job"
 A="lastSuccessfulBuild/artifact"
 MAVEN="http://maven.imagej.net/content/repositories/releases"
