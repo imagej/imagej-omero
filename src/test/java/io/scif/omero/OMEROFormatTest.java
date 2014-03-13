@@ -30,6 +30,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import io.scif.Checker;
 import io.scif.FormatException;
+import io.scif.MetadataService;
 import io.scif.SCIFIO;
 
 import org.junit.Test;
@@ -57,6 +58,46 @@ public class OMEROFormatTest {
 		assertTrue(checker.isFormat("asdf.omero"));
 		assertTrue(checker.isFormat("omero:asdf"));
 		assertEquals("omero", omeroFormat.getSuffixes()[0]);
+	}
+
+	/** Tests {@link OMEROFormat#parseArguments}. */
+	@Test
+	public void testParseArguments() throws FormatException {
+		final OMEROFormat omeroFormat = getFormat();
+		final MetadataService metadataService =
+			omeroFormat.context().service(MetadataService.class);
+
+		final String name = "data";
+		final String server = "my.host.name";
+		final int port = 4321;
+		final String user = "foo";
+		final String password = "bar";
+		final String sessionID = "nuts";
+		final boolean encrypted = true;
+		final int imageID = 12;
+		final int pixelsID = 357;
+		final String omeroString = "name=" + name + //
+			"&server=" + server + //
+			"&port=" + port + //
+			"&user=" + user + //
+			"&password=" + password + //
+			"&sessionID=" + sessionID + //
+			"&encrypted=" + encrypted + //
+			"&imageID=" + imageID + //
+			"&pixelsID=" + pixelsID;
+
+		final OMEROFormat.Metadata meta =
+			(OMEROFormat.Metadata) omeroFormat.createMetadata();
+		OMEROFormat.parseArguments(metadataService, omeroString, meta);
+
+		assertEquals(name, meta.getName());
+		assertEquals(server, meta.getCredentials().getServer());
+		assertEquals(port, meta.getCredentials().getPort());
+		assertEquals(user, meta.getCredentials().getUser());
+		assertEquals(password, meta.getCredentials().getPassword());
+		assertEquals(encrypted, meta.getCredentials().isEncrypted());
+		assertEquals(imageID, meta.getImageID());
+		assertEquals(pixelsID, meta.getPixelsID());
 	}
 
 	// -- Helper methods --

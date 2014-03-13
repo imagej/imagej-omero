@@ -504,9 +504,9 @@ public class OMEROFormat extends AbstractFormat {
 		return new int[] { z, c, t };
 	}
 
-	// -- Helper methods --
+	// -- Utility methods --
 
-	private static void parseArguments(final MetadataService metadataService,
+	public static void parseArguments(final MetadataService metadataService,
 		final String string, final Metadata meta)
 	{
 		// strip omero prefix and/or suffix
@@ -521,6 +521,8 @@ public class OMEROFormat extends AbstractFormat {
 		// populate other metadata: image ID, etc.
 		metadataService.populate(meta, map);
 	}
+
+	// -- Helper methods --
 
 	private static OMEROSession createSession(final Metadata meta)
 		throws FormatException
