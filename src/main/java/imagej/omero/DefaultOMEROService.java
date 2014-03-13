@@ -31,7 +31,12 @@ import imagej.data.display.DatasetView;
 import imagej.data.display.ImageDisplay;
 import imagej.data.display.ImageDisplayService;
 import imagej.data.table.Column;
+import imagej.data.table.DefaultGenericTable;
+import imagej.data.table.DefaultResultsTable;
 import imagej.data.table.DoubleColumn;
+import imagej.data.table.GenericColumn;
+import imagej.data.table.GenericTable;
+import imagej.data.table.ResultsTable;
 import imagej.data.table.Table;
 import imagej.display.DisplayService;
 import imagej.module.ModuleItem;
@@ -41,6 +46,7 @@ import io.scif.omero.OMEROSession;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -53,6 +59,8 @@ import java.util.Set;
 
 import omero.ServerError;
 import omero.grid.TablePrx;
+import omero.model.OriginalFile;
+import omero.model.OriginalFileI;
 
 import org.scijava.Optional;
 import org.scijava.log.LogService;
@@ -158,7 +166,7 @@ public class DefaultOMEROService extends AbstractService implements
 		// default case: convert to string
 		// works for many types, including but not limited to:
 		// - char
-		// - imagej.util.ColorRGB
+		// - imageJ.util.ColorRGB
 		// - java.io.File
 		// - java.lang.Character
 		// - java.lang.String
@@ -355,46 +363,57 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	// FIXME add to interface
-	public <C extends Column<T>, T> void uploadTable(final OMEROCredentials credentials,
-		final String name, final Table<C, T> imagejTable) throws ServerError,
+	public <C extends Column<T>, T> void uploadTable(
+		final OMEROCredentials credentials, final String name,
+		final Table<C, T> imageJTable) throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException
 	{
 		final OMEROSession session = new OMEROSession(credentials);
+		TablePrx tableService = null;
 		try {
-			final TablePrx t =
-					session.getClient().getSession().sharedResources().newTable(1, name);
-			if (t == null) {
+			tableService =
+				session.getClient().getSession().sharedResources().newTable(1, name);
+			if (tableService == null) {
 				throw new omero.ServerError(null, null, "Could not create table");
 			}
 			final omero.grid.Column[] columns =
-				new omero.grid.Column[imagejTable.getColumnCount()];
-			// 
+				new omero.grid.Column[imageJTable.getColumnCount()];
+			//
 			for (int c = 0; c < columns.length; c++) {
-				columns[c] = createOMEROColumn(imagejTable.get(c), c);
+				columns[c] = createOMEROColumn(imageJTable.get(c), c);
 			}
-			t.initialize(columns);
+			tableService.initialize(columns);
 			// TODO: Can reuse OMERO column structs (from 0 index every time)
 			// to append rows in batches, in case there are too many.
 			// If we do this, we can report progress better.
 			for (int c = 0; c < columns.length; c++) {
-				populateOMEROColumn(imagejTable.get(c), columns[c]);
+				populateOMEROColumn(imageJTable.get(c), columns[c]);
 			}
-			t.addData(columns);
+			tableService.addData(columns);
 		}
 		finally {
-			session.close();
+			try {
+				if (tableService != null) {
+					tableService.close();
+				}
+			}
+			finally {
+				session.close();
+			}
 		}
 	}
 
-	private omero.grid.Column createOMEROColumn(Column<?> imagejColumn, int index) {
+	private omero.grid.Column createOMEROColumn(final Column<?> imageJColumn,
+		final int index)
+	{
 		// FIXME: need ImageJ to remember type of column via a getType() method
 		// For now, we hardcode.
 		omero.grid.Column omeroColumn;
-		if (imagejColumn instanceof DoubleColumn) {
+		if (imageJColumn instanceof DoubleColumn) {
 			omeroColumn = new omero.grid.DoubleColumn();
 		}
 		else {
-			final Class<?> type = imagejColumn.get(0).getClass();
+			final Class<?> type = imageJColumn.get(0).getClass();
 			throw new UnsupportedOperationException("Not yet implemented");
 			/* TODO:
 			BoolColumn
@@ -412,17 +431,41 @@ public class DefaultOMEROService extends AbstractService implements
 			WellColumn
 			*/
 		}
-		omeroColumn.name = imagejColumn.getHeader();
+		omeroColumn.name = imageJColumn.getHeader();
 		if (omeroColumn.name == null) omeroColumn.name = "" + index;
 		return omeroColumn;
 	}
 
-	private void populateOMEROColumn(final Column<?> imagejColumn, final omero.grid.Column omeroColumn) {
-		if (imagejColumn instanceof DoubleColumn) {
-			final DoubleColumn doubleColumn = (DoubleColumn) imagejColumn;
+	private void populateOMEROColumn(final Column<?> imageJColumn,
+		final omero.grid.Column omeroColumn)
+	{
+		if (imageJColumn instanceof DoubleColumn) {
+			final DoubleColumn doubleColumn = (DoubleColumn) imageJColumn;
 			final omero.grid.DoubleColumn omeroDColumn =
 				(omero.grid.DoubleColumn) omeroColumn;
 			omeroDColumn.values = doubleColumn.getArray();
+		}
+		throw new UnsupportedOperationException("Unsupported column type: " +
+			imageJColumn.getClass().getName());
+	}
+
+	private void populateImageJColumn(final omero.grid.Column omeroColumn,
+		final Column<?> imageJColumn, final int offset)
+	{
+		if (omeroColumn instanceof omero.grid.DoubleColumn) {
+			final double[] data = ((omero.grid.DoubleColumn) omeroColumn).values;
+			final DoubleColumn imageJDoubleColumn = (DoubleColumn) imageJColumn;
+			System.arraycopy(data, 0, imageJDoubleColumn.getArray(), offset,
+				data.length);
+		}
+		else {
+			final GenericColumn imageJGenericColumn = (GenericColumn) imageJColumn;
+			final Field field = ClassUtils.getField(omeroColumn.getClass(), "values");
+			final Object data = ClassUtils.getValue(field, omeroColumn);
+			final int length = Array.getLength(data);
+			for (int r = 0; r < length; r++) {
+				imageJGenericColumn.set(r + offset, Array.get(data, r));
+			}
 		}
 	}
 
@@ -519,6 +562,145 @@ public class DefaultOMEROService extends AbstractService implements
 		@SuppressWarnings("unchecked")
 		final T[] typedArray = (T[]) array;
 		return collection.toArray(typedArray);
+	}
+
+	// FIXME add to interface
+	public Table<?, ?> downloadTable(final OMEROCredentials credentials,
+		final long tableID) throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException
+	{
+		final OMEROSession session = new OMEROSession(credentials);
+		TablePrx tableService = null;
+		try {
+			final OriginalFile tableFile = new OriginalFileI(tableID, false);
+			tableService =
+				session.getClient().getSession().sharedResources().openTable(tableFile);
+			if (tableService == null) {
+				throw new omero.ServerError(null, null, "Could not open table");
+			}
+			final long rawRowCount = tableService.getNumberOfRows();
+			if (rawRowCount > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException("Table too large: " + rawRowCount +
+					" rows");
+			}
+			final int rowCount = (int) rawRowCount;
+			final omero.grid.Column[] omeroColumns = tableService.getHeaders();
+
+			final Table<?, ?> imageJTable = createImageJTable(omeroColumns);
+			final int colCount = tableService.getHeaders().length;
+
+			final int batchSize = 24 * 1024;
+			int currentRow = 0;
+			final Column<?>[] imageJColumns = new Column<?>[colCount];
+			while (currentRow < rowCount) {
+				final long[] colIndices = new long[colCount];
+				for (int c = 0; c < colIndices.length; c++)
+					colIndices[c] = c;
+				final int rowsLeft = rowCount - currentRow;
+				final int rowsToRead = Math.min(batchSize, rowsLeft);
+				final omero.grid.Data data =
+					tableService.read(colIndices, currentRow, currentRow + rowsToRead);
+				assert (colCount == data.columns.length);
+				for (int c = 0; c < colCount; c++) {
+					if (imageJColumns[c] == null) {
+						imageJColumns[c] = createImageJColumn(data.columns[c]);
+						imageJColumns[c].setSize(rowCount);
+						// FIXME generics
+						if (imageJTable instanceof GenericTable) {
+							((GenericTable) imageJTable).add((GenericColumn) imageJColumns[c]);
+						}
+						else if (imageJTable instanceof ResultsTable) {
+							((ResultsTable) imageJTable).add((DoubleColumn) imageJColumns[c]);
+						}
+						else throw new IllegalStateException("You did something wrong");
+					}
+					// TODO: add fill API to ImageJ Column interface
+					populateImageJColumn(data.columns[c], imageJColumns[c], currentRow);
+				}
+				currentRow += rowsToRead;
+			}
+			return imageJTable;
+		}
+		finally {
+			try {
+				if (tableService != null) {
+					tableService.close();
+				}
+			}
+			finally {
+				session.close();
+			}
+		}
+	}
+
+	private Table<?, ?> createImageJTable(final omero.grid.Column[] omeroColumns)
+	{
+		// TODO Decide if we really need this case logic.
+		for (int c = 0; c < omeroColumns.length; c++) {
+			if (!(omeroColumns[c] instanceof omero.grid.DoubleColumn)) {
+				// not all doubles
+				return new DefaultGenericTable();
+			}
+		}
+		// all double columns, yay
+		return new DefaultResultsTable();
+	}
+
+	private Column<?> createImageJColumn(final omero.grid.Column column) {
+		if (column instanceof omero.grid.BoolColumn) {
+			// TODO: Implement BoolColumn for efficiency.
+			return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.DoubleArrayColumn) {
+			// TODO: Implement DoubleArrayColumn for efficiency.
+			return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.DoubleColumn) {
+			// TODO: Implement DoubleColumn for efficiency.
+			return new DoubleColumn(column.name);
+		}
+		if (column instanceof omero.grid.FileColumn) {
+			// TODO: Implement FileColumn for efficiency.
+			return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.FloatArrayColumn) {
+			// TODO: Implement FloatArrayColumn for efficiency.
+			return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.ImageColumn) {
+			// TODO: Implement ImageColumn for efficiency.
+//		  return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.LongArrayColumn) {
+			// TODO: Implement LongArrayColumn for efficiency.
+			return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.LongColumn) {
+			// TODO: Implement LongColumn for efficiency.
+			return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.MaskColumn) {
+			// TODO: Implement MaskColumn for efficiency.
+//		  return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.PlateColumn) {
+			// TODO: Implement PlateColumn for efficiency.
+//		  return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.RoiColumn) {
+			// TODO: Implement RoiColumn for efficiency.
+//		  return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.StringColumn) {
+			// TODO: Implement StringColumn for efficiency.
+			return new GenericColumn(column.name);
+		}
+		if (column instanceof omero.grid.WellColumn) {
+			// TODO: Implement WellColumn for efficiency.
+//		  return new GenericColumn(column.name);
+		}
+		throw new IllegalArgumentException("Unsupported column type: " +
+			column.getClass().getName());
 	}
 
 }
