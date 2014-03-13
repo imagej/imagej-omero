@@ -165,7 +165,7 @@ public class DefaultOMEROService extends AbstractService implements
 		// to recurse into data structures, so we do it ourselves!
 		if (value.getClass().isArray()) {
 			final omero.RType[] val = new omero.RType[Array.getLength(value)];
-			for (int i=0; i<val.length; i++) {
+			for (int i = 0; i < val.length; i++) {
 				val[i] = toOMERO(Array.get(value, i));
 			}
 			return omero.rtypes.rarray(val);
@@ -173,7 +173,7 @@ public class DefaultOMEROService extends AbstractService implements
 		if (value instanceof List) {
 			final List<?> list = (List<?>) value;
 			final omero.RType[] val = new omero.RType[list.size()];
-			for (int i=0; i<val.length; i++) {
+			for (int i = 0; i < val.length; i++) {
 				val[i] = toOMERO(list.get(i));
 			}
 			return omero.rtypes.rlist(val);
@@ -182,7 +182,7 @@ public class DefaultOMEROService extends AbstractService implements
 			final Map<?, ?> map = (Map<?, ?>) value;
 			final HashMap<String, omero.RType> val =
 				new HashMap<String, omero.RType>();
-			for (Object key : map.keySet()) {
+			for (final Object key : map.keySet()) {
 				val.put(key.toString(), toOMERO(map.get(key)));
 			}
 			return omero.rtypes.rmap(val);
@@ -330,7 +330,7 @@ public class DefaultOMEROService extends AbstractService implements
 		// The RandomAccessInput/OutputStream design is probably too narrow.
 		final String omeroDestination =
 			"name=" + dataset.getName() + "&" + credentials(client) //
-			+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
+				+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
 
 		// TEMP: Until SCIFIO issue #63 is resolved.
 		// https://github.com/scifio/scifio/pull/63
