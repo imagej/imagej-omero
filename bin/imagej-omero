@@ -24,7 +24,7 @@ IJ_DIR="$OMERO_HOME/lib/ImageJ.app"
 
 IJ_APP="imagej-2.0.0-SNAPSHOT-application.zip"
 
-if [ -d "$OMERO_HOME/lib/ImageJ.app" ]
+if [ -d "$IJ_DIR" ]
 then
 	echo "ImageJ installation already exists; skipping."
 else
