@@ -48,7 +48,7 @@ curl -s "http://maven.imagej.net/service/local/repositories/snapshots/content/or
 SCIFIO="scifio-0.10.2-SNAPSHOT.jar"
 
 echo "-> downloading $SCIFIO"
-rm "$IJ_DIR/jars/scifio-[0-9]*.jar"
+rm "$IJ_DIR/jars/scifio-"[0-9]*.jar
 curl -s "$JENKINS/SCIFIO/$A/target/$SCIFIO" > "$IJ_DIR/jars/$SCIFIO"
 
 # -- Download and install ImageJ-OMERO --
