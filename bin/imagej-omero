@@ -2,6 +2,11 @@
 
 # imagej-omero: Adds ImageJ capabilities to your OMERO installation.
 
+# TODO: two modes! default mode is release versions for stability
+# other mode is symlinks to ~/.m2/repository latest SNAPSHOTs
+# want latest available version of each dep in a list
+# another option is to use env variables
+
 set -e
 
 # -- Sanity checks --
