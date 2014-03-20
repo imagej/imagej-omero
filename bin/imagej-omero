@@ -49,7 +49,7 @@ SCIFIO="scifio-0.10.2-SNAPSHOT.jar"
 
 echo "-> downloading $SCIFIO"
 rm "$IJ_DIR/jars/scifio-"[0-9]*.jar
-curl -s "$JENKINS/SCIFIO/$A/target/$SCIFIO" > "$IJ_DIR/jars/$SCIFIO"
+curl -s "$JENKINS/SCIFIO/$A/scifio/target/$SCIFIO" > "$IJ_DIR/jars/$SCIFIO"
 
 # -- Download and install ImageJ-OMERO --
 
