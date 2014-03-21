@@ -88,7 +88,7 @@ curl -s "$GEN_SCRIPT_URL" > "$GEN_SCRIPT_PATH"
 echo "-> generating OMERO scripts"
 (
 	$GEN_SCRIPT_CMD > /dev/null &&
-	echo "$(ls "$OMERO_HOME/scripts/imagej/*" | wc -l) scripts generated."
+	echo "$(find "$OMERO_HOME/lib/scripts/imagej" | wc -l) scripts generated."
 )
 
 echo
