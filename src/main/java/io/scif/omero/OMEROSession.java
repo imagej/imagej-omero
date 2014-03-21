@@ -94,7 +94,7 @@ public class OMEROSession implements Closeable {
 			session = client.createSession();
 		}
 
-		if (!credentials.isEncrypted()) {
+		if (client.isSecure() && !credentials.isEncrypted()) {
 			client = client.createClient(false);
 			session = client.getSession();
 		}
