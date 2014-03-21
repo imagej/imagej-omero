@@ -94,10 +94,12 @@ public class OMEROSession implements Closeable {
 			session = client.createSession();
 		}
 
-		if (client.isSecure() && !credentials.isEncrypted()) {
-			client = client.createClient(false);
-			session = client.getSession();
-		}
+		// Until imagej-omero #30 is resolved; see:
+		// https://github.com/imagej/imagej-omero/issues/30
+//		if (client.isSecure() && !credentials.isEncrypted()) {
+//			client = client.createClient(false);
+//			session = client.getSession();
+//		}
 
 		session.detachOnDestroy();
 	}
