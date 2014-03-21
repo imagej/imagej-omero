@@ -20,6 +20,21 @@ MAVEN="http://maven.imagej.net/content/repositories/releases"
 
 IJ_DIR="$OMERO_HOME/lib/ImageJ.app"
 
+# -- Subroutines --
+
+download () {
+	name="$1"
+	url="$2"
+	dest="$3"
+	echo "-> downloading $name"
+	curl -fs "$url" > "$dest" || die "Failed to download: $url"
+}
+
+die () {
+	echo "$*" >&2
+	exit 1
+}
+
 # -- Download and install ImageJ --
 
 IJ_APP="imagej-2.0.0-SNAPSHOT-application.zip"
@@ -28,8 +43,9 @@ if [ -d "$IJ_DIR" ]
 then
 	echo "ImageJ installation already exists; skipping."
 else
-	echo "-> downloading $IJ_APP"
-	curl -fs "$JENKINS/ImageJ/$A/app/target/$IJ_APP" > "$OMERO_HOME/lib/$IJ_APP"
+	download "$IJ_APP" \
+		"$JENKINS/ImageJ/$A/app/target/$IJ_APP" \
+		"$OMERO_HOME/lib/$IJ_APP"
 	echo "-> extracting $IJ_APP"
 	(
 		cd "$OMERO_HOME/lib" &&
@@ -40,27 +56,30 @@ fi
 
 # -- Download and install SciJava SLF4J logging --
 
-echo "-> downloading SciJava SLF4J logging"
-curl -fs "http://maven.imagej.net/service/local/repositories/snapshots/content/org/scijava/scijava-log-slf4j/1.0.0-SNAPSHOT/scijava-log-slf4j-1.0.0.jar" > "$IJ_DIR/jars/scijava-log-slf4j-1.0.0.jar"
+download "SciJava SLF4J logging" \
+	"$MAVEN/org/scijava/scijava-log-slf4j/1.0.0/scijava-log-slf4j-1.0.0.jar" \
+	"$IJ_DIR/jars/scijava-log-slf4j-1.0.0.jar"
 
 # -- Replace SCIFIO with development version --
 
 SCIFIO="scifio-0.10.2-SNAPSHOT.jar"
 
-echo "-> downloading $SCIFIO"
 rm "$IJ_DIR/jars/scifio-"[0-9]*.jar
-curl -fs "$JENKINS/SCIFIO/$A/scifio/target/$SCIFIO" > "$IJ_DIR/jars/$SCIFIO"
+download "$SCIFIO" \
+	"$JENKINS/SCIFIO/$A/scifio/target/$SCIFIO" \
+	"$IJ_DIR/jars/$SCIFIO"
 
 # -- Download and install ImageJ-OMERO --
 
 IJ_OMERO="ij-omero-0.1.0-SNAPSHOT.jar"
 SCIFIO_OMERO="scifio-omero-0.3.0-SNAPSHOT.jar"
 
-echo "-> downloading $IJ_OMERO"
-curl -fs "$JENKINS/ImageJ-OMERO/$A/target/$IJ_OMERO" > "$IJ_DIR/jars/$IJ_OMERO"
-echo "-> downloading $SCIFIO_OMERO"
-curl -fs "$MAVEN/io/scif/scifio-omero/0.3.0-SNAPSHOT/$SCIFIO_OMERO" \
-	> "$IJ_DIR/jars/$SCIFIO_OMERO"
+download "$IJ_OMERO" \
+	"$JENKINS/ImageJ-OMERO/$A/target/$IJ_OMERO" \
+	"$IJ_DIR/jars/$IJ_OMERO"
+download "$SCIFIO_OMERO" \
+	"$JENKINS/SCIFIO-OMERO/$A/target/$SCIFIO_OMERO" \
+	"$IJ_DIR/jars/$SCIFIO_OMERO"
 
 # -- Download and install tutorial commands --
 
@@ -68,12 +87,12 @@ TUTORIALS="$JENKINS/ImageJ-tutorials/$A"
 SIMPLE_COMMANDS="simple-commands-1.0.0-SNAPSHOT.jar"
 WIDGET_DEMO="widget-demo-1.0.0-SNAPSHOT.jar"
 
-echo "-> downloading $SIMPLE_COMMANDS"
-curl -fs "$TUTORIALS/simple-commands/target/$SIMPLE_COMMANDS" \
-	> "$IJ_DIR/plugins/$SIMPLE_COMMANDS"
-echo "-> downloading $WIDGET_DEMO"
-curl -fs "$TUTORIALS/widget-demo/target/$WIDGET_DEMO" \
-	> "$IJ_DIR/plugins/$WIDGET_DEMO"
+download "$SIMPLE_COMMANDS" \
+	"$TUTORIALS/simple-commands/target/$SIMPLE_COMMANDS" \
+	"$IJ_DIR/plugins/$SIMPLE_COMMANDS"
+download "$WIDGET_DEMO" \
+	"$TUTORIALS/widget-demo/target/$WIDGET_DEMO" \
+	"$IJ_DIR/plugins/$WIDGET_DEMO"
 
 # -- Generate ImageJ scripts --
 
@@ -82,8 +101,7 @@ GEN_SCRIPT_URL="https://raw.github.com/imagej/imagej-omero/master/bin/$GEN_SCRIP
 GEN_SCRIPT_PATH="$OMERO_HOME/lib/$GEN_SCRIPT"
 GEN_SCRIPT_CMD="jython $GEN_SCRIPT_PATH"
 
-echo "-> downloading $GEN_SCRIPT"
-curl -fs "$GEN_SCRIPT_URL" > "$GEN_SCRIPT_PATH"
+download "$GEN_SCRIPT" "$GEN_SCRIPT_URL" "$GEN_SCRIPT_PATH"
 
 echo "-> generating OMERO scripts"
 (
