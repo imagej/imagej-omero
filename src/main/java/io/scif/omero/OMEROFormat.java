@@ -55,6 +55,7 @@ import omero.RDouble;
 import omero.RInt;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
+import omero.model.Image;
 import omero.model.Pixels;
 
 import org.scijava.log.LogService;
@@ -452,7 +453,10 @@ public class OMEROFormat extends AbstractFormat {
 			if (store != null) {
 				// save the data
 				try {
-					store.save();
+					// store resultant image and pixels IDs into the metadata
+					final Image image = store.save().getImage();
+					getMetadata().setImageID(image.getId().getValue());
+					getMetadata().setPixelsID(image.getPixels(0).getId().getValue());
 					store.close();
 				}
 				catch (final ServerError err) {
