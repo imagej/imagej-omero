@@ -52,6 +52,8 @@ If you wish to give it a test drive, the steps are:
 *   Download the [Jython launch script](bin/jython) and place in the same
     folder as the `jython-standalone` JAR file. Add this folder to your `PATH`.
 
+__Important: if you receive the error `ImportError: No module named imagej` then your `jython` is not adding ImageJ and/or OMERO to the classpath properly. Ensure you are using the Jython launch script linked above, *not* the stock `jython` that comes from your package manager or Jython download.__
+
 ### Set up ImageJ2
 
 Download the [ImageJ-OMERO installer](bin/imagej-omero), and run it:
