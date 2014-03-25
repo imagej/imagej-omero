@@ -62,7 +62,7 @@ download "SciJava SLF4J logging" \
 
 # -- Replace SCIFIO with development version --
 
-SCIFIO="scifio-0.10.2-SNAPSHOT.jar"
+SCIFIO="scifio-0.10.3-SNAPSHOT.jar"
 
 rm "$IJ_DIR/jars/scifio-"[0-9]*.jar
 download "$SCIFIO" \
