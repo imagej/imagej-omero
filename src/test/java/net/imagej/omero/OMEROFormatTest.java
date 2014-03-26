@@ -187,7 +187,7 @@ public class OMEROFormatTest {
 
 	/**
 	 * Tests {@link OMEROFormat#parseArguments} and create a session passing an
-	 * existing session ID.
+	 * existing session ID and an existing client.
 	 */
 	@Test
 	public void testOMEROSessionFromSessionIDSpecifyClient()
@@ -223,6 +223,93 @@ public class OMEROFormatTest {
 		}
 		finally {
 			if (client != null) client.__del__();
+		}
+	}
+
+	/**
+	 * Tests {@link OMEROFormat#parseArguments} and create a session passing an
+	 * existing session ID and an existing client. The client specified does not
+	 * correspond to the session ID.
+	 */
+	@Test
+	public void testOMEROSessionFromSessionIDSpecifyClients()
+		throws FormatException
+	{
+		final OMEROFormat omeroFormat = getFormat();
+		final MetadataService metadataService =
+			omeroFormat.context().service(MetadataService.class);
+		final String name = null;
+		omero.client client = null, c = null;
+		try {
+			client = new omero.client();
+			client.createSession();
+			c = new omero.client();
+			c.createSession();
+			final String omeroString = "name=" + name + //
+				"&server=" + client.getProperty("omero.host") + //
+				"&port=" + client.getProperty("omero.port") + //
+				"&sessionID=" + client.getSessionId() + ".omero";
+
+			final OMEROFormat.Metadata meta =
+				(OMEROFormat.Metadata) omeroFormat.createMetadata();
+			OMEROFormat.parseArguments(metadataService, omeroString, meta);
+
+			assertTrue(client.getProperty("omero.host").trim().length() > 0);
+			final OMEROSession session = new OMEROSession(meta.getCredentials(), c);
+			final String sessionID = session.getClient().getSessionId();
+			assertTrue(sessionID.length() > 0);
+			session.close();
+			client.closeSession();
+		}
+		catch (final Exception e) {
+			throw new FormatException(e);
+		}
+		finally {
+			if (client != null) client.__del__();
+			if (c != null) c.__del__();
+		}
+	}
+
+	/**
+	 * Tests {@link OMEROFormat#parseArguments} and create a session passing an
+	 * existing session ID and an existing client. The client specified does not
+	 * have an active session.
+	 */
+	@Test
+	public void testOMEROSessionFromSessionIDSpecifyClientsWithoutActiveSession()
+		throws FormatException
+	{
+		final OMEROFormat omeroFormat = getFormat();
+		final MetadataService metadataService =
+			omeroFormat.context().service(MetadataService.class);
+		final String name = null;
+		omero.client client = null, c = null;
+		try {
+			client = new omero.client();
+			client.createSession();
+			c = new omero.client();
+			final String omeroString = "name=" + name + //
+				"&server=" + client.getProperty("omero.host") + //
+				"&port=" + client.getProperty("omero.port") + //
+				"&sessionID=" + client.getSessionId() + ".omero";
+
+			final OMEROFormat.Metadata meta =
+				(OMEROFormat.Metadata) omeroFormat.createMetadata();
+			OMEROFormat.parseArguments(metadataService, omeroString, meta);
+
+			assertTrue(client.getProperty("omero.host").trim().length() > 0);
+			final OMEROSession session = new OMEROSession(meta.getCredentials(), c);
+			final String sessionID = session.getClient().getSessionId();
+			assertTrue(sessionID.length() > 0);
+			session.close();
+			client.closeSession();
+		}
+		catch (final Exception e) {
+			throw new FormatException(e);
+		}
+		finally {
+			if (client != null) client.__del__();
+			if (c != null) c.__del__();
 		}
 	}
 
