@@ -185,6 +185,47 @@ public class OMEROFormatTest {
 		}
 	}
 
+	/**
+	 * Tests {@link OMEROFormat#parseArguments} and create a session passing an
+	 * existing session ID.
+	 */
+	@Test
+	public void testOMEROSessionFromSessionIDSpecifyClient()
+		throws FormatException
+	{
+		final OMEROFormat omeroFormat = getFormat();
+		final MetadataService metadataService =
+			omeroFormat.context().service(MetadataService.class);
+		final String name = null;
+		omero.client client = null;
+		try {
+			client = new omero.client();
+			client.createSession();
+			final String omeroString = "name=" + name + //
+				"&server=" + client.getProperty("omero.host") + //
+				"&port=" + client.getProperty("omero.port") + //
+				"&sessionID=" + client.getSessionId() + ".omero";
+
+			final OMEROFormat.Metadata meta =
+				(OMEROFormat.Metadata) omeroFormat.createMetadata();
+			OMEROFormat.parseArguments(metadataService, omeroString, meta);
+
+			assertTrue(client.getProperty("omero.host").trim().length() > 0);
+			final OMEROSession session =
+				new OMEROSession(meta.getCredentials(), client);
+			final String sessionID = session.getClient().getSessionId();
+			assertTrue(sessionID.length() > 0);
+			session.close();
+			client.closeSession();
+		}
+		catch (final Exception e) {
+			throw new FormatException(e);
+		}
+		finally {
+			if (client != null) client.__del__();
+		}
+	}
+
 	// -- Helper methods --
 
 	private OMEROFormat getFormat() {
