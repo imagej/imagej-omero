@@ -87,7 +87,7 @@ public class OMEROSession implements Closeable {
 		final String sessionID = credentials.getSessionID();
 		if (sessionID != null) {
 			if (close) client.closeSession();
-			session = client.createSession(sessionID, sessionID);
+			session = client.joinSession(sessionID);
 		}
 		else if (credentials.getUser() != null && credentials.getPassword() != null) {
 			final String user = credentials.getUser();
