@@ -21,7 +21,7 @@
  * #L%
  */
 
-package imagej.omero;
+package net.imagej.omero;
 
 public class Main {
 

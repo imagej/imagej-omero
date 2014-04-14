@@ -1,4 +1,4 @@
-import os, sys, imagej.omero.ScriptGenerator as sg
+import os, sys, net.imagej.omero.ScriptGenerator as sg
 scriptDir = os.getenv('OMERO_HOME') + '/lib/scripts/imagej'
 if os.path.exists(scriptDir):
 	print 'The', scriptDir, 'path already exists.'

@@ -21,7 +21,7 @@
  * #L%
  */
 
-package imagej.omero;
+package net.imagej.omero;
 
 import imagej.data.Dataset;
 import imagej.data.DatasetService;

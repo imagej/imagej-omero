@@ -9,7 +9,7 @@
 	</parent>
 
 	<groupId>net.imagej</groupId>
-	<artifactId>ij-omero</artifactId>
+	<artifactId>imagej-omero</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
 	<name>ImageJ/OMERO interoperability</name>
@@ -46,7 +46,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<packageName>imagej.omero.server</packageName>
+							<packageName>net.imagej.omero.server</packageName>
 						</manifest>
 					</archive>
 				</configuration>

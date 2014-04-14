@@ -21,7 +21,7 @@
  * #L%
  */
 
-package imagej.omero;
+package net.imagej.omero;
 
 import imagej.Identifiable;
 import imagej.ImageJ;
@@ -103,9 +103,9 @@ public class ScriptGenerator extends AbstractContextual {
 		stubFile.getParentFile().mkdirs();
 		final PrintWriter out = new PrintWriter(new FileWriter(stubFile));
 		out.println("#!/usr/bin/env jython");
-		out.println("import imagej.omero.ScriptRunner, sys");
+		out.println("import net.imagej.omero.ScriptRunner, sys");
 		out.println("id = \"" + escapedID + "\"");
-		out.println("imagej.omero.ScriptRunner.main(id)");
+		out.println("net.imagej.omero.ScriptRunner.main(id)");
 		out.close();
 	}
 

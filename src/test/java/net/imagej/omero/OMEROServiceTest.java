@@ -21,7 +21,7 @@
  * #L%
  */
 
-package imagej.omero;
+package net.imagej.omero;
 
 import static org.junit.Assert.assertEquals;
 import imagej.ImageJ;
