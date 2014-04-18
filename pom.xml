@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>1.155</version>
+		<version>1.161</version>
 		<relativePath />
 	</parent>
 
@@ -18,21 +18,21 @@
 	<inceptionYear>2013</inceptionYear>
 
 	<dependencies>
+		<!-- SciJava dependencies -->
 		<dependency>
-			<groupId>${scifio.groupId}</groupId>
+			<groupId>io.scif</groupId>
 			<artifactId>scifio</artifactId>
-			<version>${scifio.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>${imglib2.groupId}</groupId>
+			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-meta</artifactId>
-			<version>${imglib2.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>${scijava-common.groupId}</groupId>
+			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
-			<version>${scijava-common.version}</version>
 		</dependency>
+
+		<!-- Third-party dependencies -->
 		<dependency>
 			<groupId>ome</groupId>
 			<artifactId>omero-client</artifactId>
@@ -47,10 +47,10 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Test dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
