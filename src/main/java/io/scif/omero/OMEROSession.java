@@ -71,18 +71,23 @@ public class OMEROSession implements Closeable {
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException
 	{
 		// initialize the client
+		boolean close = false;
 		if (c == null) {
 			if (credentials.getServer() != null) {
 				client = new omero.client(credentials.getServer(), credentials.getPort());
 			}
 			else client = new omero.client();
 		}
-		else client = c;
+		else {
+			client = c;
+			close = true;
+		}
 
 		// initialize the session (i.e., log in)
 		final String sessionID = credentials.getSessionID();
 		if (sessionID != null) {
-			session = client.createSession(sessionID, sessionID);
+			if (close) client.closeSession();
+			session = client.joinSession(sessionID);
 		}
 		else if (credentials.getUser() != null && credentials.getPassword() != null) {
 			final String user = credentials.getUser();
