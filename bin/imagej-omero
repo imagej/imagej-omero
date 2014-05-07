@@ -34,6 +34,8 @@ fi
 
 # -- Constants --
 
+# TODO: Consider allowing IMAGEJ_HOME to override IJ_DIR here.
+
 IJ_DIR="$omero/lib/ImageJ.app"
 
 # -- Download and install ImageJ --
