@@ -4,6 +4,21 @@
 
 set -e
 
+# -- Subroutines --
+
+die () {
+	echo "$*" >&2
+	exit 1
+}
+
+download () {
+	name="$1"
+	url="$2"
+	dest="$3"
+	echo "-> downloading $name"
+	curl -fs "$url" > "$dest" || die "Failed to download: $url"
+}
+
 # -- Sanity checks --
 
 if [ ! -d "$OMERO_HOME/lib" ]
@@ -15,21 +30,6 @@ fi
 # -- Constants --
 
 IJ_DIR="$OMERO_HOME/lib/ImageJ.app"
-
-# -- Subroutines --
-
-download () {
-	name="$1"
-	url="$2"
-	dest="$3"
-	echo "-> downloading $name"
-	curl -fs "$url" > "$dest" || die "Failed to download: $url"
-}
-
-die () {
-	echo "$*" >&2
-	exit 1
-}
 
 # -- Download and install ImageJ --
 
