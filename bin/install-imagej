@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# imagej-omero: Adds ImageJ capabilities to your OMERO installation.
+# install-imagej: Adds ImageJ capabilities to your OMERO installation.
 
 set -e
 
