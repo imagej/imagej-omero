@@ -21,15 +21,20 @@ download () {
 
 # -- Sanity checks --
 
-if [ ! -f "$OMERO_HOME/lib/server/blitz.jar" ]
+test $# = 1 ||
+	die "Usage: $0 <path/to/omero>"
+
+omero="$1"
+
+if [ ! -f "$omero/lib/server/blitz.jar" ]
 then
-	echo "Please set OMERO_HOME to a valid OMERO installation."
-	exit 1
+	echo "Invalid OMERO installation: $omero"
+	exit 2
 fi
 
 # -- Constants --
 
-IJ_DIR="$OMERO_HOME/lib/ImageJ.app"
+IJ_DIR="$omero/lib/ImageJ.app"
 
 # -- Download and install ImageJ --
 
