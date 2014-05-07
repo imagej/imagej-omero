@@ -21,7 +21,7 @@ download () {
 
 # -- Sanity checks --
 
-if [ ! -d "$OMERO_HOME/lib" ]
+if [ ! -f "$OMERO_HOME/lib/server/blitz.jar" ]
 then
 	echo "Please set OMERO_HOME to a valid OMERO installation."
 	exit 1
