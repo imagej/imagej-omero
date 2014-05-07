@@ -14,10 +14,6 @@ fi
 
 # -- Constants --
 
-JENKINS="http://jenkins.imagej.net/job"
-A="lastSuccessfulBuild/artifact"
-MAVEN="http://maven.imagej.net/content/repositories/releases"
-
 IJ_DIR="$OMERO_HOME/lib/ImageJ.app"
 
 # -- Subroutines --
@@ -37,62 +33,21 @@ die () {
 
 # -- Download and install ImageJ --
 
-IJ_APP="imagej-2.0.0-SNAPSHOT-application.zip"
-
 if [ -d "$IJ_DIR" ]
 then
 	echo "ImageJ installation already exists; skipping."
 else
-	download "$IJ_APP" \
-		"$JENKINS/ImageJ/$A/app/target/$IJ_APP" \
-		"$OMERO_HOME/lib/$IJ_APP"
-	echo "-> extracting $IJ_APP"
 	(
-		cd "$OMERO_HOME/lib" &&
-		unzip -q "$IJ_APP" &&
-		rm "$IJ_APP"
+		mkdir -p "$IJ_DIR"
+		cd "$IJ_DIR"
+		download ImageJ http://update.imagej.net/bootstrap.js install.js
+		echo "-> installing ImageJ"
+		jrunscript bootstrap.js add-update-site \
+			OMERO-5.0 http://sites.imagej.net/OMERO-5.0
+		jrunscript bootstrap.js update
+		rm install.js
 	)
 fi
-
-# -- Download and install SciJava SLF4J logging --
-
-download "SciJava SLF4J logging" \
-	"$MAVEN/org/scijava/scijava-log-slf4j/1.0.0/scijava-log-slf4j-1.0.0.jar" \
-	"$IJ_DIR/jars/scijava-log-slf4j-1.0.0.jar"
-
-# -- Replace SCIFIO with development version --
-
-SCIFIO="scifio-0.10.3-SNAPSHOT.jar"
-
-rm "$IJ_DIR/jars/scifio-"[0-9]*.jar
-download "$SCIFIO" \
-	"$JENKINS/SCIFIO/$A/scifio/target/$SCIFIO" \
-	"$IJ_DIR/jars/$SCIFIO"
-
-# -- Download and install ImageJ-OMERO --
-
-IJ_OMERO="ij-omero-0.1.0-SNAPSHOT.jar"
-SCIFIO_OMERO="scifio-omero-0.3.0-SNAPSHOT.jar"
-
-download "$IJ_OMERO" \
-	"$JENKINS/ImageJ-OMERO/$A/target/$IJ_OMERO" \
-	"$IJ_DIR/jars/$IJ_OMERO"
-download "$SCIFIO_OMERO" \
-	"$JENKINS/SCIFIO-OMERO/$A/target/$SCIFIO_OMERO" \
-	"$IJ_DIR/jars/$SCIFIO_OMERO"
-
-# -- Download and install tutorial commands --
-
-TUTORIALS="$JENKINS/ImageJ-tutorials/$A"
-SIMPLE_COMMANDS="simple-commands-1.0.0-SNAPSHOT.jar"
-WIDGET_DEMO="widget-demo-1.0.0-SNAPSHOT.jar"
-
-download "$SIMPLE_COMMANDS" \
-	"$TUTORIALS/simple-commands/target/$SIMPLE_COMMANDS" \
-	"$IJ_DIR/plugins/$SIMPLE_COMMANDS"
-download "$WIDGET_DEMO" \
-	"$TUTORIALS/widget-demo/target/$WIDGET_DEMO" \
-	"$IJ_DIR/plugins/$WIDGET_DEMO"
 
 # -- Generate ImageJ scripts --
 
