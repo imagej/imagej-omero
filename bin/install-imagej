@@ -22,7 +22,7 @@ download () {
 # -- Sanity checks --
 
 test $# = 1 ||
-	die "Usage: $0 <path/to/omero>"
+	die "Usage: $0 <path/to/omero> [--all]"
 
 omero="$1"
 
