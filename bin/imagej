@@ -1,6 +1,0 @@
-#!/bin/sh
-export OMERO_JARS="$OMERO_HOME/lib/server/*"
-export IMAGEJ_JARS="$OMERO_HOME/lib/ImageJ.app/jars/*"
-export IMAGEJ_PLUGINS="$OMERO_HOME/lib/ImageJ.app/plugins/*"
-export CP="$OMERO_JARS:$IMAGEJ_JARS:$IMAGEJ_PLUGINS:$CLASSPATH"
-java -cp "$CP" imagej.Main $@
