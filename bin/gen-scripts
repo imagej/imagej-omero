@@ -39,15 +39,7 @@ omero="$1"
 test -f "$omero/lib/server/blitz.jar" ||
 	die "Invalid OMERO installation: $omero"
 
-if [ -e "$IMAGEJ_HOME" ]
-then
-	imagej="$IMAGEJ_HOME"
-	echo "Using ImageJ location set by IMAGEJ_HOME: $imagej"
-else
-	# TODO: First try "$0/.." for ImageJ location
-	imagej="$omero/lib/ImageJ.app"
-	echo "Using default location of ImageJ: $imagej"
-fi
+imagej="$(cd $(dirname "$0")/.. && pwd)"
 
 test -d "$imagej/jars" ||
 	die "Invalid ImageJ installation: $imagej"
