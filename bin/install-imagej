@@ -19,7 +19,7 @@ download () {
 	curl -fs "$url" > "$dest" || die "Failed to download: $url"
 }
 
-# -- Sanity checks --
+# -- Determine OMERO and ImageJ directories --
 
 test $# = 1 ||
 	die "Usage: $0 <path/to/omero> [--all]"
