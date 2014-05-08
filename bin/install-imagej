@@ -46,18 +46,16 @@ fi
 if [ -d "$imagej" ]
 then
 	echo "ImageJ installation already exists; skipping."
-else
-	(
-		mkdir -p "$imagej"
-		cd "$imagej"
-		download ImageJ http://update.imagej.net/bootstrap.js install.js
-		echo "-> installing ImageJ at: $imagej"
-		jrunscript bootstrap.js add-update-site \
-			OMERO-5.0 http://sites.imagej.net/OMERO-5.0
-		jrunscript bootstrap.js update
-		rm install.js
-	)
-fi
+else (
+	mkdir -p "$imagej"
+	cd "$imagej"
+	download ImageJ http://update.imagej.net/bootstrap.js install.js
+	echo "-> installing ImageJ"
+	jrunscript bootstrap.js add-update-site \
+		OMERO-5.0 http://sites.imagej.net/OMERO-5.0
+	jrunscript bootstrap.js update
+	rm install.js
+) fi
 
 # -- Generate ImageJ scripts --
 
