@@ -54,21 +54,17 @@ else (
 	rm install.js
 ) fi
 
-# -- Generate ImageJ scripts --
+# -- Generate OMERO scripts --
 
-GEN_SCRIPT="genScripts.jy"
-GEN_SCRIPT_URL="https://raw.github.com/imagej/imagej-omero/master/bin/$GEN_SCRIPT"
-GEN_SCRIPT_PATH="$OMERO_HOME/lib/$GEN_SCRIPT"
-GEN_SCRIPT_CMD="jython $GEN_SCRIPT_PATH"
+gen_scripts="$imagej/lib/gen-scripts"
 
-download "$GEN_SCRIPT" "$GEN_SCRIPT_URL" "$GEN_SCRIPT_PATH"
+test -f "$gen_scripts" ||
+	die "No script generator at: $gen_scripts"
 
 echo "-> generating OMERO scripts"
-(
-	$GEN_SCRIPT_CMD > /dev/null &&
-	echo "$(find "$OMERO_HOME/lib/scripts/imagej" | wc -l) scripts generated."
-)
+"$gen_scripts" $@ &&
+	echo "$(find "$omero/lib/scripts/imagej" | wc -l) scripts generated."
 
 echo
 echo "To regenerate scripts, run:"
-echo "    $GEN_SCRIPT_CMD"
+echo "    \"$gen_scripts\" \"$omero\" [--all]"
