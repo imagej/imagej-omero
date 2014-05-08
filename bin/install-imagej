@@ -34,21 +34,24 @@ fi
 
 # -- Constants --
 
-# TODO: Consider allowing IMAGEJ_HOME to override IJ_DIR here.
-
-IJ_DIR="$omero/lib/ImageJ.app"
+if [ -e "$IMAGEJ_HOME" ]
+then
+	imagej="$IMAGEJ_HOME"
+else
+	imagej="$omero/lib/ImageJ.app"
+fi
 
 # -- Download and install ImageJ --
 
-if [ -d "$IJ_DIR" ]
+if [ -d "$imagej" ]
 then
 	echo "ImageJ installation already exists; skipping."
 else
 	(
-		mkdir -p "$IJ_DIR"
-		cd "$IJ_DIR"
+		mkdir -p "$imagej"
+		cd "$imagej"
 		download ImageJ http://update.imagej.net/bootstrap.js install.js
-		echo "-> installing ImageJ"
+		echo "-> installing ImageJ at: $imagej"
 		jrunscript bootstrap.js add-update-site \
 			OMERO-5.0 http://sites.imagej.net/OMERO-5.0
 		jrunscript bootstrap.js update
