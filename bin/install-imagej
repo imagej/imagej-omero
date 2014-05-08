@@ -32,8 +32,10 @@ test -f "$omero/lib/server/blitz.jar" ||
 if [ -e "$IMAGEJ_HOME" ]
 then
 	imagej="$IMAGEJ_HOME"
+	echo "Using ImageJ location set by IMAGEJ_HOME: $imagej"
 else
 	imagej="$omero/lib/ImageJ.app"
+	echo "Using default location of ImageJ: $imagej"
 fi
 
 # -- Download and install ImageJ --
