@@ -7,68 +7,52 @@ This project provides interoperability between
 There are ImageJ commands for accessing images from a remote OMERO server,
 as well as uploading image data from ImageJ to OMERO as a new image.
 
-To try it out, drop the `ij-omero` JAR file, along with its dependencies, into
-your ImageJ plugins folder. Launch ImageJ and there will be two new commands:
+To try it out, enable the __OMERO-5.0__
+[update site](http://wiki.imagej.net/Update_Sites).
+
+You will then have the following new menu items:
 
 * File > Import > OMERO...
 * File > Export > OMERO...
 
 ## Calling ImageJ commands as OMERO scripts
 
-This project enables execution of ImageJ commands on the server side as OMERO
-scripts.
-
-The following ImageJ commands are tested and working:
-
-* [HelloWorld](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/simple-commands/src/main/java/HelloWorld.java):
-  a basic example with one string input, and one string output.
-* [WidgetDemo](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/widget-demo/src/main/java/WidgetDemo.java):
-  an example exercising many different parameter types, providing a good
-  illustration of how type conversion works going back and forth between ImageJ
-  and OMERO.
-* [ComputeStats](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/simple-commands/src/main/java/ComputeStats.java):
-  an example which takes an image as input and produces numbers.
-* [GradientImage](https://github.com/imagej/imagej-tutorials/blob/0bbd12e3/simple-commands/src/main/java/GradientImage.java):
-  an example which takes numbers as input and produces an image.
+You can execute ImageJ modules (commands, scripts, etc.) on the server side as
+OMERO scripts.
 
 Translation of some complex data types is not yet implemented. In particular,
-ImageJ results tables are not translated to and from OMERO.tables structures.
+ImageJ results tables are not translated to and from OMERO.tables structures,
+and ImageJ regions of interest (ROIs) are not translated to/from OMERO ROIs.
 
 If you wish to give it a test drive, the steps are:
 
-### Set up OMERO
+### Install prerequisites
 
-*   [Install OMERO 5](http://www.openmicroscopy.org/site/support/omero5/sysadmins/unix/server-installation.html)
-    if you have not already done so.
+*   [Install OMERO 5](http://www.openmicroscopy.org/site/support/omero5/sysadmins/unix/server-installation.html).
+*   Install Jython using your package manager, or
+    [from the website](https://wiki.python.org/jython/InstallationInstructions).
 
-*   Set your `OMERO_HOME` environment variable to point to your OMERO
-    installation.
+### Install ImageJ
 
-### Set up Jython
-
-*   Download the latest
-    [pre-built standalone version of Jython](http://jython.org/downloads.html).
-
-*   Download the [Jython launch script](bin/jython) and place in the same
-    folder as the `jython-standalone` JAR file. Add this folder to your `PATH`.
-
-__Important: if you receive the error `ImportError: No module named imagej` then your `jython` is not adding ImageJ and/or OMERO to the classpath properly. Ensure you are using the Jython launch script linked above, *not* the stock `jython` that comes from your package manager or Jython download.__
-
-### Set up ImageJ2
-
-Download the [ImageJ-OMERO installer](bin/imagej-omero), and run it:
+If you have not yet installed ImageJ on the OMERO server machine, then
+download the [ImageJ-OMERO installer](bin/install-imagej), and run it:
 
 ```shell
-sh imagej-omero
+sh install-imagej <path/to/omero>
 ```
 
-The installer performs the following steps:
+The installer will:
 
-*   Installs ImageJ2 into `$OMERO_HOME/lib/ImageJ.app`.
-*   Installs `ij-omero` and `scifio-omero` into `ImageJ.app/jars`.
-*   Installs `simple-commands` and `widget-demo` into `ImageJ.app/plugins`.
-*   Installs OMERO script wrappers for all available ImageJ commands into
-    `$OMERO_HOME/lib/scripts/imagej`.
+*   Download and install ImageJ into OMERO's `lib/ImageJ.app` folder,
+    with the Fiji and OMERO-5.0 update sites enabled.
+*   Install OMERO script wrappers for all available ImageJ commands
+    into OMERO's `lib/scripts/imagej` folder.
+
+Alternately, if you wish to use an existing ImageJ installation:
+
+1.  Enable the __OMERO-5.0__
+    [update site](http://wiki.imagej.net/Update_Sites).
+2.  Run `gen-scripts` in ImageJ's `lib` directory.
 
 ### Take it for a spin
 
@@ -84,20 +68,29 @@ The installer performs the following steps:
     omero script list
     ```
 
-*   List parameters of `HelloWorld` command:
+*   List parameters of "System Information" command:
 
     ```shell
-    omero script params $(omero script list | grep Hello | sed 's/|.*//')
+    omero script params $(omero script list | grep 'System Info' | sed 's/|.*//')
     ```
 
-*   Execute the `HelloWorld` command:
+*   Execute the "System Information" command:
 
     ```shell
-    omero script launch $(omero script list | grep Hello | sed 's/|.*//')
+    omero script launch $(omero script list | grep 'System Info' | sed 's/|.*//')
     ```
 
 *   Repeat with any other desired commands.
     Also try from OMERO.web and OMERO.insight!
+
+### Uninstalling
+
+If you wish to remove ImageJ support from OMERO:
+
+```shell
+OMERO_DIR="/path/to/omero"
+rm -rf "$OMERO_DIR/lib/scripts/imagej" "$OMERO_DIR/lib/ImageJ.app"
+```
 
 ## See also
 
