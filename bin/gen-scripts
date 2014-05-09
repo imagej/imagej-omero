@@ -11,25 +11,7 @@ die () {
 	exit 1
 }
 
-imagej_exec () {
-	ARCH="$(getconf LONG_BIT)"
-	case "$(uname)" in
-		Linux)
-			echo "ImageJ-linux$ARCH"
-			;;
-		Darwin)
-			echo "Contents/MacOS/ImageJ-macosx"
-			;;
-		CYGWIN)
-			echo "ImageJ-win$ARCH"
-			;;
-		*)
-			echo "ImageJ"
-			;;
-	esac
-}
-
-# -- Determine OMERO and ImageJ directories --
+# -- Verify OMERO directory --
 
 test $# -gt 0 ||
 	die "Usage: $0 <path/to/omero> [--all]"
@@ -39,12 +21,6 @@ omero="$1"
 test -f "$omero/lib/server/blitz.jar" ||
 	die "Invalid OMERO installation: $omero"
 
-imagej="$(cd $(dirname "$0")/.. && pwd)"
+# -- Generate OMERO script wrappers --
 
-test -d "$imagej/jars" ||
-	die "Invalid ImageJ installation: $imagej"
-
-# -- Generate scripts using ImageJ --
-
-"$imagej/$(imagej_exec)" --headless --full-classpath \
-	--main-class net.imagej.omero.ScriptGenerator $@
+"$(dirname "$0")/run-class" net.imagej.omero.ScriptGenerator $@
