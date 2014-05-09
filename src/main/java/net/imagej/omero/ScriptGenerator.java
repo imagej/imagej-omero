@@ -179,11 +179,9 @@ public class ScriptGenerator extends AbstractContextual {
 			}
 		}
 		return rv == null ? null : new File(rv.getParent(), rv.getName() + ".jy");
-
 	}
 
 	private String sanitize(final String str) {
-
 		// replace undesirable characters (space, slash and backslash)
 		String s = str.replaceAll("[ /\\\\]", "_");
 
