@@ -113,6 +113,12 @@ public class ScriptGenerator extends AbstractContextual {
 			throw new IllegalArgumentException("Invalid directory: " + dir);
 		}
 
+		// we will execute ImageJ.app/lib/run-script
+		final File baseDir = ij.app().getApp().getBaseDirectory();
+		final File libDir = new File(baseDir, "lib");
+		final File runScript = new File(libDir, "run-script");
+		final String exec = runScript.getAbsolutePath();
+
 		// sanitize identifier
 		final String id = ((Identifiable) info).getIdentifier();
 		final String escapedID = id.replaceAll("\n", "\\\\n");
@@ -121,10 +127,13 @@ public class ScriptGenerator extends AbstractContextual {
 		final File stubFile = formatFilename(dir, info);
 		stubFile.getParentFile().mkdirs();
 		final PrintWriter out = new PrintWriter(new FileWriter(stubFile));
+		// Someday, we can perhaps improve OMERO to call the ImageJ
+		// launcher directly rather than using Jython in this silly way.
 		out.println("#!/usr/bin/env jython");
-		out.println("import net.imagej.omero.ScriptRunner, sys");
+		out.println("from subprocess import call");
+		out.println("exec = \"" + exec + "\"");
 		out.println("id = \"" + escapedID + "\"");
-		out.println("net.imagej.omero.ScriptRunner.main(id)");
+		out.println("subprocess.call([exec, id])");
 		out.close();
 	}
 
