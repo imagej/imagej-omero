@@ -56,7 +56,7 @@
 				<configuration>
 					<licenseName>gpl_v2</licenseName>
 					<organizationName>Board of Regents of the University of
-Wisconsin-Madison.</organizationName>
+Wisconsin-Madison and University of Dundee.</organizationName>
 				</configuration>
 			</plugin>
 		</plugins>
