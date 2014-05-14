@@ -23,9 +23,9 @@
 
 package net.imagej.omero;
 
-import imagej.Identifiable;
-import imagej.module.ModuleInfo;
-import imagej.module.ModuleService;
+import org.scijava.Identifiable;
+import org.scijava.module.ModuleInfo;
+import org.scijava.module.ModuleService;
 
 /**
  * Utility class for working with ImageJ modules, particularly

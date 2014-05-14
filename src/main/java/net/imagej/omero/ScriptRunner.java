@@ -23,14 +23,14 @@
 
 package net.imagej.omero;
 
-import imagej.ImageJ;
-import imagej.module.Module;
-import imagej.module.ModuleInfo;
-
 import java.util.Date;
+
+import net.imagej.ImageJ;
 
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
+import org.scijava.module.Module;
+import org.scijava.module.ModuleInfo;
 
 /**
  * Executes ImageJ {@link Module}s as OMERO scripts.

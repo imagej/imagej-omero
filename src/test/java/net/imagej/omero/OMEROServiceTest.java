@@ -24,14 +24,6 @@
 package net.imagej.omero;
 
 import static org.junit.Assert.assertEquals;
-import imagej.ImageJ;
-import imagej.data.Dataset;
-import imagej.data.display.DatasetView;
-import imagej.data.display.ImageDisplay;
-import imagej.module.AbstractModuleItem;
-import imagej.module.ModuleItem;
-import imagej.util.ColorRGB;
-import imagej.util.MersenneTwisterFast;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -43,6 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.imagej.Dataset;
+import net.imagej.ImageJ;
+import net.imagej.display.DatasetView;
+import net.imagej.display.ImageDisplay;
 import omero.RArray;
 import omero.RBool;
 import omero.RDouble;
@@ -57,6 +53,10 @@ import omero.RType;
 import omero.grid.Param;
 
 import org.junit.Test;
+import org.scijava.module.AbstractModuleItem;
+import org.scijava.module.ModuleItem;
+import org.scijava.util.ColorRGB;
+import org.scijava.util.MersenneTwisterFast;
 
 /**
  * Tests {@link DefaultOMEROService}.
@@ -65,7 +65,7 @@ import org.junit.Test;
  */
 public class OMEROServiceTest {
 
-	/** Tests {@link OMEROService#getJobParam(imagej.module.ModuleItem)}. */
+	/** Tests {@link OMEROService#getJobParam(org.scijava.module.ModuleItem)}. */
 	@Test
 	public void testGetJobParam() {
 		final OMEROService omeroService = createService();

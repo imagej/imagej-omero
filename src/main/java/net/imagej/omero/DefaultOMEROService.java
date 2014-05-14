@@ -23,14 +23,6 @@
 
 package net.imagej.omero;
 
-import imagej.data.Dataset;
-import imagej.data.DatasetService;
-import imagej.data.display.DatasetView;
-import imagej.data.display.ImageDisplay;
-import imagej.data.display.ImageDisplayService;
-import imagej.display.DisplayService;
-import imagej.module.ModuleItem;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -44,8 +36,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.imagej.Dataset;
+import net.imagej.DatasetService;
+import net.imagej.display.DatasetView;
+import net.imagej.display.ImageDisplay;
+import net.imagej.display.ImageDisplayService;
+
 import org.scijava.Optional;
+import org.scijava.display.DisplayService;
 import org.scijava.log.LogService;
+import org.scijava.module.ModuleItem;
 import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -363,8 +363,8 @@ public class DefaultOMEROService extends AbstractService implements
 	 * relevant type needed by ImageJ. Examples:
 	 * </p>
 	 * <ol>
-	 * <li>Many ImageJ types (such as {@link imagej.util.ColorRGB}) are mapped to
-	 * {@link String} for use with OMERO. We lean on the SciJava Common
+	 * <li>Many ImageJ types (such as {@link org.scijava.util.ColorRGB}) are
+	 * mapped to {@link String} for use with OMERO. We lean on the SciJava Common
 	 * {@link ConversionUtils#convert(Object, Class)} method to handle conversion
 	 * of such types back to ImageJ's expected type for the parameter.</li>
 	 * <li>ImageJ's image types (i.e., {@link Dataset}, {@link DatasetView} and

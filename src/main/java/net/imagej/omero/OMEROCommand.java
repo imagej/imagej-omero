@@ -23,8 +23,7 @@
 
 package net.imagej.omero;
 
-import imagej.command.ContextCommand;
-
+import org.scijava.command.ContextCommand;
 import org.scijava.plugin.Parameter;
 
 /** An ImageJ command for interacting with an OMERO server. */

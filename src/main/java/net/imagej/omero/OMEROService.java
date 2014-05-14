@@ -23,13 +23,13 @@
 
 package net.imagej.omero;
 
-import imagej.data.Dataset;
-import imagej.data.display.DatasetView;
-import imagej.data.display.ImageDisplay;
-import imagej.module.ModuleItem;
-
 import java.io.IOException;
 
+import net.imagej.Dataset;
+import net.imagej.display.DatasetView;
+import net.imagej.display.ImageDisplay;
+
+import org.scijava.module.ModuleItem;
 import org.scijava.service.Service;
 
 /**

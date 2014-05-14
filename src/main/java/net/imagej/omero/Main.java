@@ -26,7 +26,7 @@ package net.imagej.omero;
 public class Main {
 
 	public static void main(String... args) {
-		imagej.Main.launch(args);
+		net.imagej.Main.launch(args);
 	}
 
 }
