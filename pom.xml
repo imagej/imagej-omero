@@ -10,7 +10,7 @@
 
 	<groupId>io.scif</groupId>
 	<artifactId>scifio-omero</artifactId>
-	<version>0.3.1-SNAPSHOT</version>
+	<version>0.4.1-SNAPSHOT</version>
 
 	<name>SCIFIO Format for OMERO</name>
 	<description>A SCIFIO Format implementation which provides transparent access to image pixels on an OMERO server.</description>
