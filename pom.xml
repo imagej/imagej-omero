@@ -52,7 +52,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<packageName>net.imagej.omero.server</packageName>
+							<packageName>net.imagej.omero</packageName>
 						</manifest>
 					</archive>
 				</configuration>
