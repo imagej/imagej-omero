@@ -260,18 +260,6 @@ public class OMEROServiceTest {
 			return required;
 		}
 
-		// TEMP: Until the next ImageJ release.
-		@Override
-		public T getSoftMinimum() {
-			return getMinimumValue();
-		}
-
-		// TEMP: Until the next ImageJ release.
-		@Override
-		public T getSoftMaximum() {
-			return getMaximumValue();
-		}
-
 		@Override
 		public String getDescription() {
 			return description;
