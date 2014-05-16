@@ -71,15 +71,34 @@ public class ScriptGenerator extends AbstractContextual {
 	// -- ScriptRunner methods --
 
 	/** Generates OMERO script stubs for all available ImageJ modules. */
-	public void generateAll(final File dir, final boolean headlessOnly)
+	public int generateAll(final File omeroDir, final boolean headlessOnly)
 		throws IOException
 	{
-		if (!dir.isDirectory()) {
-			throw new IllegalArgumentException("Invalid directory: " + dir);
+		final File scriptsDir = new File(new File(omeroDir, "lib"), "scripts");
+		if (!scriptsDir.exists()) {
+			System.err.println("OMERO scripts directory not found: " + scriptsDir);
+			return 1;
 		}
+
+		final File dir = new File(scriptsDir, "imagej");
+		if (dir.exists()) {
+			System.err.println("Path already exists: " + dir);
+			System.err.println("Please remove it if you wish to generate scripts.");
+			return 2;
+		}
+
+		// create the directory
+		final boolean success = dir.mkdirs();
+		if (!success) {
+			System.err.println("Could not create directory: " + dir);
+			return 3;
+		}
+
+		// generate the scripts
 		for (final ModuleInfo info : ij.module().getModules()) {
 			if (isValid(info, headlessOnly)) generate(info, dir);
 		}
+		return 0;
 	}
 
 	/** Generates an OMERO script stub for the given ImageJ module. */
@@ -94,6 +113,12 @@ public class ScriptGenerator extends AbstractContextual {
 			throw new IllegalArgumentException("Invalid directory: " + dir);
 		}
 
+		// we will execute ImageJ.app/lib/run-script
+		final File baseDir = ij.app().getApp().getBaseDirectory();
+		final File libDir = new File(baseDir, "lib");
+		final File runScript = new File(libDir, "run-script");
+		final String exec = runScript.getAbsolutePath();
+
 		// sanitize identifier
 		final String id = ((Identifiable) info).getIdentifier();
 		final String escapedID = id.replaceAll("\n", "\\\\n");
@@ -102,10 +127,13 @@ public class ScriptGenerator extends AbstractContextual {
 		final File stubFile = formatFilename(dir, info);
 		stubFile.getParentFile().mkdirs();
 		final PrintWriter out = new PrintWriter(new FileWriter(stubFile));
+		// Someday, we can perhaps improve OMERO to call the ImageJ
+		// launcher directly rather than using Jython in this silly way.
 		out.println("#!/usr/bin/env jython");
-		out.println("import net.imagej.omero.ScriptRunner, sys");
+		out.println("from subprocess import call");
+		out.println("exec = \"" + exec + "\"");
 		out.println("id = \"" + escapedID + "\"");
-		out.println("net.imagej.omero.ScriptRunner.main(id)");
+		out.println("subprocess.call([exec, id])");
 		out.close();
 	}
 
@@ -128,7 +156,7 @@ public class ScriptGenerator extends AbstractContextual {
 
 		// generate script stubs
 		final ScriptGenerator scriptGenerator = new ScriptGenerator();
-		scriptGenerator.generateAll(dir, headlessOnly);
+		int result = scriptGenerator.generateAll(dir, headlessOnly);
 
 		// clean up resources
 		scriptGenerator.getContext().dispose();
@@ -136,7 +164,7 @@ public class ScriptGenerator extends AbstractContextual {
 		System.err.println(new Date() + ": generation completed");
 
 		// shut down the JVM, "just in case"
-		System.exit(0);
+		System.exit(result);
 	}
 
 	// -- Helper methods --
@@ -160,11 +188,9 @@ public class ScriptGenerator extends AbstractContextual {
 			}
 		}
 		return rv == null ? null : new File(rv.getParent(), rv.getName() + ".jy");
-
 	}
 
 	private String sanitize(final String str) {
-
 		// replace undesirable characters (space, slash and backslash)
 		String s = str.replaceAll("[ /\\\\]", "_");
 

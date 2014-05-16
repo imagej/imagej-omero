@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# gen-scripts: Generates OMERO script wrappers for ImageJ modules.
+
+set -e
+
+# -- Subroutines --
+
+die () {
+	echo "$*" >&2
+	exit 1
+}
+
+# -- Verify OMERO directory --
+
+test $# -gt 0 ||
+	die "Usage: $0 <path/to/omero> [--all]"
+
+omero="$1"
+
+test -f "$omero/lib/server/blitz.jar" ||
+	die "Invalid OMERO installation: $omero"
+
+# -- Generate OMERO script wrappers --
+
+"$(dirname "$0")/run-class" net.imagej.omero.ScriptGenerator $@

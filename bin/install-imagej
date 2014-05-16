@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# install-imagej: Adds ImageJ capabilities to your OMERO installation.
+
+set -e
+
+# -- Subroutines --
+
+die () {
+	echo "$*" >&2
+	exit 1
+}
+
+download () {
+	name="$1"
+	url="$2"
+	dest="$3"
+	echo "-> downloading $name"
+	curl -fs "$url" > "$dest" || die "Failed to download: $url"
+}
+
+# -- Determine OMERO and ImageJ directories --
+
+test $# = 1 ||
+	die "Usage: $0 <path/to/omero> [--all]"
+
+omero="$1"
+
+test -f "$omero/lib/server/blitz.jar" ||
+	die "Invalid OMERO installation: $omero"
+
+if [ -e "$IMAGEJ_HOME" ]
+then
+	imagej="$IMAGEJ_HOME"
+	echo "Using ImageJ location set by IMAGEJ_HOME: $imagej"
+else
+	imagej="$omero/lib/ImageJ.app"
+	echo "Using default location of ImageJ: $imagej"
+fi
+
+# -- Download and install ImageJ --
+
+if [ -d "$imagej" ]
+then
+	echo "ImageJ installation already exists; skipping."
+else (
+	installer="install.js"
+	mkdir -p "$imagej"
+	cd "$imagej"
+	download ImageJ http://update.imagej.net/bootstrap.js "$installer"
+	echo "-> installing ImageJ"
+	jrunscript "$installer" add-update-site \
+		OMERO-5.0 http://sites.imagej.net/OMERO-5.0
+	jrunscript "$installer" update
+	rm "$installer"
+) fi
+
+# -- Generate OMERO scripts --
+
+gen_scripts="$imagej/lib/gen-scripts"
+
+test -f "$gen_scripts" ||
+	die "No script generator at: $gen_scripts"
+
+echo "-> generating OMERO scripts"
+"$gen_scripts" $@ &&
+	echo "$(find "$omero/lib/scripts/imagej" | wc -l) scripts generated."
+
+echo
+echo "To regenerate scripts, run:"
+echo "    \"$gen_scripts\" \"$omero\" [--all]"

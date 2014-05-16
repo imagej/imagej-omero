@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# run-class: Executes the given class using the ImageJ launcher.
+
+set -e
+
+# -- Subroutines --
+
+die () {
+	echo "$*" >&2
+	exit 1
+}
+
+imagej_exec () {
+	ARCH="$(getconf LONG_BIT)"
+	case "$(uname)" in
+		Linux)
+			echo "ImageJ-linux$ARCH"
+			;;
+		Darwin)
+			echo "Contents/MacOS/ImageJ-macosx"
+			;;
+		CYGWIN)
+			echo "ImageJ-win$ARCH"
+			;;
+		*)
+			echo "ImageJ"
+			;;
+	esac
+}
+
+# -- Parse main class argument --
+
+test $# -gt 0 ||
+	die "Usage: $0 <main.class> [...]"
+
+# -- Determine ImageJ directory --
+
+imagej="$(cd $(dirname "$0")/.. && pwd)"
+
+test -d "$imagej/jars" ||
+	die "Invalid ImageJ installation: $imagej"
+
+# -- Generate scripts using ImageJ --
+
+"$imagej/$(imagej_exec)" --headless \
+	--full-classpath --main-class $@
