@@ -1,9 +1,9 @@
 /*
  * #%L
- * Server- and client-side communication between ImageJ and OMERO.
+ * ImageJ software for multidimensional image processing and analysis.
  * %%
  * Copyright (C) 2013 - 2014 Board of Regents of the University of
- * Wisconsin-Madison.
+ * Wisconsin-Madison and University of Dundee.
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
