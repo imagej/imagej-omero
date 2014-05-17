@@ -13,10 +13,14 @@ die () {
 
 # -- Verify OMERO directory --
 
-test $# -gt 0 ||
-	die "Usage: $0 <path/to/omero> [--all]"
-
-omero="$1"
+if [ $# -eq 0 ]
+then
+	omero="$(cd "$(dirname "$0")/../../.." && pwd)"
+	test -f "$omero/lib/server/blitz.jar" ||
+		die "Usage: $0 <path/to/omero> [--all]"
+else
+	omero="$1"
+fi
 
 test -f "$omero/lib/server/blitz.jar" ||
 	die "Invalid OMERO installation: $omero"
