@@ -26,15 +26,13 @@ and ImageJ regions of interest (ROIs) are not translated to/from OMERO ROIs.
 
 If you wish to give it a test drive, the steps are:
 
-### Install prerequisites
+### Installation
 
-*   [Install OMERO 5](http://www.openmicroscopy.org/site/support/omero5/sysadmins/unix/server-installation.html).
-*   Install Jython using your package manager, or
-    [from the website](https://wiki.python.org/jython/InstallationInstructions).
+First,
+[install OMERO 5](http://www.openmicroscopy.org/site/support/omero5/sysadmins/unix/server-installation.html)
+if you have not already done so.
 
-### Install ImageJ
-
-If you have not yet installed ImageJ on the OMERO server machine, then
+Then, if you have not yet installed ImageJ on the OMERO server machine,
 download the [ImageJ-OMERO installer](bin/install-imagej), and run it:
 
 ```shell
