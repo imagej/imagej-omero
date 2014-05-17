@@ -41,7 +41,7 @@ import org.scijava.module.Module;
 import org.scijava.module.ModuleInfo;
 
 /**
- * Generates Jython stubs for running ImageJ {@link Module}s as OMERO scripts.
+ * Generates Python stubs for running ImageJ {@link Module}s as OMERO scripts.
  * 
  * @author Curtis Rueden
  * @see "https://www.openmicroscopy.org/site/support/omero4/developers/Modules/Scripts.html"
@@ -117,7 +117,7 @@ public class ScriptGenerator extends AbstractContextual {
 		final File baseDir = ij.app().getApp().getBaseDirectory();
 		final File libDir = new File(baseDir, "lib");
 		final File runScript = new File(libDir, "run-script");
-		final String exec = runScript.getAbsolutePath();
+		final String exe = runScript.getAbsolutePath();
 
 		// sanitize identifier
 		final String id = ((Identifiable) info).getIdentifier();
@@ -128,12 +128,12 @@ public class ScriptGenerator extends AbstractContextual {
 		stubFile.getParentFile().mkdirs();
 		final PrintWriter out = new PrintWriter(new FileWriter(stubFile));
 		// Someday, we can perhaps improve OMERO to call the ImageJ
-		// launcher directly rather than using Jython in this silly way.
-		out.println("#!/usr/bin/env jython");
-		out.println("from subprocess import call");
-		out.println("exec = \"" + exec + "\"");
-		out.println("id = \"" + escapedID + "\"");
-		out.println("subprocess.call([exec, id])");
+		// launcher directly rather than using Python in this silly way.
+		out.println("#!/usr/bin/env python");
+		out.println("from subprocess import check_output");
+		out.println("exe = \"" + exe + "\"");
+		out.println("ident = \"" + escapedID + "\"");
+		out.println("subprocess.check_output([exe, ident])");
 		out.close();
 	}
 
@@ -174,7 +174,7 @@ public class ScriptGenerator extends AbstractContextual {
 
 		if (menuPath == null || menuPath.isEmpty())
 		{
-			return new File(dir, sanitize(info.getTitle()) + ".jy");
+			return new File(dir, sanitize(info.getTitle()) + ".py");
 		}
 
 		File rv = null;
@@ -187,7 +187,7 @@ public class ScriptGenerator extends AbstractContextual {
 				rv = new File(rv, n);
 			}
 		}
-		return rv == null ? null : new File(rv.getParent(), rv.getName() + ".jy");
+		return rv == null ? null : new File(rv.getParent(), rv.getName() + ".py");
 	}
 
 	private String sanitize(final String str) {
