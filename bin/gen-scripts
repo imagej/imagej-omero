@@ -13,13 +13,23 @@ die () {
 
 # -- Verify OMERO directory --
 
-if [ $# -eq 0 ]
+if [ $# -gt 0 ]
+then
+	case "$1" in
+		--*)
+			;;
+		*)
+			omero="$1"
+			shift
+			;;
+	esac
+fi
+
+if [ -z "$omero" ]
 then
 	omero="$(cd "$(dirname "$0")/../../.." && pwd)"
 	test -f "$omero/lib/server/blitz.jar" ||
 		die "Usage: $0 <path/to/omero> [--all]"
-else
-	omero="$1"
 fi
 
 test -f "$omero/lib/server/blitz.jar" ||
@@ -27,4 +37,4 @@ test -f "$omero/lib/server/blitz.jar" ||
 
 # -- Generate OMERO script wrappers --
 
-"$(dirname "$0")/run-class" net.imagej.omero.ScriptGenerator $@
+"$(dirname "$0")/run-class" net.imagej.omero.ScriptGenerator "$omero" $@
