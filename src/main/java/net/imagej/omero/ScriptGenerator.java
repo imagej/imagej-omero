@@ -133,7 +133,7 @@ public class ScriptGenerator extends AbstractContextual {
 		out.println("from subprocess import check_output");
 		out.println("exe = \"" + exe + "\"");
 		out.println("ident = \"" + escapedID + "\"");
-		out.println("subprocess.check_output([exe, ident])");
+		out.println("check_output([exe, ident])");
 		out.close();
 	}
 
