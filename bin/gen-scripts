@@ -11,11 +11,18 @@ die () {
 	exit 1
 }
 
+usage () {
+	die "Usage: $0 <path/to/omero> [--force] [--all]"
+}
+
 # -- Verify OMERO directory --
 
 if [ $# -gt 0 ]
 then
 	case "$1" in
+		--help)
+			usage
+			;;
 		--*)
 			;;
 		*)
@@ -28,8 +35,7 @@ fi
 if [ -z "$omero" ]
 then
 	omero="$(cd "$(dirname "$0")/../../.." && pwd)"
-	test -f "$omero/lib/server/blitz.jar" ||
-		die "Usage: $0 <path/to/omero> [--all]"
+	test -f "$omero/lib/server/blitz.jar" || usage
 fi
 
 test -f "$omero/lib/server/blitz.jar" ||
