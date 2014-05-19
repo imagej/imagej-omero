@@ -68,7 +68,7 @@ public class ScriptGenerator extends AbstractContextual {
 		setContext(ij.getContext());
 	}
 
-	// -- ScriptRunner methods --
+	// -- ScriptGenerator methods --
 
 	/** Generates OMERO script stubs for all available ImageJ modules. */
 	public int generateAll(final File omeroDir, final boolean headlessOnly)
