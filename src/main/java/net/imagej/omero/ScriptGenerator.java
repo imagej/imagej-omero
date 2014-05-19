@@ -167,7 +167,7 @@ public class ScriptGenerator extends AbstractContextual {
 		File dir = null;
 		for (final String arg : args) {
 			if ("--all".equals(arg)) scriptGenerator.setHeadlessOnly(false);
-			if ("--force".equals(arg)) scriptGenerator.setForceOverwrite(true);
+			else if ("--force".equals(arg)) scriptGenerator.setForceOverwrite(true);
 			else dir = new File(arg);
 		}
 
