@@ -53,6 +53,8 @@ public class ScriptGenerator extends AbstractContextual {
 	/** The ImageJ application gateway. */
 	private final ImageJ ij;
 
+	private boolean headlessOnly = true;
+
 	// -- Constructors --
 
 	public ScriptGenerator() {
@@ -70,10 +72,13 @@ public class ScriptGenerator extends AbstractContextual {
 
 	// -- ScriptGenerator methods --
 
+	/** Toggles whether to generate only headless-friendly modules. */
+	public void setHeadlessOnly(final boolean headlessOnly) {
+		this.headlessOnly = headlessOnly;
+	}
+
 	/** Generates OMERO script stubs for all available ImageJ modules. */
-	public int generateAll(final File omeroDir, final boolean headlessOnly)
-		throws IOException
-	{
+	public int generateAll(final File omeroDir) throws IOException {
 		final File scriptsDir = new File(new File(omeroDir, "lib"), "scripts");
 		if (!scriptsDir.exists()) {
 			System.err.println("OMERO scripts directory not found: " + scriptsDir);
@@ -141,22 +146,22 @@ public class ScriptGenerator extends AbstractContextual {
 
 	/** Entry point for generating OMERO script stubs. */
 	public static void main(final String... args) throws Exception {
-		// parse arguments
-		boolean headlessOnly = true;
-		File dir = null;
-		for (final String arg : args) {
-			if ("--all".equals(arg)) headlessOnly = false;
-			else dir = new File(arg);
-		}
-
 		System.err.println(new Date() + ": generating scripts");
 
 		// NB: Make ImageJ startup less verbose.
 		System.setProperty("scijava.log.level", "warn");
 
-		// generate script stubs
 		final ScriptGenerator scriptGenerator = new ScriptGenerator();
-		int result = scriptGenerator.generateAll(dir, headlessOnly);
+
+		// parse arguments
+		File dir = null;
+		for (final String arg : args) {
+			if ("--all".equals(arg)) scriptGenerator.setHeadlessOnly(false);
+			else dir = new File(arg);
+		}
+
+		// generate script stubs
+		int result = scriptGenerator.generateAll(dir);
 
 		// clean up resources
 		scriptGenerator.getContext().dispose();
