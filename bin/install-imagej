@@ -63,8 +63,7 @@ test -f "$gen_scripts" ||
 	die "No script generator at: $gen_scripts"
 
 echo "-> generating OMERO scripts"
-"$gen_scripts" $@ &&
-	echo "$(find "$omero/lib/scripts/imagej" | wc -l) scripts generated."
+"$gen_scripts" $@
 
 echo
 echo "To regenerate scripts, run:"
