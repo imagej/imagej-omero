@@ -25,6 +25,7 @@ package net.imagej.omero;
 
 import org.scijava.command.ContextCommand;
 import org.scijava.plugin.Parameter;
+import org.scijava.widget.TextWidget;
 
 /** An ImageJ command for interacting with an OMERO server. */
 public abstract class OMEROCommand extends ContextCommand {
@@ -38,8 +39,7 @@ public abstract class OMEROCommand extends ContextCommand {
 	@Parameter
 	private String user;
 
-	// TEMP: Use TextWidget.PASSWORD_STYLE constant once it is released.
-	@Parameter(style = "password")
+	@Parameter(style = TextWidget.PASSWORD_STYLE)
 	private String password;
 
 	// -- OMEROCommand methods --
