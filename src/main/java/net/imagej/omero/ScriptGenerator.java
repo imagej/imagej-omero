@@ -39,6 +39,7 @@ import org.scijava.MenuPath;
 import org.scijava.UIDetails;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleInfo;
+import org.scijava.util.FileUtils;
 
 /**
  * Generates Python stubs for running ImageJ {@link Module}s as OMERO scripts.
@@ -54,6 +55,7 @@ public class ScriptGenerator extends AbstractContextual {
 	private final ImageJ ij;
 
 	private boolean headlessOnly = true;
+	private boolean forceOverwrite = false;
 
 	// -- Constructors --
 
@@ -77,6 +79,11 @@ public class ScriptGenerator extends AbstractContextual {
 		this.headlessOnly = headlessOnly;
 	}
 
+	/** Toggles whether to force overwrite any existing ImageJ scripts. */
+	public void setForceOverwrite(final boolean forceOverwrite) {
+		this.forceOverwrite = forceOverwrite;
+	}
+
 	/** Generates OMERO script stubs for all available ImageJ modules. */
 	public int generateAll(final File omeroDir) throws IOException {
 		final File scriptsDir = new File(new File(omeroDir, "lib"), "scripts");
@@ -87,9 +94,12 @@ public class ScriptGenerator extends AbstractContextual {
 
 		final File dir = new File(scriptsDir, "imagej");
 		if (dir.exists()) {
-			System.err.println("Path already exists: " + dir);
-			System.err.println("Please remove it if you wish to generate scripts.");
-			return 2;
+			if (!forceOverwrite) {
+				System.err.println("Path already exists: " + dir);
+				System.err.println("Please remove it if you wish to generate scripts.");
+				return 2;
+			}
+			FileUtils.deleteRecursively(dir);
 		}
 
 		// create the directory
@@ -157,6 +167,7 @@ public class ScriptGenerator extends AbstractContextual {
 		File dir = null;
 		for (final String arg : args) {
 			if ("--all".equals(arg)) scriptGenerator.setHeadlessOnly(false);
+			if ("--force".equals(arg)) scriptGenerator.setForceOverwrite(true);
 			else dir = new File(arg);
 		}
 
