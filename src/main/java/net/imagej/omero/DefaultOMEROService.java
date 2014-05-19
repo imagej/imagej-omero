@@ -312,12 +312,6 @@ public class DefaultOMEROService extends AbstractService implements
 		final String omeroSource =
 			"omero:" + credentials(client) + "&imageID=" + imageID;
 
-		// TEMP: Until SCIFIO issue #63 is resolved.
-		// https://github.com/scifio/scifio/pull/63
-		final File temp = new File(omeroSource);
-		temp.createNewFile();
-		temp.deleteOnExit();
-
 		return datasetService.open(omeroSource);
 	}
 
@@ -331,12 +325,6 @@ public class DefaultOMEROService extends AbstractService implements
 		final String omeroDestination =
 			"name=" + dataset.getName() + "&" + credentials(client) //
 				+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
-
-		// TEMP: Until SCIFIO issue #63 is resolved.
-		// https://github.com/scifio/scifio/pull/63
-		final File temp = new File(omeroDestination);
-		temp.createNewFile();
-		temp.deleteOnExit();
 
 		datasetService.save(dataset, omeroDestination);
 
