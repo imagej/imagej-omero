@@ -7,8 +7,9 @@ This project provides interoperability between
 There are ImageJ commands for accessing images from a remote OMERO server,
 as well as uploading image data from ImageJ to OMERO as a new image.
 
-To try it out, enable the __OMERO-5.0__
-[update site](http://wiki.imagej.net/Update_Sites).
+To try it out, add __OMERO-5.0__ to the list of update
+sites with this url http://sites.imagej.net/OMERO-5.0 following
+[these instructions](http://wiki.imagej.net/Update_Sites).
 
 You will then have the following new menu items:
 
