@@ -96,7 +96,7 @@ public class ScriptGenerator extends AbstractContextual {
 		if (dir.exists()) {
 			if (!forceOverwrite) {
 				System.err.println("Path already exists: " + dir);
-				System.err.println("Please remove it if you wish to generate scripts.");
+				System.err.println("Please run with --force if you wish to generate scripts.");
 				return 2;
 			}
 			FileUtils.deleteRecursively(dir);
