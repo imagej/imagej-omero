@@ -23,6 +23,8 @@
 
 package net.imagej.omero;
 
+import io.scif.omero.OMEROFormat;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -328,7 +330,11 @@ public class DefaultOMEROService extends AbstractService implements
 
 		datasetService.save(dataset, omeroDestination);
 
-		// FIXME! Return correct Image ID
+		final Object globalMetadata = dataset.getProperties().get("scifio.metadata.global");
+		if (globalMetadata instanceof OMEROFormat.Metadata) {
+			final OMEROFormat.Metadata meta = (OMEROFormat.Metadata) globalMetadata;
+			return meta.getImageID();
+		}
 		return -1;
 	}
 
