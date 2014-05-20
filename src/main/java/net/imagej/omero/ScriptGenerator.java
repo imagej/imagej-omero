@@ -161,7 +161,7 @@ public class ScriptGenerator extends AbstractContextual {
 
 	/** Entry point for generating OMERO script stubs. */
 	public static void main(final String... args) throws Exception {
-		System.err.println(new Date() + ": generating scripts");
+		System.out.println(new Date() + ": generating scripts");
 
 		// NB: Make ImageJ startup less verbose.
 		System.setProperty("scijava.log.level", "warn");
@@ -182,7 +182,7 @@ public class ScriptGenerator extends AbstractContextual {
 		// clean up resources
 		scriptGenerator.getContext().dispose();
 
-		System.err.println(new Date() + ": generation completed");
+		System.out.println(new Date() + ": generation completed");
 
 		// shut down the JVM, "just in case"
 		System.exit(result);

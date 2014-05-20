@@ -104,7 +104,7 @@ public class ScriptRunner extends AbstractContextual {
 
 	/** Simple entry point for executing ImageJ modules as scripts. */
 	public static void main(final String... args) throws Exception {
-		System.err.println(new Date() + ": initializing script runner");
+		System.out.println(new Date() + ": initializing script runner");
 
 		// NB: Make ImageJ startup less verbose.
 		System.setProperty("scijava.log.level", "warn");
@@ -115,7 +115,7 @@ public class ScriptRunner extends AbstractContextual {
 		// execute modules
 		int failed = 0;
 		for (final String id : args) {
-			System.err.println(new Date() + ": executing: " + id);
+			System.out.println(new Date() + ": executing: " + id);
 			final boolean success = scriptRunner.invoke(id);
 			if (!success) failed++;
 		}
@@ -123,7 +123,7 @@ public class ScriptRunner extends AbstractContextual {
 		// clean up resources
 		scriptRunner.getContext().dispose();
 
-		System.err.println(new Date() + ": executions completed");
+		System.out.println(new Date() + ": executions completed");
 
 		// shut down the JVM
 		System.exit(failed);
