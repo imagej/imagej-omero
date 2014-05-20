@@ -145,10 +145,15 @@ public class ScriptGenerator extends AbstractContextual {
 		// Someday, we can perhaps improve OMERO to call the ImageJ
 		// launcher directly rather than using Python in this silly way.
 		out.println("#!/usr/bin/env python");
-		out.println("from subprocess import check_output");
+		out.println("from __future__ import print_function");
+		out.println("import sys, subprocess");
 		out.println("exe = \"" + exe + "\"");
 		out.println("ident = \"" + escapedID + "\"");
-		out.println("check_output([exe, ident])");
+		out.println("try:");
+		out.println("    print(subprocess.check_output([exe, ident]))");
+		out.println("except subprocess.CalledProcessError, e:");
+		out.println("    print(e.output)");
+		out.println("    sys.exit(e.returncode)");
 		out.close();
 	}
 
