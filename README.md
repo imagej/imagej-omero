@@ -4,3 +4,5 @@ This repository contains code for interoperability between
 
 In particular, it provides a SCIFIO `Format` implementation which offers
 transparent read and write access to image pixels on an OMERO server.
+
+See also [ImageJ-OMERO](https://github.com/imagej/imagej-omero).
