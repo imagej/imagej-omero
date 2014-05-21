@@ -106,9 +106,6 @@ public class ScriptRunner extends AbstractContextual {
 	public static void main(final String... args) throws Exception {
 		System.out.println(new Date() + ": initializing script runner");
 
-		// NB: Make ImageJ startup less verbose.
-		System.setProperty("scijava.log.level", "warn");
-
 		// initialize script runner
 		final ScriptRunner scriptRunner = new ScriptRunner();
 
