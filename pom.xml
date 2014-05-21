@@ -106,6 +106,10 @@ Wisconsin-Madison and University of Dundee.</organizationName>
 		</developer>
 	</developers>
 
+	<contributors>
+		<contributor><name>Niko Ehrenfeuchter</name></contributor>
+	</contributors>
+
 	<issueManagement>
 		<system>GitHub Issues</system>
 		<url>https://github.com/imagej/imagej-omero/issues</url>
