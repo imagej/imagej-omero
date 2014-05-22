@@ -27,14 +27,14 @@ and ImageJ regions of interest (ROIs) are not translated to/from OMERO ROIs.
 
 If you wish to give it a test drive, the steps are:
 
+### Prerequisites
+
+*   [OMERO 5](http://www.openmicroscopy.org/site/support/omero5/sysadmins/unix/server-installation.html)
+*   Python 2.7 or later
+
 ### Installation
 
-First,
-[install OMERO 5](http://www.openmicroscopy.org/site/support/omero5/sysadmins/unix/server-installation.html)
-if you have not already done so.
-
-Then, if you have not yet installed ImageJ on the OMERO server machine,
-download the [ImageJ-OMERO installer](bin/install-imagej), and run it:
+Download the [ImageJ-OMERO installer](bin/install-imagej), and run it:
 
 ```shell
 sh install-imagej <path/to/omero>
@@ -43,11 +43,14 @@ sh install-imagej <path/to/omero>
 The installer will:
 
 *   Download and install ImageJ into OMERO's `lib/ImageJ.app` folder,
-    with the Fiji and OMERO-5.0 update sites enabled.
+    with the __Fiji__ and __OMERO-5.0__ update sites enabled.
 *   Install OMERO script wrappers for all available ImageJ commands
     into OMERO's `lib/scripts/imagej` folder.
 
-Alternately, if you wish to use an existing ImageJ installation:
+### Using an existing ImageJ installation
+
+If you already have ImageJ installed on the OMERO server machine,
+you can use that, rather than installing a new copy of ImageJ:
 
 1.  Enable the __OMERO-5.0__
     [update site](http://wiki.imagej.net/Update_Sites).
@@ -87,8 +90,8 @@ Alternately, if you wish to use an existing ImageJ installation:
 If you wish to remove ImageJ support from OMERO:
 
 ```shell
-OMERO_DIR="/path/to/omero"
-rm -rf "$OMERO_DIR/lib/scripts/imagej" "$OMERO_DIR/lib/ImageJ.app"
+OMERO_PREFIX="/path/to/omero"
+rm -rf "$OMERO_PREFIX/lib/scripts/imagej" "$OMERO_PREFIX/lib/ImageJ.app"
 ```
 
 ## See also
