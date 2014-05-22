@@ -34,7 +34,9 @@ If you wish to give it a test drive, the steps are:
 
 ### Installation
 
-Download the [ImageJ-OMERO installer](bin/install-imagej), and run it:
+Download the
+[ImageJ-OMERO installer](https://raw.githubusercontent.com/imagej/imagej-omero/master/bin/install-imagej),
+and run it:
 
 ```shell
 sh install-imagej <path/to/omero>
