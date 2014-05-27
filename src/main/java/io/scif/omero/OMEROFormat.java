@@ -453,10 +453,9 @@ public class OMEROFormat extends AbstractFormat {
 			if (store != null) {
 				// save the data
 				try {
-					// store resultant image and pixels IDs into the metadata
+					// store resultant image ID into the metadata
 					final Image image = store.save().getImage();
 					getMetadata().setImageID(image.getId().getValue());
-					getMetadata().setPixelsID(image.getPixels(0).getId().getValue());
 					store.close();
 				}
 				catch (final ServerError err) {
