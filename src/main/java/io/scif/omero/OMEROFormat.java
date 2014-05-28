@@ -437,11 +437,11 @@ public class OMEROFormat extends AbstractFormat {
 			final byte[] bytes = plane.getBytes();
 			final int[] zct = zct(imageIndex, planeIndex, getMetadata());
 			try {
-				log.info("writePlane: bytes = " + bytes.length);
-				log.info("writePlane: z = " + zct[0] + " c = " + zct[1] + " t = " + zct[2]);
-				log.info("writePlane: w = " + plane.getImageMetadata().getAxisLength(0));
-				log.info("writePlane: h = " + plane.getImageMetadata().getAxisLength(1));
-				log.info("writePlane: num planar = " + plane.getImageMetadata().getPlanarAxisCount());
+				log.debug("writePlane: bytes = " + bytes.length);
+				log.debug("writePlane: z = " + zct[0] + " c = " + zct[1] + " t = " + zct[2]);
+				log.debug("writePlane: w = " + plane.getImageMetadata().getAxisLength(0));
+				log.debug("writePlane: h = " + plane.getImageMetadata().getAxisLength(1));
+				log.debug("writePlane: num planar = " + plane.getImageMetadata().getPlanarAxisCount());
 				store.setPlane(bytes, zct[0], zct[1], zct[2]);
 			}
 			catch (final ServerError err) {
