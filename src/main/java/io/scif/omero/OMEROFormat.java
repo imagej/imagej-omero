@@ -449,8 +449,6 @@ public class OMEROFormat extends AbstractFormat {
 				throw new FormatException("Error writing to OMERO: imageIndex=" +
 					imageIndex + ", planeIndex=" + planeIndex, err);
 			}
-
-			System.out.println(bytes.length);
 		}
 
 		@Override
