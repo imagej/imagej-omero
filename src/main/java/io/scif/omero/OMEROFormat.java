@@ -58,6 +58,7 @@ import omero.api.RawPixelsStorePrx;
 import omero.model.Image;
 import omero.model.Pixels;
 
+import org.scijava.Priority;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -68,7 +69,7 @@ import org.scijava.plugin.Plugin;
  * 
  * @author Curtis Rueden
  */
-@Plugin(type = Format.class)
+@Plugin(type = Format.class, priority = Priority.HIGH_PRIORITY)
 public class OMEROFormat extends AbstractFormat {
 
 	// -- Format methods --
