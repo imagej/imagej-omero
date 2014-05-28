@@ -23,6 +23,7 @@
 
 package net.imagej.omero;
 
+import io.scif.Metadata;
 import io.scif.omero.OMEROFormat;
 
 import java.io.File;
@@ -328,12 +329,11 @@ public class DefaultOMEROService extends AbstractService implements
 			"name=" + dataset.getName() + "&" + credentials(client) //
 				+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
 
-		datasetService.save(dataset, omeroDestination);
+		final Metadata metadata = datasetService.save(dataset, omeroDestination);
 
-		final Object globalMetadata = dataset.getProperties().get("scifio.metadata.global");
-		if (globalMetadata instanceof OMEROFormat.Metadata) {
-			final OMEROFormat.Metadata meta = (OMEROFormat.Metadata) globalMetadata;
-			return meta.getImageID();
+		if (metadata instanceof OMEROFormat.Metadata) {
+			final OMEROFormat.Metadata omeroMeta = (OMEROFormat.Metadata) metadata;
+			return omeroMeta.getImageID();
 		}
 		return -1;
 	}
