@@ -296,6 +296,7 @@ public class OMEROFormat extends AbstractFormat {
 			// populate SCIFIO ImageMetadata
 			createImageMetadata(1);
 			final ImageMetadata imageMeta = get(0);
+			imageMeta.setName(name);
 			imageMeta.setAxes(axes, axisLengths);
 			imageMeta.setPixelType(pixType);
 			imageMeta.setMetadataComplete(true);
