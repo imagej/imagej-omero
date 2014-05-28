@@ -328,6 +328,9 @@ public class OMEROFormat extends AbstractFormat {
 				throw communicationException(err);
 			}
 
+			// parse image name
+			meta.setName(pix.getImage().getName().getValue());
+
 			// parse pixel sizes
 			meta.setSizeX(pix.getSizeX().getValue());
 			meta.setSizeY(pix.getSizeY().getValue());
