@@ -376,13 +376,11 @@ public class OMEROFormat extends AbstractFormat {
 			try {
 				session = createSession(meta);
 				pix = session.loadPixels(meta);
+				session.loadImageName(meta);
 			}
 			catch (final ServerError err) {
 				throw communicationException(err);
 			}
-
-			// parse image name
-			meta.setName(pix.getImage().getName().getValue());
 
 			// parse pixel sizes
 			meta.setSizeX(pix.getSizeX().getValue());
