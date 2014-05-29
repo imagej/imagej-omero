@@ -128,6 +128,28 @@ public class OMEROSession implements Closeable {
 		return session.getPixelsService().retrievePixDescription(getPixelsID(meta));
 	}
 
+	/** Gets an OMERO {@code Image} descriptor, loading remotely as needed. */
+	public Image loadImage(final OMEROFormat.Metadata meta) throws ServerError {
+		// return cached Image if available
+		Image image = meta.getImage();
+		if (image != null) return image;
+
+		final long imageID = meta.getImageID();
+		if (imageID == 0) throw new IllegalArgumentException("Image ID is unset");
+
+		// load the Image from the remote server
+		final List<Long> ids = Arrays.asList(imageID);
+		final List<Image> images =
+			session.getContainerService().getImages("Image", ids, null);
+		if (images == null || images.isEmpty()) {
+			throw new IllegalArgumentException("Invalid image ID: " + imageID);
+		}
+		image = images.get(0);
+		meta.setImage(image);
+
+		return image;
+	}
+
 	/**
 	 * Obtains a raw pixels store for reading from the pixels associated with the
 	 * given metadata.
