@@ -180,6 +180,21 @@ public class OMEROSession implements Closeable {
 		return pixelsID;
 	}
 
+	/** Gets the metadata's associated image name, loading remotely as needed. */
+	public String loadImageName(final OMEROFormat.Metadata meta)
+		throws ServerError
+	{
+		// return cached image name if available
+		String name = meta.getName();
+		if (name != null) return name;
+
+		// load the Image name from the remote server
+		name = loadImage(meta).getName().getValue();
+		meta.setName(name);
+
+		return name;
+	}
+
 	/**
 	 * Obtains a raw pixels store for reading from the pixels associated with the
 	 * given metadata.
