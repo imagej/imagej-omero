@@ -128,7 +128,10 @@ public class OMEROSession implements Closeable {
 		return session.getPixelsService().retrievePixDescription(getPixelsID(meta));
 	}
 
-	/** Obtains a raw pixels store for reading from the configured pixels ID. */
+	/**
+	 * Obtains a raw pixels store for reading from the pixels associated with the
+	 * given metadata.
+	 */
 	public RawPixelsStorePrx openPixels(final OMEROFormat.Metadata meta)
 		throws ServerError
 	{
@@ -137,7 +140,10 @@ public class OMEROSession implements Closeable {
 		return store;
 	}
 
-	/** Obtains a raw pixels store for writing to a newly created pixels ID. */
+	/**
+	 * Obtains a raw pixels store for writing to a new image which will be
+	 * associated with the given metadata.
+	 */
 	public RawPixelsStorePrx createPixels(final OMEROFormat.Metadata meta)
 		throws ServerError, FormatException
 	{
