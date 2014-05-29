@@ -145,6 +145,12 @@ public class OMEROFormat extends AbstractFormat {
 		@Field
 		private String pixelType;
 
+		/** Cached {@code Image} descriptor. */
+		private Image image;
+
+		/** Cached {@code Pixels} descriptor. */
+		private Pixels pixels;
+
 		// -- io.scif.omero.OMEROFormat.Metadata methods --
 
 		public OMEROCredentials getCredentials() {
@@ -207,6 +213,14 @@ public class OMEROFormat extends AbstractFormat {
 			return pixelType;
 		}
 
+		public Image getImage() {
+			return image;
+		}
+
+		public Pixels getPixels() {
+			return pixels;
+		}
+
 		public void setName(final String name) {
 			this.name = name;
 		}
@@ -217,10 +231,22 @@ public class OMEROFormat extends AbstractFormat {
 
 		public void setImageID(final long imageID) {
 			this.imageID = imageID;
+
+			// clear stale Image cache
+			final Image cachedImage = getImage();
+			if (cachedImage != null && cachedImage.getId().getValue() != imageID) {
+				setImage(null);
+			}
 		}
 
 		public void setPixelsID(final long pixelsID) {
 			this.pixelsID = pixelsID;
+
+			// clear stale Pixels cache
+			final Pixels cachedPixels = getPixels();
+			if (cachedPixels != null && cachedPixels.getId().getValue() != pixelsID) {
+				setPixels(null);
+			}
 		}
 
 		public void setSizeX(final int sizeX) {
@@ -265,6 +291,32 @@ public class OMEROFormat extends AbstractFormat {
 
 		public void setPixelType(final String pixelType) {
 			this.pixelType = pixelType;
+		}
+
+		public void setImage(final Image image) {
+			this.image = image;
+			if (image == null) return;
+
+			// sanity check for matching image IDs
+			final long existingID = getImageID();
+			final long id = image.getId().getValue();
+			if (existingID != id) {
+				throw new IllegalArgumentException("existing image ID (" +
+					existingID + ") does not match the given Image (" + id + ")");
+			}
+		}
+
+		public void setPixels(final Pixels pixels) {
+			this.pixels = pixels;
+			if (pixels == null) return;
+
+			// sanity check for matching pixels IDs
+			final long existingID = getPixelsID();
+			final long id = pixels.getId().getValue();
+			if (existingID != id) {
+				throw new IllegalArgumentException("existing pixels ID (" +
+					existingID + ") does not match the given Pixels (" + id + ")");
+			}
 		}
 
 		// -- io.scif.Metadata methods --
