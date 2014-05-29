@@ -121,12 +121,28 @@ public class OMEROSession implements Closeable {
 		return session;
 	}
 
-	/** Gets an OMERO {@code Pixels} descriptor */
-	public Pixels getPixelsInfo(final OMEROFormat.Metadata meta)
-		throws ServerError
-	{
+	/** Gets an OMERO {@code Pixels} descriptor, loading remotely as needed. */
+	public Pixels loadPixels(final OMEROFormat.Metadata meta) throws ServerError {
+		// return cached Pixels if available
+		Pixels pixels = meta.getPixels();
+		if (pixels != null) return pixels;
+
+		// NB: We cannot write:
+		//
+		// loadImage(meta).getPixels(0)
+		//
+		// because retrieving an Image is not enough to
+		// retrieve all fields of the linked Pixels.
+
+		// load the pixels ID from the remote server
 		final long pixelsID = loadPixelsID(meta);
-		return session.getPixelsService().retrievePixDescription(pixelsID);
+		meta.setPixelsID(pixelsID);
+
+		// load the Pixels from the remote server
+		pixels = session.getPixelsService().retrievePixDescription(pixelsID);
+		meta.setPixels(pixels);
+
+		return pixels;
 	}
 
 	/** Gets an OMERO {@code Image} descriptor, loading remotely as needed. */

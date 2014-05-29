@@ -375,7 +375,7 @@ public class OMEROFormat extends AbstractFormat {
 			final Pixels pix;
 			try {
 				session = createSession(meta);
-				pix = session.getPixelsInfo(meta);
+				pix = session.loadPixels(meta);
 			}
 			catch (final ServerError err) {
 				throw communicationException(err);
