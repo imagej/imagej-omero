@@ -149,10 +149,14 @@ public class OMEROSession implements Closeable {
 	{
 		// create a new Image which will house the written pixels
 		final ImageData newImage = createImage(meta);
+		final long imageID = newImage.getId();
+		meta.setImageID(imageID);
 
 		// configure the raw pixels store
 		final RawPixelsStorePrx store = session.createRawPixelsStore();
-		store.setPixelsId(newImage.getDefaultPixels().getId(), false);
+		final long pixelsID = newImage.getDefaultPixels().getId();
+		store.setPixelsId(pixelsID, false);
+		meta.setPixelsID(pixelsID);
 
 		return store;
 	}
