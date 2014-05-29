@@ -101,10 +101,10 @@ public class OMEROFormat extends AbstractFormat {
 	public static class Metadata extends AbstractMetadata {
 
 		@Field
-		private String name;
+		private OMEROCredentials credentials;
 
 		@Field
-		private OMEROCredentials credentials;
+		private String name;
 
 		@Field(label = "Image ID")
 		private long imageID;
@@ -147,12 +147,12 @@ public class OMEROFormat extends AbstractFormat {
 
 		// -- io.scif.omero.OMEROFormat.Metadata methods --
 
-		public String getName() {
-			return name;
-		}
-
 		public OMEROCredentials getCredentials() {
 			return credentials;
+		}
+
+		public String getName() {
+			return name;
 		}
 
 		public long getImageID() {
