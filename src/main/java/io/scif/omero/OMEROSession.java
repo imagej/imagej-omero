@@ -73,8 +73,9 @@ public class OMEROSession implements Closeable {
 		// initialize the client
 		boolean close = false;
 		if (c == null) {
-			if (credentials.getServer() != null) {
-				client = new omero.client(credentials.getServer(), credentials.getPort());
+			final String server = credentials.getServer();
+			if (server != null) {
+				client = new omero.client(server, credentials.getPort());
 			}
 			else client = new omero.client();
 		}
@@ -89,7 +90,8 @@ public class OMEROSession implements Closeable {
 			if (close) client.closeSession();
 			session = client.joinSession(sessionID);
 		}
-		else if (credentials.getUser() != null && credentials.getPassword() != null) {
+		else if (credentials.getUser() != null && credentials.getPassword() != null)
+		{
 			final String user = credentials.getUser();
 			final String password = credentials.getPassword();
 			session = client.createSession(user, password);
