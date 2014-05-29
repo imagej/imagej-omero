@@ -125,7 +125,8 @@ public class OMEROSession implements Closeable {
 	public Pixels getPixelsInfo(final OMEROFormat.Metadata meta)
 		throws ServerError
 	{
-		return session.getPixelsService().retrievePixDescription(getPixelsID(meta));
+		final long pixelsID = loadPixelsID(meta);
+		return session.getPixelsService().retrievePixDescription(pixelsID);
 	}
 
 	/** Gets an OMERO {@code Image} descriptor, loading remotely as needed. */
@@ -150,6 +151,19 @@ public class OMEROSession implements Closeable {
 		return image;
 	}
 
+	/** Gets the metadata's associated pixels ID, loading remotely as needed. */
+	public long loadPixelsID(final OMEROFormat.Metadata meta) throws ServerError {
+		// return cached pixels ID if available
+		long pixelsID = meta.getPixelsID();
+		if (pixelsID != 0) return pixelsID;
+
+		// obtain pixels ID from image ID
+		pixelsID = loadImage(meta).getPixels(0).getId().getValue();
+		meta.setPixelsID(pixelsID);
+
+		return pixelsID;
+	}
+
 	/**
 	 * Obtains a raw pixels store for reading from the pixels associated with the
 	 * given metadata.
@@ -158,7 +172,7 @@ public class OMEROSession implements Closeable {
 		throws ServerError
 	{
 		final RawPixelsStorePrx store = session.createRawPixelsStore();
-		store.setPixelsId(getPixelsID(meta), false);
+		store.setPixelsId(loadPixelsID(meta), false);
 		return store;
 	}
 
@@ -193,22 +207,6 @@ public class OMEROSession implements Closeable {
 	}
 
 	// -- Helper methods --
-
-	private long getPixelsID(final OMEROFormat.Metadata meta) throws ServerError {
-		final long pixelsID = meta.getPixelsID();
-		if (pixelsID != 0) return pixelsID;
-
-		// obtain pixels ID from image ID
-		final long imageID = meta.getImageID();
-		if (imageID == 0) return 0;
-		final List<Image> images =
-			session.getContainerService().getImages("Image", Arrays.asList(imageID),
-				null);
-		if (images == null || images.isEmpty()) {
-			throw new IllegalArgumentException("Invalid image ID: " + imageID);
-		}
-		return images.get(0).getPixels(0).getId().getValue();
-	}
 
 	private ImageData createImage(final OMEROFormat.Metadata meta)
 		throws ServerError, FormatException
