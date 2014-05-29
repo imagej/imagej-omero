@@ -41,7 +41,7 @@ import org.scijava.plugin.Plugin;
 	@Menu(label = MenuConstants.FILE_LABEL, weight = MenuConstants.FILE_WEIGHT,
 		mnemonic = MenuConstants.FILE_MNEMONIC),
 	@Menu(label = "Export", weight = 6),
-	@Menu(label = "OMERO...", weight = 100, mnemonic = 'o') })
+	@Menu(label = "OMERO... ", weight = 100, mnemonic = 'o') })
 public class SaveToOMERO extends OMEROCommand {
 
 	@Parameter
