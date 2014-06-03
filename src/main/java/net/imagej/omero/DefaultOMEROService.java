@@ -25,7 +25,6 @@ package net.imagej.omero;
 
 import io.scif.omero.OMEROFormat;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
