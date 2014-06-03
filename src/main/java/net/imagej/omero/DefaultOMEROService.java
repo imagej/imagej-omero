@@ -23,6 +23,7 @@
 
 package net.imagej.omero;
 
+import ij.ImagePlus;
 import io.scif.omero.OMEROFormat;
 
 import java.io.IOException;
@@ -42,6 +43,7 @@ import net.imagej.DatasetService;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
+import net.imagej.legacy.LegacyService;
 
 import org.scijava.Optional;
 import org.scijava.display.DisplayService;
@@ -82,6 +84,9 @@ public class DefaultOMEROService extends AbstractService implements
 	@Parameter
 	private ObjectService objectService;
 
+	@Parameter
+	private LegacyService legacyService;
+
 	// -- OMEROService methods --
 
 	@Override
@@ -108,7 +113,8 @@ public class DefaultOMEROService extends AbstractService implements
 		// image types
 		if (Dataset.class.isAssignableFrom(type) ||
 			DatasetView.class.isAssignableFrom(type) ||
-			ImageDisplay.class.isAssignableFrom(type))
+			ImageDisplay.class.isAssignableFrom(type) ||
+			ImagePlus.class.isAssignableFrom(type))
 		{
 			// use an image ID
 			return omero.rtypes.rlong(0);
@@ -226,6 +232,12 @@ public class DefaultOMEROService extends AbstractService implements
 			final ImageDisplay imageDisplay = (ImageDisplay) value;
 			// TODO: Support more aspects of image displays; e.g., multiple datasets.
 			return toOMERO(client, imageDisplayService.getActiveDataset(imageDisplay));
+		}
+		if (value instanceof ImagePlus) {
+			final ImagePlus imp = (ImagePlus) value;
+			final ImageDisplay imageDisplay =
+				legacyService.getImageMap().registerLegacyImage(imp);
+			return toOMERO(client, imageDisplay);
 		}
 		return toOMERO(value);
 	}
@@ -410,6 +422,12 @@ public class DefaultOMEROService extends AbstractService implements
 				@SuppressWarnings("unchecked")
 				final T display = (T) displayService.createDisplay(dataset);
 				return display;
+			}
+			if (ImagePlus.class.isAssignableFrom(type)) {
+				final ImageDisplay display = convert(client, value, ImageDisplay.class);
+				@SuppressWarnings("unchecked")
+				final T imp = (T) legacyService.getImageMap().registerDisplay(display);
+				return imp;
 			}
 		}
 
