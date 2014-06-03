@@ -160,12 +160,12 @@ public class DefaultOMEROService extends AbstractService implements
 		// default case: convert to string
 		// works for many types, including but not limited to:
 		// - char
-		// - imagej.util.ColorRGB
 		// - java.io.File
 		// - java.lang.Character
 		// - java.lang.String
 		// - java.math.BigDecimal
 		// - java.math.BigInteger
+		// - org.scijava.util.ColorRGB
 		return omero.rtypes.rstring("");
 	}
 
