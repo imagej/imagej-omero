@@ -127,6 +127,8 @@ public class OMEROServiceTest {
 		assertParam(omeroService, RString.class, BigInteger.class);
 		assertParam(omeroService, RString.class, ColorRGB.class);
 		assertParam(omeroService, RString.class, File.class);
+
+		omeroService.getContext().dispose();
 	}
 
 	/** Tests {@link OMEROService#prototype(Class)}. */
@@ -191,6 +193,8 @@ public class OMEROServiceTest {
 		assertPrototype(omeroService, RString.class, BigInteger.class);
 		assertPrototype(omeroService, RString.class, ColorRGB.class);
 		assertPrototype(omeroService, RString.class, File.class);
+
+		omeroService.getContext().dispose();
 	}
 
 	// -- Helper methods --
