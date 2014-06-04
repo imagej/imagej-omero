@@ -490,6 +490,7 @@ public class OMEROFormat extends AbstractFormat {
 
 		private OMEROSession session;
 		private RawPixelsStorePrx store;
+		private String imageName;
 
 		@Override
 		public void writePlane(final int imageIndex, final long planeIndex,
@@ -497,7 +498,7 @@ public class OMEROFormat extends AbstractFormat {
 			throws FormatException, IOException
 		{
 			// TODO: Consider whether to reuse OMERO session from somewhere else.
-			if (session == null) initSession();
+			if (session == null) initSession(imageIndex);
 
 			final byte[] bytes = plane.getBytes();
 			final int[] zct = zct(imageIndex, planeIndex, getMetadata());
@@ -524,6 +525,7 @@ public class OMEROFormat extends AbstractFormat {
 				try {
 					// store resultant image ID into the metadata
 					final Image image = store.save().getImage();
+					image.setName(omero.rtypes.rstring(imageName));
 					getMetadata().setImageID(image.getId().getValue());
 					store.close();
 				}
@@ -541,9 +543,10 @@ public class OMEROFormat extends AbstractFormat {
 			return new String[0];
 		}
 
-		private void initSession() throws FormatException {
+		private void initSession(final int imageIndex) throws FormatException {
 			try {
 				final Metadata meta = getMetadata();
+				imageName = meta.get(imageIndex).getName();
 
 				// parse OMERO credentials from destination string
 				// HACK: Get destination string from the metadata's dataset name.
