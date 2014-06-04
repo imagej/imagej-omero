@@ -50,6 +50,10 @@
 		</dependency>
 	</dependencies>
 
+	<properties>
+		<scifio-omero.version>0.5.0</scifio-omero.version>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
