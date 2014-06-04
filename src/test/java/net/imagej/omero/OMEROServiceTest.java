@@ -24,6 +24,7 @@
 package net.imagej.omero;
 
 import static org.junit.Assert.assertEquals;
+import ij.ImagePlus;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -120,6 +121,7 @@ public class OMEROServiceTest {
 		assertParam(omeroService, RLong.class, Dataset.class);
 		assertParam(omeroService, RLong.class, DatasetView.class);
 		assertParam(omeroService, RLong.class, ImageDisplay.class);
+		assertParam(omeroService, RLong.class, ImagePlus.class);
 
 		// -- test other object types --
 
@@ -186,6 +188,7 @@ public class OMEROServiceTest {
 		assertPrototype(omeroService, RLong.class, Dataset.class);
 		assertPrototype(omeroService, RLong.class, DatasetView.class);
 		assertPrototype(omeroService, RLong.class, ImageDisplay.class);
+		assertPrototype(omeroService, RLong.class, ImagePlus.class);
 
 		// -- test other object types --
 
