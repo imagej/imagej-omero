@@ -505,8 +505,7 @@ public class OMEROFormat extends AbstractFormat {
 				store.setPlane(bytes, zct[0], zct[1], zct[2]);
 			}
 			catch (final ServerError err) {
-				throw new FormatException("Error writing to OMERO: imageIndex=" +
-					imageIndex + ", planeIndex=" + planeIndex, err);
+				throw writerException(err, imageIndex, planeIndex);
 			}
 			catch (final Ice.LocalException exc) {
 				throw versionException(exc);
@@ -620,6 +619,13 @@ public class OMEROFormat extends AbstractFormat {
 	private static FormatException versionException(final Throwable cause) {
 		return new FormatException(
 			"Error communicating with OMERO -- server version mismatch?", cause);
+	}
+
+	private static FormatException writerException(final Throwable t,
+		final int imageIndex, final long planeIndex)
+	{
+		return new FormatException("Error writing to OMERO: imageIndex=" +
+			imageIndex + ", planeIndex=" + planeIndex, t);
 	}
 
 	private static int value(final long[] pos, final int i) {
