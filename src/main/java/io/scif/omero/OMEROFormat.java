@@ -381,6 +381,9 @@ public class OMEROFormat extends AbstractFormat {
 			catch (final ServerError err) {
 				throw communicationException(err);
 			}
+			catch (final Ice.LocalException exc) {
+				throw versionException(exc);
+			}
 
 			// parse pixel sizes
 			meta.setSizeX(pix.getSizeX().getValue());
@@ -437,6 +440,9 @@ public class OMEROFormat extends AbstractFormat {
 			catch (final ServerError err) {
 				throw communicationException(err);
 			}
+			catch (final Ice.LocalException exc) {
+				throw versionException(exc);
+			}
 
 			return plane;
 		}
@@ -461,6 +467,9 @@ public class OMEROFormat extends AbstractFormat {
 			}
 			catch (final ServerError err) {
 				throw communicationException(err);
+			}
+			catch (final Ice.LocalException exc) {
+				throw versionException(exc);
 			}
 		}
 
@@ -498,6 +507,9 @@ public class OMEROFormat extends AbstractFormat {
 			catch (final ServerError err) {
 				throw new FormatException("Error writing to OMERO: imageIndex=" +
 					imageIndex + ", planeIndex=" + planeIndex, err);
+			}
+			catch (final Ice.LocalException exc) {
+				throw versionException(exc);
 			}
 		}
 
@@ -603,6 +615,11 @@ public class OMEROFormat extends AbstractFormat {
 
 	private static FormatException connectionException(final Throwable cause) {
 		return new FormatException("Error connecting to OMERO", cause);
+	}
+
+	private static FormatException versionException(final Throwable cause) {
+		return new FormatException(
+			"Error communicating with OMERO -- server version mismatch?", cause);
 	}
 
 	private static int value(final long[] pos, final int i) {
