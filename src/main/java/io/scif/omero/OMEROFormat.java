@@ -562,9 +562,11 @@ public class OMEROFormat extends AbstractFormat {
 	{
 		final long[] pos =
 			FormatTools.rasterToPosition(imageIndex, planeIndex, metadata);
-		final int zIndex = metadata.get(imageIndex).getAxisIndex(Axes.Z);
-		final int cIndex = metadata.get(imageIndex).getAxisIndex(Axes.CHANNEL);
-		final int tIndex = metadata.get(imageIndex).getAxisIndex(Axes.TIME);
+		final ImageMetadata imageMeta = metadata.get(imageIndex);
+		final int planarAxisCount = imageMeta.getPlanarAxisCount();
+		final int zIndex = imageMeta.getAxisIndex(Axes.Z) - planarAxisCount;
+		final int cIndex = imageMeta.getAxisIndex(Axes.CHANNEL) - planarAxisCount;
+		final int tIndex = imageMeta.getAxisIndex(Axes.TIME) - planarAxisCount;
 		final int z = value(pos, zIndex);
 		final int c = value(pos, cIndex);
 		final int t = value(pos, tIndex);
