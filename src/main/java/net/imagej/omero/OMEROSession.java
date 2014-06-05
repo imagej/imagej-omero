@@ -287,6 +287,10 @@ public class OMEROSession implements Closeable {
 		return new ImageData(results.get(0));
 	}
 
+//	private void setMinMax() {
+//		session.getPixelsService().setChannelGlobalMinMax(pixelsId, theC, min, max);
+//	}
+
 	private PixelsType getPixelsType(final int pixelType) throws ServerError,
 		FormatException
 	{
