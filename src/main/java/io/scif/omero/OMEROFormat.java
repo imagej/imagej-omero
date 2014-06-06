@@ -560,6 +560,8 @@ public class OMEROFormat extends AbstractFormat {
 	public static int[] zct(final int imageIndex, final long planeIndex,
 		final Metadata metadata)
 	{
+		// FIXME: Consider incorporating this logic into ImageMetadata class.
+		// Would be nicer to have e.g. imageMeta.getPosition(planeIndex) directly.
 		final long[] pos =
 			FormatTools.rasterToPosition(imageIndex, planeIndex, metadata);
 		final ImageMetadata imageMeta = metadata.get(imageIndex);
