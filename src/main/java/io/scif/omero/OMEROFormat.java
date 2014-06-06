@@ -339,8 +339,12 @@ public class OMEROFormat extends AbstractFormat {
 			if (physSizeC != null) cAxis.setScale(physSizeC);
 			final LinearAxis tAxis = new DefaultLinearAxis(Axes.TIME);
 			if (physSizeT != null) tAxis.setScale(physSizeT);
-			final CalibratedAxis[] axes = { xAxis, yAxis, zAxis, cAxis, tAxis };
-			final long[] axisLengths = { sizeX, sizeY, sizeZ, sizeC, sizeT };
+			// HACK: Do things in XYCZT order for ImageJ1 compatibility.
+			// Technically, this _shouldn't_ matter because imagej-legacy
+			// should take care of dimension swapping incompatible orderings.
+			// But for now, this sidesteps the issue.
+			final CalibratedAxis[] axes = { xAxis, yAxis, cAxis, zAxis, tAxis };
+			final long[] axisLengths = { sizeX, sizeY, sizeC, sizeZ, sizeT };
 
 			// obtain pixel type
 			final int pixType = FormatTools.pixelTypeFromString(pixelType);
