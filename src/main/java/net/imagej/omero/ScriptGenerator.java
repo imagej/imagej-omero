@@ -111,7 +111,7 @@ public class ScriptGenerator extends AbstractContextual {
 
 		// generate the scripts
 		for (final ModuleInfo info : ij.module().getModules()) {
-			if (isValid(info, headlessOnly)) generate(info, dir);
+			if (isValid(info)) generate(info, dir);
 		}
 		return 0;
 	}
@@ -218,7 +218,7 @@ public class ScriptGenerator extends AbstractContextual {
 		return s;
 	}
 
-	private boolean isValid(final ModuleInfo info, final boolean headlessOnly) {
+	private boolean isValid(final ModuleInfo info) {
 		if (!(info instanceof Identifiable)) return false;
 		if (headlessOnly && !info.canRunHeadless()) return false;
 		if (!UIDetails.APPLICATION_MENU_ROOT.equals(info.getMenuRoot())) return false;
