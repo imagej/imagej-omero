@@ -221,8 +221,7 @@ public class ScriptGenerator extends AbstractContextual {
 	private boolean isValid(final ModuleInfo info) {
 		if (!(info instanceof Identifiable)) return false;
 		if (headlessOnly && !info.canRunHeadless()) return false;
-		if (!UIDetails.APPLICATION_MENU_ROOT.equals(info.getMenuRoot())) return false;
-		return true;
+		return UIDetails.APPLICATION_MENU_ROOT.equals(info.getMenuRoot());
 	}
 
 }
