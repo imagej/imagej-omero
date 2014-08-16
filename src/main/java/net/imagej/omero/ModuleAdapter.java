@@ -35,15 +35,14 @@ import net.imagej.display.ImageDisplay;
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
 import org.scijava.ItemVisibility;
+import org.scijava.Versioned;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.module.Module;
-import org.scijava.module.ModuleException;
 import org.scijava.module.ModuleInfo;
 import org.scijava.module.ModuleItem;
 import org.scijava.module.ModuleService;
 import org.scijava.plugin.Parameter;
-import org.scijava.util.Manifest;
 
 /**
  * Adapts an ImageJ {@link Module} (such as a {@link Command}) to be usable as
@@ -188,32 +187,15 @@ public class ModuleAdapter extends AbstractContextual {
 	}
 
 	/**
-	 * Extracts the version of the associated ImageJ module, by scanning the
-	 * relevant JAR manifest.
+	 * Gets the version of the associated ImageJ module.
 	 * 
-	 * @return The <code>Implementation-Version</code> of the associated JAR
-	 *         manifest; or if there is no associated JAR manifest, or something
-	 *         else goes wrong, returns null.
+	 * @return {@link Versioned#getVersion()}; or null if the module does not
+	 *         implement the {@link Versioned} interface. Extracts the version of
+	 *         the associated ImageJ module, by scanning the relevant JAR manifest
+	 *         and/or POM.
 	 */
 	public String getVersion() {
-		final Class<?> c;
-		try {
-			c = info.createModule().getDelegateObject().getClass();
-		}
-		catch (final ModuleException exc) {
-			log.debug(exc);
-			return null;
-		}
-		final Manifest m = Manifest.getManifest(c);
-		if (m == null) return null;
-		final String version = m.getImplementationVersion();
-		if (version == null) return null;
-		if (version.endsWith("-SNAPSHOT")) {
-			// append commit hash to differentiate between development versions
-			final String build = m.getImplementationBuild();
-			return build == null ? version : version + "-" + build;
-		}
-		return version;
+		return info instanceof Versioned ? ((Versioned) info).getVersion() : null;
 	}
 
 	// -- Helper methods --
