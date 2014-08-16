@@ -23,7 +23,6 @@
 
 package net.imagej.omero;
 
-import java.io.File;
 import java.io.IOException;
 
 import net.imagej.Dataset;
