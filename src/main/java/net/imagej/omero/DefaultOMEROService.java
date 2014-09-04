@@ -175,6 +175,10 @@ public class DefaultOMEROService extends AbstractService implements
 
 		// NB: Unfortunately, omero.rtypes.rtype is not smart enough
 		// to recurse into data structures, so we do it ourselves!
+
+		// TODO: Use omero.rtypes.wrap, now that it exists!
+		// https://github.com/openmicroscopy/openmicroscopy/commit/0767a2e37996d553bbdec343488b7b385756490a
+
 		if (value.getClass().isArray()) {
 			final omero.RType[] val = new omero.RType[Array.getLength(value)];
 			for (int i = 0; i < val.length; i++) {
