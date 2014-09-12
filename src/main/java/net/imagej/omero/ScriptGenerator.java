@@ -34,9 +34,7 @@ import net.imagej.ImageJ;
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
 import org.scijava.Identifiable;
-import org.scijava.MenuEntry;
-import org.scijava.MenuPath;
-import org.scijava.UIDetails;
+import org.scijava.menu.ShadowMenu;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleInfo;
 import org.scijava.util.FileUtils;
@@ -109,52 +107,15 @@ public class ScriptGenerator extends AbstractContextual {
 			return 3;
 		}
 
-		// generate the scripts
-		for (final ModuleInfo info : ij.module().getModules()) {
-			if (isValid(info)) generate(info, dir);
-		}
-		return 0;
-	}
-
-	/** Generates an OMERO script stub for the given ImageJ module. */
-	public void generate(final ModuleInfo info, final File dir)
-		throws IOException
-	{
-		// validate arguments
-		if (!(info instanceof Identifiable)) {
-			throw new IllegalArgumentException("Unidentifiable module: " + info);
-		}
-		if (!dir.isDirectory()) {
-			throw new IllegalArgumentException("Invalid directory: " + dir);
-		}
-
 		// we will execute ImageJ.app/lib/run-script
 		final File baseDir = ij.app().getApp().getBaseDirectory();
 		final File libDir = new File(baseDir, "lib");
 		final File runScript = new File(libDir, "run-script");
 		final String exe = runScript.getAbsolutePath();
 
-		// sanitize identifier
-		final String id = ((Identifiable) info).getIdentifier();
-		final String escapedID = id.replaceAll("\n", "\\\\n");
-
-		// write the stub
-		final File stubFile = formatFilename(dir, info);
-		stubFile.getParentFile().mkdirs();
-		final PrintWriter out = new PrintWriter(new FileWriter(stubFile));
-		// Someday, we can perhaps improve OMERO to call the ImageJ
-		// launcher directly rather than using Python in this silly way.
-		out.println("#!/usr/bin/env python");
-		out.println("from __future__ import print_function");
-		out.println("import sys, subprocess");
-		out.println("exe = \"" + exe + "\"");
-		out.println("ident = \"" + escapedID + "\"");
-		out.println("try:");
-		out.println("    print(subprocess.check_output([exe, ident]))");
-		out.println("except subprocess.CalledProcessError, e:");
-		out.println("    print(e.output)");
-		out.println("    sys.exit(e.returncode)");
-		out.close();
+		// generate the scripts
+		generateAll(ij.menu().getMenu(), dir, exe, 0);
+		return 0;
 	}
 
 	// -- Main method --
@@ -187,41 +148,94 @@ public class ScriptGenerator extends AbstractContextual {
 
 	// -- Helper methods --
 
-	private File formatFilename(File dir, final ModuleInfo info) {
-		final MenuPath menuPath = info.getMenuPath();
-
-		if (menuPath == null || menuPath.isEmpty())
-		{
-			return new File(dir, sanitize(info.getTitle()) + ".py");
+	/**
+	 * Generates OMERO script stubs for all ImageJ modules in the given menu
+	 * structure.
+	 */
+	private void generateAll(final ShadowMenu menu, final File dir,
+		final String exe, final int pos) throws IOException
+	{
+		if (menu.isLeaf()) {
+			// menu points to a leaf node -- i.e., a module
+			generate(menu.getModuleInfo(), dir, exe, pos);
+			return;
 		}
 
-		File rv = null;
-		for (final MenuEntry menu : menuPath) {
-			final String n = sanitize(menu.getName());
-			if (rv == null) {
-				rv = new File(dir, n);
-			}
-			else {
-				rv = new File(rv, n);
-			}
+		// menu points to a menu structure with children
+		final String name = menu.getName();
+		final File subDir;
+		if (name == null) {
+			// no menu entry; probably the root menu
+			subDir = dir;
 		}
-		return rv == null ? null : new File(rv.getParent(), rv.getName() + ".py");
+		else {
+			// create the menu's subdirectory
+			subDir = new File(dir, sanitize(name, pos));
+			subDir.mkdir();
+		}
+		// loop over the menu's children
+		int i = 0;
+		for (final ShadowMenu subMenu : menu.getChildren()) {
+			generateAll(subMenu, subDir, exe, i++);
+		}
 	}
 
-	private String sanitize(final String str) {
+	/** Generates an OMERO script stub for the given ImageJ module. */
+	private void generate(final ModuleInfo info, final File dir,
+		final String exe, final int pos) throws IOException
+	{
+		// validate module
+		if (!(info instanceof Identifiable)) return;
+		if (headlessOnly && !info.canRunHeadless()) return;
+
+		// validate directory
+		if (!dir.isDirectory()) {
+			throw new IllegalArgumentException("Invalid directory: " + dir);
+		}
+
+		// sanitize identifier
+		final String id = ((Identifiable) info).getIdentifier();
+		final String escapedID = id.replaceAll("\n", "\\\\n");
+
+		// write the stub
+		final File stubFile = formatFilename(dir, info, pos);
+		final PrintWriter out = new PrintWriter(new FileWriter(stubFile));
+		// Someday, we can perhaps improve OMERO to call the ImageJ
+		// launcher directly rather than using Python in this silly way.
+		out.println("#!/usr/bin/env python");
+		out.println("from __future__ import print_function");
+		out.println("import sys, subprocess");
+		out.println("exe = \"" + exe + "\"");
+		out.println("ident = \"" + escapedID + "\"");
+		out.println("try:");
+		out.println("    print(subprocess.check_output([exe, ident]))");
+		out.println("except subprocess.CalledProcessError, e:");
+		out.println("    print(e.output)");
+		out.println("    sys.exit(e.returncode)");
+		out.close();
+	}
+
+	private File formatFilename(final File dir, final ModuleInfo info,
+		final int pos)
+	{
+		return new File(dir, sanitize(info.getTitle(), pos) + ".py");
+	}
+
+	private String sanitize(final String str, final int pos) {
 		// replace undesirable characters (space, slash and backslash)
 		String s = str.replaceAll("[ /\\\\]", "_");
 
 		// remove ellipsis if present
 		if (s.endsWith("...")) s = s.substring(0, s.length() - 3);
 
-		return s;
-	}
+		// prepend the correct number of invisible spaces, for proper sorting
+		final StringBuilder sb = new StringBuilder();
+		for (int l = 0; l < pos; l++) {
+			sb.append("\ufeff");
+		}
+		sb.append(s);
 
-	private boolean isValid(final ModuleInfo info) {
-		if (!(info instanceof Identifiable)) return false;
-		if (headlessOnly && !info.canRunHeadless()) return false;
-		return UIDetails.APPLICATION_MENU_ROOT.equals(info.getMenuRoot());
+		return sb.toString();
 	}
 
 }
