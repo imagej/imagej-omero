@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 
 import net.imagej.Dataset;
-import net.imagej.ImageJ;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import omero.RArray;
@@ -54,6 +53,7 @@ import omero.RType;
 import omero.grid.Param;
 
 import org.junit.Test;
+import org.scijava.Context;
 import org.scijava.module.AbstractModuleItem;
 import org.scijava.module.ModuleItem;
 import org.scijava.util.ColorRGB;
@@ -203,7 +203,7 @@ public class OMEROServiceTest {
 	// -- Helper methods --
 
 	private OMEROService createService() {
-		return new ImageJ(OMEROService.class).get(OMEROService.class);
+		return new Context(OMEROService.class).service(OMEROService.class);
 	}
 
 	private <T> ModuleItem<T> createItem(final Class<T> type) {
