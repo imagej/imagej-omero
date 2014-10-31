@@ -29,14 +29,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
 
-import net.imagej.ImageJ;
-
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
 import org.scijava.Identifiable;
+import org.scijava.app.AppService;
+import org.scijava.menu.MenuService;
 import org.scijava.menu.ShadowMenu;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleInfo;
+import org.scijava.plugin.Parameter;
 import org.scijava.util.FileUtils;
 
 /**
@@ -47,10 +48,13 @@ import org.scijava.util.FileUtils;
  */
 public class ScriptGenerator extends AbstractContextual {
 
-	// -- Instance fields --
+	// -- Fields --
 
-	/** The ImageJ application gateway. */
-	private final ImageJ ij;
+	@Parameter
+	private AppService appService;
+
+	@Parameter
+	private MenuService menuService;
 
 	private boolean headlessOnly = true;
 	private boolean forceOverwrite = false;
@@ -58,16 +62,11 @@ public class ScriptGenerator extends AbstractContextual {
 	// -- Constructors --
 
 	public ScriptGenerator() {
-		this(new ImageJ());
+		this(new Context());
 	}
 
 	public ScriptGenerator(final Context context) {
-		this(new ImageJ(context));
-	}
-
-	public ScriptGenerator(final ImageJ ij) {
-		this.ij = ij;
-		setContext(ij.getContext());
+		context.inject(this);
 	}
 
 	// -- ScriptGenerator methods --
@@ -108,13 +107,13 @@ public class ScriptGenerator extends AbstractContextual {
 		}
 
 		// we will execute ImageJ.app/lib/run-script
-		final File baseDir = ij.app().getApp().getBaseDirectory();
+		final File baseDir = appService.getApp().getBaseDirectory();
 		final File libDir = new File(baseDir, "lib");
 		final File runScript = new File(libDir, "run-script");
 		final String exe = runScript.getAbsolutePath();
 
 		// generate the scripts
-		generateAll(ij.menu().getMenu(), dir, exe, 0);
+		generateAll(menuService.getMenu(), dir, exe, 0);
 		return 0;
 	}
 

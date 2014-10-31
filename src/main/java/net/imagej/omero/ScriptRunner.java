@@ -25,12 +25,13 @@ package net.imagej.omero;
 
 import java.util.Date;
 
-import net.imagej.ImageJ;
-
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
+import org.scijava.log.LogService;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleInfo;
+import org.scijava.module.ModuleService;
+import org.scijava.plugin.Parameter;
 
 /**
  * Executes ImageJ {@link Module}s as OMERO scripts.
@@ -40,37 +41,30 @@ import org.scijava.module.ModuleInfo;
  */
 public class ScriptRunner extends AbstractContextual {
 
-	// -- Instance fields --
+	// -- Fields --
 
-	/** The ImageJ application gateway. */
-	private final ImageJ ij;
+	@Parameter
+	private ModuleService moduleService;
+
+	@Parameter
+	private LogService log;
 
 	// -- Constructors --
 
 	public ScriptRunner() {
-		this(new ImageJ());
+		this(new Context());
 	}
 
 	public ScriptRunner(final Context context) {
-		this(new ImageJ(context));
-	}
-
-	public ScriptRunner(final ImageJ ij) {
-		this.ij = ij;
-		setContext(ij.getContext());
+		setContext(context);
 	}
 
 	// -- ScriptRunner methods --
 
-	/** Gets the ImageJ application gateway used by this script runner. */
-	public ImageJ ij() {
-		return ij;
-	}
-
 	/** Invokes the given ImageJ module identifier as an OMERO script. */
 	public boolean invoke(final String id) {
 		// look for a module matching the given identifier
-		final ModuleInfo info = ModuleUtils.findModule(ij.module(), id);
+		final ModuleInfo info = ModuleUtils.findModule(moduleService, id);
 		return invoke(info);
 	}
 
@@ -81,7 +75,7 @@ public class ScriptRunner extends AbstractContextual {
 
 		// initialize module converter
 		final ModuleAdapter adaptedModule =
-			new ModuleAdapter(ij.getContext(), info, c);
+			new ModuleAdapter(getContext(), info, c);
 
 		// perform appropriate action (either parse or launch)
 		try {
@@ -91,7 +85,7 @@ public class ScriptRunner extends AbstractContextual {
 			else adaptedModule.launch();
 		}
 		catch (final Throwable t) {
-			ij.log().error(t);
+			log.error(t);
 			return false;
 		}
 		finally {
