@@ -348,7 +348,8 @@ public class DefaultOMEROService extends AbstractService implements
 			"name=" + dataset.getName() + "&" + credentials(client) //
 				+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
 
-		final Metadata metadata = datasetService.save(dataset, omeroDestination);
+		final Metadata metadata = (Metadata)
+			datasetService.save(dataset, omeroDestination);
 
 		if (metadata instanceof OMEROFormat.Metadata) {
 			final OMEROFormat.Metadata omeroMeta = (OMEROFormat.Metadata) metadata;
