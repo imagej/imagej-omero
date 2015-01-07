@@ -25,8 +25,6 @@
 
 package io.scif.omero;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import io.scif.AbstractChecker;
 import io.scif.AbstractFormat;
 import io.scif.AbstractMetadata;
@@ -47,10 +45,10 @@ import io.scif.util.FormatTools;
 import java.io.IOException;
 import java.util.Map;
 
-import net.imglib2.meta.Axes;
-import net.imglib2.meta.CalibratedAxis;
-import net.imglib2.meta.axis.DefaultLinearAxis;
-import net.imglib2.meta.axis.LinearAxis;
+import net.imagej.axis.Axes;
+import net.imagej.axis.CalibratedAxis;
+import net.imagej.axis.DefaultLinearAxis;
+import net.imagej.axis.LinearAxis;
 import omero.RDouble;
 import omero.RInt;
 import omero.ServerError;
@@ -62,6 +60,9 @@ import org.scijava.Priority;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 
 /**
  * A SCIFIO {@link Format} which provides read/write access to pixels on an

@@ -25,8 +25,6 @@
 
 package io.scif.omero;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
 import io.scif.util.FormatTools;
@@ -36,7 +34,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import net.imglib2.meta.Axes;
+import net.imagej.axis.Axes;
 import omero.RLong;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
@@ -46,6 +44,8 @@ import omero.model.Image;
 import omero.model.Pixels;
 import omero.model.PixelsType;
 import pojos.ImageData;
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 
 /**
  * Helper class for managing OMERO client sessions.
