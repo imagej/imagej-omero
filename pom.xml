@@ -158,6 +158,11 @@
 				<artifactId>license-maven-plugin</artifactId>
 				<configuration>
 					<licenseName>gpl_v2</licenseName>
+          <projectName>OME database I/O package for communicating with OME and OMERO servers.</projectName>
+					<organizationName>Open Microscopy Environment:
+	- Board of Regents of the University of Wisconsin-Madison
+	- Glencoe Software, Inc.
+	- University of Dundee</organizationName>
 				</configuration>
 			</plugin>
 		</plugins>
