@@ -1,11 +1,11 @@
 // @BOTH ImagePlus imp
-// @ColorRGB bg
+// @ColorRGB(label = "Color") bg
 
 importClass(Packages.ij.IJ)
-
 IJ.setAutoThreshold(imp, "Otsu");
 IJ.run(imp, "Create Mask", "");
 IJ.wait(200); // HACK: avoid timing bug
+IJ.selectWindow("mask");
 mask = IJ.getImage();
 IJ.run(mask, "Dilate", "");
 IJ.run(mask, "Create Selection", "");
