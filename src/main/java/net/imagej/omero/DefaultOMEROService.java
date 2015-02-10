@@ -47,6 +47,7 @@ import net.imagej.display.ImageDisplayService;
 import net.imagej.legacy.LegacyService;
 
 import org.scijava.Optional;
+import org.scijava.convert.ConvertService;
 import org.scijava.display.DisplayService;
 import org.scijava.log.LogService;
 import org.scijava.module.ModuleItem;
@@ -57,7 +58,6 @@ import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.util.ClassUtils;
 import org.scijava.util.ConversionUtils;
-import org.scijava.convert.ConvertService;
 
 /**
  * Default ImageJ service for managing OMERO data conversion.
