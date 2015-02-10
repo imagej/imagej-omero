@@ -23,10 +23,11 @@
 
 package net.imagej.omero;
 
+import io.scif.services.DatasetIOService;
+
 import java.io.IOException;
 
 import net.imagej.Dataset;
-import net.imagej.DatasetService;
 
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
@@ -48,7 +49,7 @@ public class OpenFromOMERO extends OMEROCommand {
 	private LogService log;
 
 	@Parameter
-	private DatasetService datasetService;
+	private DatasetIOService datasetIOService;
 
 	@Parameter
 	private int imageID;
@@ -67,7 +68,7 @@ public class OpenFromOMERO extends OMEROCommand {
 			".omero";
 
 		try {
-			dataset = datasetService.open(omeroSource);
+			dataset = datasetIOService.open(omeroSource);
 		}
 		catch (IOException exc) {
 			log.error(exc);

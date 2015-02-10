@@ -26,6 +26,7 @@ package net.imagej.omero;
 import ij.ImagePlus;
 import io.scif.Metadata;
 import io.scif.omero.OMEROFormat;
+import io.scif.services.DatasetIOService;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -40,7 +41,6 @@ import java.util.Map;
 import java.util.Set;
 
 import net.imagej.Dataset;
-import net.imagej.DatasetService;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
@@ -75,7 +75,7 @@ public class DefaultOMEROService extends AbstractService implements
 	private LogService log;
 
 	@Parameter
-	private DatasetService datasetService;
+	private DatasetIOService datasetIOService;
 
 	@Parameter
 	private DisplayService displayService;
@@ -334,7 +334,7 @@ public class DefaultOMEROService extends AbstractService implements
 		final String omeroSource =
 			"omero:" + credentials(client) + "&imageID=" + imageID;
 
-		return datasetService.open(omeroSource);
+		return datasetIOService.open(omeroSource);
 	}
 
 	@Override
@@ -348,8 +348,7 @@ public class DefaultOMEROService extends AbstractService implements
 			"name=" + dataset.getName() + "&" + credentials(client) //
 				+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
 
-		final Metadata metadata = (Metadata)
-			datasetService.save(dataset, omeroDestination);
+		final Metadata metadata = datasetIOService.save(dataset, omeroDestination);
 
 		if (metadata instanceof OMEROFormat.Metadata) {
 			final OMEROFormat.Metadata omeroMeta = (OMEROFormat.Metadata) metadata;
