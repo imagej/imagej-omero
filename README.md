@@ -75,13 +75,13 @@ you can use that, rather than installing a new copy of ImageJ:
 *   List parameters of "System Information" command:
 
     ```shell
-    omero script params $(omero script list | grep 'System Info' | sed 's/|.*//')
+    omero script params $(omero script list | grep 'System_Info' | sed 's/|.*//')
     ```
 
 *   Execute the "System Information" command:
 
     ```shell
-    omero script launch $(omero script list | grep 'System Info' | sed 's/|.*//')
+    omero script launch $(omero script list | grep 'System_Info' | sed 's/|.*//')
     ```
 
 *   Repeat with any other desired commands.
