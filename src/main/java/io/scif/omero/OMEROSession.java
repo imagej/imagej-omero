@@ -25,6 +25,8 @@
 
 package io.scif.omero;
 
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
 import io.scif.util.FormatTools;
@@ -44,8 +46,6 @@ import omero.model.Image;
 import omero.model.Pixels;
 import omero.model.PixelsType;
 import pojos.ImageData;
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 
 /**
  * Helper class for managing OMERO client sessions.
