@@ -21,7 +21,7 @@
  * #L%
  */
 
-package net.imagej.omero;
+package net.imagej.omero.commands;
 
 import io.scif.config.SCIFIOConfig;
 import io.scif.config.SCIFIOConfig.ImgMode;
@@ -30,6 +30,7 @@ import io.scif.services.DatasetIOService;
 import java.io.IOException;
 
 import net.imagej.Dataset;
+import net.imagej.omero.OMEROCommand;
 
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
@@ -45,7 +46,7 @@ import org.scijava.plugin.Plugin;
 		mnemonic = MenuConstants.FILE_MNEMONIC),
 	@Menu(label = "Import", weight = 5),
 	@Menu(label = "OMERO...", weight = 100, mnemonic = 'o') })
-public class OpenFromOMERO extends OMEROCommand {
+public class OpenImageFromOMERO extends OMEROCommand {
 
 	@Parameter
 	private LogService log;

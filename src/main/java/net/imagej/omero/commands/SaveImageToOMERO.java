@@ -21,13 +21,14 @@
  * #L%
  */
 
-package net.imagej.omero;
+package net.imagej.omero.commands;
 
 import io.scif.services.DatasetIOService;
 
 import java.io.IOException;
 
 import net.imagej.Dataset;
+import net.imagej.omero.OMEROCommand;
 
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
@@ -42,7 +43,7 @@ import org.scijava.plugin.Plugin;
 		mnemonic = MenuConstants.FILE_MNEMONIC),
 	@Menu(label = "Export", weight = 6),
 	@Menu(label = "OMERO... ", weight = 100, mnemonic = 'o') })
-public class SaveToOMERO extends OMEROCommand {
+public class SaveImageToOMERO extends OMEROCommand {
 
 	@Parameter
 	private LogService log;
