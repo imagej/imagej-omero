@@ -452,10 +452,9 @@ public class DefaultOMEROService extends AbstractService implements
 	private static <T> T[] toArray(final Collection<Object> collection,
 		final Class<T> type)
 	{
-		final Object array = Array.newInstance(type, 0);
 		@SuppressWarnings("unchecked")
-		final T[] typedArray = (T[]) array;
-		return collection.toArray(typedArray);
+		final T[] array = (T[]) Array.newInstance(type, 0);
+		return collection.toArray(array);
 	}
 
 }
