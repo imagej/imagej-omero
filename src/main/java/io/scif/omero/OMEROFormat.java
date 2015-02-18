@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import net.imagej.axis.Axes;
+import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imagej.axis.LinearAxis;
@@ -564,22 +565,45 @@ public class OMEROFormat extends AbstractFormat {
 	public static int[] zct(final int imageIndex, final long planeIndex,
 		final Metadata metadata)
 	{
-		// FIXME: Consider incorporating this logic into ImageMetadata class.
-		// Would be nicer to have e.g. imageMeta.getPosition(planeIndex) directly.
-		final long[] pos =
-			FormatTools.rasterToPosition(imageIndex, planeIndex, metadata);
-		final ImageMetadata imageMeta = metadata.get(imageIndex);
-		final int planarAxisCount = imageMeta.getPlanarAxisCount();
-		final int zIndex = imageMeta.getAxisIndex(Axes.Z) - planarAxisCount;
-		final int cIndex = imageMeta.getAxisIndex(Axes.CHANNEL) - planarAxisCount;
-		final int tIndex = imageMeta.getAxisIndex(Axes.TIME) - planarAxisCount;
-		final int z = value(pos, zIndex);
-		final int c = value(pos, cIndex);
-		final int t = value(pos, tIndex);
-		return new int[] { z, c, t };
+		final AxisType[] axes = {Axes.Z, Axes.CHANNEL, Axes.TIME};
+		final long[] zct = rasterToPosition(imageIndex, planeIndex, metadata, axes);
+		final int[] result = new int[zct.length];
+		for (int i = 0; i < zct.length; i++)
+			result[i] = value(axes[i], zct[i]);
+		return result;
 	}
 
-	// -- Utility methods --
+	/**
+	 * Gets the position per axis of the given plane index, reordering the axes as
+	 * requested.
+	 * 
+	 * @param imageIndex TODO
+	 * @param planeIndex The plane to convert to axis coordinates.
+	 * @param metadata TODO
+	 * @param axisTypes The axes whose coordinates are desired. TODO if a type is
+	 *          given that is not part of the image, this method gives -1 for that
+	 *          axis's position.
+	 * @return TODO
+	 */
+	public static long[]
+		rasterToPosition(final int imageIndex, final long planeIndex,
+			final Metadata metadata, final AxisType... axisTypes)
+	{
+		// FIXME: Move this into SCIFIO core in a utility class.
+		final long[] nPos =
+			FormatTools.rasterToPosition(imageIndex, planeIndex, metadata);
+
+		final ImageMetadata imageMeta = metadata.get(imageIndex);
+		final int planarAxisCount = imageMeta.getPlanarAxisCount();
+
+		final long[] kPos = new long[axisTypes.length];
+		for (int i = 0; i < kPos.length; i++) {
+			final int index = imageMeta.getAxisIndex(axisTypes[i]);
+			kPos[i] = index < 0 ? -1 : nPos[index - planarAxisCount];
+		}
+
+		return kPos;
+	}
 
 	public static void parseArguments(final MetadataService metadataService,
 		final String string, final Metadata meta)
@@ -636,13 +660,11 @@ public class OMEROFormat extends AbstractFormat {
 			imageIndex + ", planeIndex=" + planeIndex, t);
 	}
 
-	private static int value(final long[] pos, final int i) {
-		if (i < 0 || i >= pos.length) return 0;
-		final long value = pos[i];
-		if (value > Integer.MAX_VALUE) {
-			throw new IllegalArgumentException("Index too large: " + value);
-		}
-		return (int) value;
+	private static int value(final AxisType axisType, final long value) {
+		if (value < 0) return 0;
+		if (value <= Integer.MAX_VALUE) return (int) value;
+		throw new IllegalArgumentException(axisType + " axis position too large: " +
+			value);
 	}
 
 }
