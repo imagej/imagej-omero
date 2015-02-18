@@ -23,6 +23,8 @@
 
 package net.imagej.omero;
 
+import io.scif.config.SCIFIOConfig;
+import io.scif.config.SCIFIOConfig.ImgMode;
 import io.scif.services.DatasetIOService;
 
 import java.io.IOException;
@@ -67,8 +69,12 @@ public class OpenFromOMERO extends OMEROCommand {
 			"&imageID=" + imageID + //
 			".omero";
 
+		// Force on-demand loading of planes, instead of loading them all up front.
+		final SCIFIOConfig config = new SCIFIOConfig();
+		config.imgOpenerSetImgModes(ImgMode.CELL);
+
 		try {
-			dataset = datasetIOService.open(omeroSource);
+			dataset = datasetIOService.open(omeroSource, config);
 		}
 		catch (IOException exc) {
 			log.error(exc);
