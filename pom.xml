@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>io.scif</groupId>
 		<artifactId>pom-scifio</artifactId>
-		<version>5.6.0</version>
+		<version>7.0.0</version>
 		<relativePath />
 	</parent>
 
 	<artifactId>scifio-omero</artifactId>
-	<version>0.7.1-SNAPSHOT</version>
+	<version>0.8.0-SNAPSHOT</version>
 
 	<name>SCIFIO Format for OMERO</name>
 	<description>A SCIFIO Format implementation which provides transparent access to image pixels on an OMERO server.</description>
