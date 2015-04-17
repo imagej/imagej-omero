@@ -8,8 +8,7 @@ There are ImageJ commands for accessing images from a remote OMERO server,
 as well as uploading image data from ImageJ to OMERO as a new image.
 
 To try it out, enable the __OMERO-5.0__
-[update site](http://wiki.imagej.net/Update_Sites) and switch to ImageJ's
-modern mode using Help > Switch to Modern Mode.
+[update site](http://wiki.imagej.net/Update_Sites).
 
 You will then have the following new menu items:
 
