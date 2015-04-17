@@ -41,7 +41,7 @@ imagej="$(cd $(dirname "$0")/.. && pwd)"
 test -d "$imagej/jars" ||
 	die "Invalid ImageJ installation: $imagej"
 
-# -- Generate scripts using ImageJ --
+# -- Launch ImageJ --
 
 "$imagej/$(imagej_exec)" --headless \
 	--full-classpath --main-class $@
