@@ -95,8 +95,27 @@ OMERO_PREFIX="/path/to/omero"
 rm -rf "$OMERO_PREFIX/lib/scripts/imagej" "$OMERO_PREFIX/lib/ImageJ.app"
 ```
 
-## See also
+## Under the hood: a SCIFIO image format for OMERO data
 
-This project makes use of the
-[scifio-omero](https://github.com/scifio/scifio-omero) library for reading and
-writing OMERO images using the [SCIFIO](http://scif.io/) library.
+This component provides a [SCIFIO](http://imagej.net/SCIFIO) `Format`
+implementation which offers transparent read and write access to image pixels
+on an OMERO server.
+
+With this format implementation, SCIFIO's `ImgOpener` class can be used to
+"open" (i.e., download on demand) an ImgLib2 `ImgPlus` directly from an OMERO
+server. The `ImgPlus` will be backed by a `SCIFIOCellImg`, which is backed by
+an `OMEROFormat.Reader`, which is backed by an `omero.client` connection.
+
+The `ImgPlus` can then be wrapped as an ImageJ2 `Dataset`, enabling ImageJ2
+commands to operate upon it directly.
+
+When changes are made to the local `ImgPlus`'s pixels, those changes happen in
+memory, to the `Img`'s "cells"; i.e., paged blocks. As new cells are requested
+which push memory consumption beyond desired limits, old dirty cells are cached
+out to disk. These cached cells, when present, are used in preference to data
+from the original source. In this way, it is possible to iterate over a massive
+remote dataset and apply image processing filters, with all changes recorded to
+the disk cache, as long as there is sufficient disk space.
+
+Finally, once processing is complete, SCIFIO's `ImgSaver` class can be used to
+"save" (i.e., upload) the `ImgPlus` back to OMERO as a new pixels object.
