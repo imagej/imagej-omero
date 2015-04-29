@@ -1,6 +1,6 @@
 /*
  * #%L
- * OME database I/O package for communicating with OME and OMERO servers.
+ * ImageJ software for multidimensional image processing and analysis.
  * %%
  * Copyright (C) 2013 - 2015 Open Microscopy Environment:
  * 	- Board of Regents of the University of Wisconsin-Madison

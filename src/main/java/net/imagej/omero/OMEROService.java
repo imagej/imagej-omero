@@ -2,8 +2,10 @@
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
- * Copyright (C) 2013 - 2015 Board of Regents of the University of
- * Wisconsin-Madison and University of Dundee.
+ * Copyright (C) 2013 - 2015 Open Microscopy Environment:
+ * 	- Board of Regents of the University of Wisconsin-Madison
+ * 	- Glencoe Software, Inc.
+ * 	- University of Dundee
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
