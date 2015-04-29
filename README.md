@@ -1,3 +1,5 @@
+![](http://jenkins.imagej.net/job/SCIFIO-OMERO/lastBuild/badge/icon)
+
 This repository contains code for interoperability between
 [SCIFIO](http://scif.io/) and the
 [OMERO server](https://www.openmicroscopy.org/site/support/omero4/).
