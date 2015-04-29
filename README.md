@@ -1,4 +1,4 @@
-![](http://jenkins.imagej.net/job/ImageJ-OMERO/lastBuild/badge/icon)
+[![](http://jenkins.imagej.net/job/ImageJ-OMERO/lastBuild/badge/icon)](http://jenkins.imagej.net/job/ImageJ-OMERO/)
 
 This project provides interoperability between
 [ImageJ](http://developer.imagej.net/) and the
