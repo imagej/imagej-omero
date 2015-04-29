@@ -1,4 +1,4 @@
-![](http://jenkins.imagej.net/job/SCIFIO-OMERO/lastBuild/badge/icon)
+[![](http://jenkins.imagej.net/job/SCIFIO-OMERO/lastBuild/badge/icon)](http://jenkins.imagej.net/job/SCIFIO-OMERO/)
 
 This repository contains code for interoperability between
 [SCIFIO](http://scif.io/) and the
