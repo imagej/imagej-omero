@@ -23,7 +23,7 @@
  * #L%
  */
 
-package io.scif.omero;
+package net.imagej.omero;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;

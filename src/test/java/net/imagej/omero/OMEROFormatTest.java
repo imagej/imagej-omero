@@ -23,7 +23,7 @@
  * #L%
  */
 
-package io.scif.omero;
+package net.imagej.omero;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,6 +32,7 @@ import io.scif.Checker;
 import io.scif.FormatException;
 import io.scif.MetadataService;
 import io.scif.SCIFIO;
+import net.imagej.omero.OMEROFormat;
 
 import org.junit.Test;
 

@@ -23,7 +23,7 @@
  * #L%
  */
 
-package io.scif.omero;
+package net.imagej.omero;
 
 import io.scif.Field;
 

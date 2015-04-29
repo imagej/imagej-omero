@@ -25,7 +25,6 @@ package net.imagej.omero;
 
 import ij.ImagePlus;
 import io.scif.Metadata;
-import io.scif.omero.OMEROFormat;
 import io.scif.services.DatasetIOService;
 
 import java.io.IOException;
