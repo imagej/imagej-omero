@@ -1,3 +1,5 @@
+![](http://jenkins.imagej.net/job/ImageJ-OMERO/lastBuild/badge/icon)
+
 This project provides interoperability between
 [ImageJ](http://developer.imagej.net/) and the
 [OMERO server](https://www.openmicroscopy.org/site/support/omero5/).
