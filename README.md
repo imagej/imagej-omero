@@ -95,7 +95,7 @@ OMERO_PREFIX="/path/to/omero"
 rm -rf "$OMERO_PREFIX/lib/scripts/imagej" "$OMERO_PREFIX/lib/ImageJ.app"
 ```
 
-## Under the hood: a SCIFIO image format for OMERO data
+## Under the hood: a SCIFIO format for OMERO data
 
 This component provides a [SCIFIO](http://imagej.net/SCIFIO) `Format`
 implementation which offers transparent read and write access to image pixels
