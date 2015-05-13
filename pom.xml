@@ -35,10 +35,6 @@
 			<groupId>io.scif</groupId>
 			<artifactId>scifio</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>io.scif</groupId>
-			<artifactId>scifio-omero</artifactId>
-		</dependency>
 
 		<!-- SciJava dependencies -->
 		<dependency>
