@@ -110,6 +110,10 @@
 		<url>http://jenkins.imagej.net/job/ImageJ-OMERO/</url>
 	</ciManagement>
 
+	<properties>
+		<omero.version>5.0.0-beta1-256-019d14a-ice34-b3523</omero.version>
+	</properties>
+
 	<repositories>
 		<repository>
 			<id>imagej.public</id>
@@ -148,7 +152,7 @@
 		<dependency>
 			<groupId>ome</groupId>
 			<artifactId>omero-client</artifactId>
-			<version>5.0.0-beta1-256-019d14a-ice34-b3523</version>
+			<version>${omero.version}</version>
 		</dependency>
 
 		<!-- NB: SLF4J is a dependency of omero-client. -->
