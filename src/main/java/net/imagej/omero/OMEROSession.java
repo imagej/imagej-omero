@@ -32,6 +32,7 @@ import io.scif.ImageMetadata;
 import io.scif.util.FormatTools;
 
 import java.io.Closeable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -249,17 +250,24 @@ public class OMEROSession implements Closeable {
 		final int yLen = axisLength(imageMeta, Axes.Y);
 		final int zLen = axisLength(imageMeta, Axes.Z);
 		final int tLen = axisLength(imageMeta, Axes.TIME);
+		final int cLen = axisLength(imageMeta, Axes.CHANNEL);
 		final int sizeX = xLen == 0 ? 1 : xLen;
 		final int sizeY = yLen == 0 ? 1 : yLen;
 		final int sizeZ = zLen == 0 ? 1 : zLen;
 		final int sizeT = tLen == 0 ? 1 : tLen;
+		final int sizeC = cLen == 0 ? 1 : cLen;
+		final List<Integer> channelList = new ArrayList<Integer>(sizeC);
+		for (int c = 0; c < sizeC; c++) {
+			// TODO: Populate actual emission wavelengths?
+			channelList.add(c);
+		}
 		final int pixelType = imageMeta.getPixelType();
 		final PixelsType pixelsType = getPixelsType(pixelType);
 		final String name = meta.getName();
 		final String description = meta.getName();
 		final RLong id =
 			session.getPixelsService().createImage(sizeX, sizeY, sizeZ, sizeT,
-				Arrays.asList(0), pixelsType, name, description);
+				channelList, pixelsType, name, description);
 		if (id == null) throw new FormatException("Cannot create image");
 
 		// retrieve the newly created Image
