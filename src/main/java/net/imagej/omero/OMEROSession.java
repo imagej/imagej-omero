@@ -37,6 +37,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.imagej.axis.Axes;
+import net.imagej.axis.AxisType;
 import omero.RLong;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
@@ -244,11 +245,10 @@ public class OMEROSession implements Closeable {
 	{
 		// create a new Image
 		final ImageMetadata imageMeta = meta.get(0);
-		// FIXME: Check before casting.
-		final int xLen = (int) imageMeta.getAxisLength(Axes.X);
-		final int yLen = (int) imageMeta.getAxisLength(Axes.Y);
-		final int zLen = (int) imageMeta.getAxisLength(Axes.Z);
-		final int tLen = (int) imageMeta.getAxisLength(Axes.TIME);
+		final int xLen = axisLength(imageMeta, Axes.X);
+		final int yLen = axisLength(imageMeta, Axes.Y);
+		final int zLen = axisLength(imageMeta, Axes.Z);
+		final int tLen = axisLength(imageMeta, Axes.TIME);
 		final int sizeX = xLen == 0 ? 1 : xLen;
 		final int sizeY = yLen == 0 ? 1 : yLen;
 		final int sizeZ = zLen == 0 ? 1 : zLen;
@@ -287,6 +287,18 @@ public class OMEROSession implements Closeable {
 			if (value.equals(pixelType)) return type;
 		}
 		throw new FormatException("Invalid pixel type: " + pixelType);
+	}
+
+	private int
+		axisLength(final ImageMetadata imageMeta, final AxisType axisType)
+			throws FormatException
+	{
+		final long axisLength = imageMeta.getAxisLength(Axes.X);
+		if (axisLength > Integer.MAX_VALUE) {
+			throw new FormatException("Length of " + axisType +
+				" axis is too large for OMERO: " + axisLength);
+		}
+		return (int) axisLength;
 	}
 
 }
