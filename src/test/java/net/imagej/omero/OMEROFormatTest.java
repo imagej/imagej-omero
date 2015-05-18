@@ -32,7 +32,6 @@ import io.scif.Checker;
 import io.scif.FormatException;
 import io.scif.MetadataService;
 import io.scif.SCIFIO;
-import net.imagej.omero.OMEROFormat;
 
 import org.junit.Test;
 
