@@ -52,12 +52,15 @@ import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imagej.axis.LinearAxis;
-import omero.RDouble;
 import omero.RInt;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.model.Image;
+import omero.model.Length;
 import omero.model.Pixels;
+import omero.model.Time;
+import omero.model.enums.UnitsLength;
+import omero.model.enums.UnitsTime;
 
 import org.scijava.Priority;
 import org.scijava.log.LogService;
@@ -129,19 +132,22 @@ public class OMEROFormat extends AbstractFormat {
 		private int sizeT;
 
 		@Field
-		private Double physSizeX;
+		private Length physSizeX;
 
 		@Field
-		private Double physSizeY;
+		private Length physSizeY;
 
 		@Field
-		private Double physSizeZ;
+		private Length physSizeZ;
 
 		@Field
-		private Integer physSizeC;
+		private RInt waveStart;
 
 		@Field
-		private Double physSizeT;
+		private RInt waveIncrement;
+
+		@Field
+		private Time timeIncrement;
 
 		@Field
 		private String pixelType;
@@ -190,24 +196,28 @@ public class OMEROFormat extends AbstractFormat {
 			return sizeT;
 		}
 
-		public Double getPhysicalSizeX() {
+		public Length getPhysicalSizeX() {
 			return physSizeX;
 		}
 
-		public Double getPhysicalSizeY() {
+		public Length getPhysicalSizeY() {
 			return physSizeY;
 		}
 
-		public Double getPhysicalSizeZ() {
+		public Length getPhysicalSizeZ() {
 			return physSizeZ;
 		}
 
-		public Integer getPhysicalSizeC() {
-			return physSizeC;
+		public RInt getWaveStart() {
+			return waveStart;
 		}
 
-		public Double getPhysicalSizeT() {
-			return physSizeT;
+		public RInt getWaveIncrement() {
+			return waveIncrement;
+		}
+
+		public Time getTimeIncrement() {
+			return timeIncrement;
 		}
 
 		public String getPixelType() {
@@ -270,24 +280,28 @@ public class OMEROFormat extends AbstractFormat {
 			this.sizeT = sizeT;
 		}
 
-		public void setPhysicalSizeX(final double physSizeX) {
+		public void setPhysicalSizeX(final Length physSizeX) {
 			this.physSizeX = physSizeX;
 		}
 
-		public void setPhysicalSizeY(final double physSizeY) {
+		public void setPhysicalSizeY(final Length physSizeY) {
 			this.physSizeY = physSizeY;
 		}
 
-		public void setPhysicalSizeZ(final double physSizeZ) {
+		public void setPhysicalSizeZ(final Length physSizeZ) {
 			this.physSizeZ = physSizeZ;
 		}
 
-		public void setPhysicalSizeC(final int physSizeC) {
-			this.physSizeC = physSizeC;
+		public void setWaveStart(final RInt waveStart) {
+			this.waveStart = waveStart;
 		}
 
-		public void setPhysicalSizeT(final double physSizeT) {
-			this.physSizeT = physSizeT;
+		public void setWaveIncrement(final RInt waveIncrement) {
+			this.waveIncrement = waveIncrement;
+		}
+
+		public void setTimeIncrement(final Time timeIncrement) {
+			this.timeIncrement = timeIncrement;
 		}
 
 		public void setPixelType(final String pixelType) {
@@ -330,16 +344,11 @@ public class OMEROFormat extends AbstractFormat {
 			if (getImageCount() > 0) return; // already populated
 
 			// construct dimensional axes
-			final LinearAxis xAxis = new DefaultLinearAxis(Axes.X);
-			if (physSizeX != null) xAxis.setScale(physSizeX);
-			final LinearAxis yAxis = new DefaultLinearAxis(Axes.Y);
-			if (physSizeY != null) yAxis.setScale(physSizeY);
-			final LinearAxis zAxis = new DefaultLinearAxis(Axes.Z);
-			if (physSizeZ != null) zAxis.setScale(physSizeZ);
-			final LinearAxis cAxis = new DefaultLinearAxis(Axes.CHANNEL);
-			if (physSizeC != null) cAxis.setScale(physSizeC);
-			final LinearAxis tAxis = new DefaultLinearAxis(Axes.TIME);
-			if (physSizeT != null) tAxis.setScale(physSizeT);
+			final LinearAxis xAxis = axis(Axes.X, physSizeX);
+			final LinearAxis yAxis = axis(Axes.Y, physSizeY);
+			final LinearAxis zAxis = axis(Axes.Z, physSizeZ);
+			final LinearAxis cAxis = axis(Axes.CHANNEL, waveStart, waveIncrement);
+			final LinearAxis tAxis = axis(Axes.TIME, timeIncrement);
 			// HACK: Do things in XYCZT order for ImageJ1 compatibility.
 			// Technically, this _shouldn't_ matter because imagej-legacy
 			// should take care of dimension swapping incompatible orderings.
@@ -359,7 +368,6 @@ public class OMEROFormat extends AbstractFormat {
 			imageMeta.setMetadataComplete(true);
 			imageMeta.setOrderCertain(true);
 		}
-
 	}
 
 	public static class Parser extends AbstractParser<Metadata> {
@@ -398,16 +406,12 @@ public class OMEROFormat extends AbstractFormat {
 			meta.setSizeT(pix.getSizeT().getValue());
 
 			// parse physical pixel sizes
-			final RDouble physSizeX = pix.getPhysicalSizeX();
-			if (physSizeX != null) meta.setPhysicalSizeX(physSizeX.getValue());
-			final RDouble physSizeY = pix.getPhysicalSizeY();
-			if (physSizeY != null) meta.setPhysicalSizeY(physSizeY.getValue());
-			final RDouble physSizeZ = pix.getPhysicalSizeZ();
-			if (physSizeZ != null) meta.setPhysicalSizeZ(physSizeZ.getValue());
-			final RInt physSizeC = pix.getWaveIncrement();
-			if (physSizeC != null) meta.setPhysicalSizeC(physSizeC.getValue());
-			final RDouble physSizeT = pix.getTimeIncrement();
-			if (physSizeT != null) meta.setPhysicalSizeT(physSizeT.getValue());
+			meta.setPhysicalSizeX(pix.getPhysicalSizeX());
+			meta.setPhysicalSizeY(pix.getPhysicalSizeY());
+			meta.setPhysicalSizeZ(pix.getPhysicalSizeZ());
+			meta.setWaveStart(pix.getWaveStart());
+			meta.setWaveIncrement(pix.getWaveIncrement());
+			meta.setTimeIncrement(pix.getTimeIncrement());
 
 			// parse pixel type
 			meta.setPixelType(pix.getPixelsType().getValue().getValue());
@@ -665,6 +669,46 @@ public class OMEROFormat extends AbstractFormat {
 		if (value <= Integer.MAX_VALUE) return (int) value;
 		throw new IllegalArgumentException(axisType + " axis position too large: " +
 			value);
+	}
+
+	private static LinearAxis axis(final AxisType axisType, final Length q) {
+		final DefaultLinearAxis axis = new DefaultLinearAxis(axisType);
+		if (q != null) calibrate(axis, null, q.getValue(), unit(q.getUnit()));
+		return axis;
+	}
+
+	private static LinearAxis axis(final AxisType axisType, final RInt origin,
+		final RInt scale)
+	{
+		final DefaultLinearAxis axis = new DefaultLinearAxis(axisType);
+		calibrate(axis, i(origin), i(scale), "nm");
+		return axis;
+	}
+
+	private static LinearAxis axis(final AxisType axisType, final Time q) {
+		final DefaultLinearAxis axis = new DefaultLinearAxis(axisType);
+		if (q != null) calibrate(axis, null, q.getValue(), unit(q.getUnit()));
+		return axis;
+	}
+
+	private static void calibrate(final LinearAxis axis, final Number origin,
+		final Number scale, final String unit)
+	{
+		if (origin != null) axis.setOrigin(origin.doubleValue());
+		if (scale != null) axis.setScale(scale.doubleValue());
+		if (unit != null) axis.setUnit(unit);
+	}
+
+	private static String unit(final UnitsTime unit) {
+		return OMEROUtils.unit(unit).getSymbol();
+	}
+
+	private static String unit(final UnitsLength unit) {
+		return OMEROUtils.unit(unit).getSymbol();
+	}
+
+	private static Integer i(final RInt value) {
+		return value == null ? null : value.getValue();
 	}
 
 }
