@@ -293,7 +293,7 @@ public class OMEROSession implements Closeable {
 		axisLength(final ImageMetadata imageMeta, final AxisType axisType)
 			throws FormatException
 	{
-		final long axisLength = imageMeta.getAxisLength(Axes.X);
+		final long axisLength = imageMeta.getAxisLength(axisType);
 		if (axisLength > Integer.MAX_VALUE) {
 			throw new FormatException("Length of " + axisType +
 				" axis is too large for OMERO: " + axisLength);
