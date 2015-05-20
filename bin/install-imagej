@@ -50,7 +50,7 @@ else (
 	download ImageJ http://update.imagej.net/bootstrap.js "$installer"
 	echo "-> installing ImageJ"
 	jrunscript "$installer" add-update-site \
-		OMERO-5.0 http://sites.imagej.net/OMERO-5.0
+		OMERO-5.1 http://sites.imagej.net/OMERO-5.1
 	jrunscript "$installer" update
 	rm "$installer"
 ) fi
