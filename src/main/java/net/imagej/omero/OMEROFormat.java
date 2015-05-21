@@ -61,6 +61,7 @@ import omero.api.RawPixelsStorePrx;
 import omero.model.Image;
 import omero.model.Length;
 import omero.model.Pixels;
+import omero.model.StatsInfo;
 import omero.model.Time;
 import omero.model.enums.UnitsLength;
 import omero.model.enums.UnitsTime;
@@ -69,6 +70,7 @@ import org.scijava.Priority;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.ObjectArray;
 
 /**
  * A SCIFIO {@link Format} which provides read/write access to pixels on an
@@ -155,6 +157,9 @@ public class OMEROFormat extends AbstractFormat {
 		@Field
 		private String pixelType;
 
+		@Field
+		private ObjectArray<Channel> channels;
+
 		/** Cached {@code Image} descriptor. */
 		private Image image;
 
@@ -227,6 +232,14 @@ public class OMEROFormat extends AbstractFormat {
 			return pixelType;
 		}
 
+		public Double getChannelMin(final int c) {
+			return channels.get(c).dataMin;
+		}
+
+		public Double getChannelMax(final int c) {
+			return channels.get(c).dataMax;
+		}
+
 		public Image getImage() {
 			return image;
 		}
@@ -277,6 +290,10 @@ public class OMEROFormat extends AbstractFormat {
 
 		public void setSizeC(final int sizeC) {
 			this.sizeC = sizeC;
+			channels = new ObjectArray<Channel>(Channel.class, sizeC);
+			for (int c = 0; c < sizeC; c++) {
+				channels.set(c, new Channel());
+			}
 		}
 
 		public void setSizeT(final int sizeT) {
@@ -309,6 +326,14 @@ public class OMEROFormat extends AbstractFormat {
 
 		public void setPixelType(final String pixelType) {
 			this.pixelType = pixelType;
+		}
+
+		public void setChannelMin(final int c, final Double min) {
+			channels.get(c).dataMin = min;
+		}
+
+		public void setChannelMax(final int c, final Double max) {
+			channels.get(c).dataMax = max;
 		}
 
 		public void setImage(final Image image) {
@@ -371,6 +396,15 @@ public class OMEROFormat extends AbstractFormat {
 			imageMeta.setMetadataComplete(true);
 			imageMeta.setOrderCertain(true);
 		}
+
+		// -- Helper classes --
+
+		/** Struct for channel-specific metadata. */
+		private class Channel {
+			@Field
+			private Double dataMin, dataMax;
+		}
+
 	}
 
 	public static class Parser extends AbstractParser<Metadata> {
@@ -418,6 +452,13 @@ public class OMEROFormat extends AbstractFormat {
 
 			// parse pixel type
 			meta.setPixelType(v(pix.getPixelsType().getValue()));
+
+			// parse channel min/max values
+			for (int c = 0; c < meta.getSizeC(); c++) {
+				final StatsInfo statsInfo = pix.getChannel(c).getStatsInfo();
+				meta.setChannelMin(c, v(statsInfo.getGlobalMin()));
+				meta.setChannelMax(c, v(statsInfo.getGlobalMax()));
+			}
 
 			// terminate OMERO session
 			session.close();
