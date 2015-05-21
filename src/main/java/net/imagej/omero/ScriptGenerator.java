@@ -129,9 +129,13 @@ public class ScriptGenerator extends AbstractContextual {
 
 		// parse arguments
 		File dir = null;
-		for (final String arg : args) {
-			if ("--all".equals(arg)) scriptGenerator.setHeadlessOnly(false);
-			else if ("--force".equals(arg)) scriptGenerator.setForceOverwrite(true);
+		for (int i = 0; i < args.length; i++) {
+			final String arg = args[i];
+			if (arg.startsWith("--")) {
+				if (arg.equals("--all")) scriptGenerator.setHeadlessOnly(false);
+				else if (arg.equals("--force")) scriptGenerator.setForceOverwrite(true);
+				else System.err.println("[WARNING] Ignoring bogus flag: " + arg);
+			}
 			else dir = new File(arg);
 		}
 
