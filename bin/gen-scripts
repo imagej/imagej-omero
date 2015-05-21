@@ -12,7 +12,7 @@ die () {
 }
 
 usage () {
-	die "Usage: $0 <path/to/omero> [--force] [--all]"
+	die "Usage: $0 <path/to/omero> [--namespace ns] [--force] [--all]"
 }
 
 # -- Verify OMERO directory --

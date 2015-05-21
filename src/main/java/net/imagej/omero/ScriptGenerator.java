@@ -58,6 +58,7 @@ public class ScriptGenerator extends AbstractContextual {
 	@Parameter
 	private MenuService menuService;
 
+	private String namespace = "imagej";
 	private boolean headlessOnly = true;
 	private boolean forceOverwrite = false;
 
@@ -72,6 +73,10 @@ public class ScriptGenerator extends AbstractContextual {
 	}
 
 	// -- ScriptGenerator methods --
+
+	public void setNamespace(final String namespace) {
+		this.namespace = namespace;
+	}
 
 	/** Toggles whether to generate only headless-friendly modules. */
 	public void setHeadlessOnly(final boolean headlessOnly) {
@@ -91,7 +96,7 @@ public class ScriptGenerator extends AbstractContextual {
 			return 1;
 		}
 
-		final File dir = new File(scriptsDir, "imagej");
+		final File dir = new File(scriptsDir, namespace);
 		if (dir.exists()) {
 			if (!forceOverwrite) {
 				System.err.println("Path already exists: " + dir);
@@ -132,7 +137,10 @@ public class ScriptGenerator extends AbstractContextual {
 		for (int i = 0; i < args.length; i++) {
 			final String arg = args[i];
 			if (arg.startsWith("--")) {
-				if (arg.equals("--all")) scriptGenerator.setHeadlessOnly(false);
+				if (i < args.length - 1 && arg.equals("--namespace")) {
+					scriptGenerator.setNamespace(args[++i]);
+				}
+				else if (arg.equals("--all")) scriptGenerator.setHeadlessOnly(false);
 				else if (arg.equals("--force")) scriptGenerator.setForceOverwrite(true);
 				else System.err.println("[WARNING] Ignoring bogus flag: " + arg);
 			}
