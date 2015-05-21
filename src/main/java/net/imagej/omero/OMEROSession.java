@@ -47,6 +47,7 @@ import omero.model.IObject;
 import omero.model.Image;
 import omero.model.Pixels;
 import omero.model.PixelsType;
+import omero.model.RenderingDef;
 import pojos.ImageData;
 
 /**
@@ -167,6 +168,15 @@ public class OMEROSession implements Closeable {
 		meta.setImage(image);
 
 		return image;
+	}
+
+	/** Gets the rendering settings for the associated pixels ID. */
+	public RenderingDef loadRenderingDef(final OMEROFormat.Metadata meta)
+		throws ServerError
+	{
+		final long pid = meta.getPixelsID();
+		final long uid = session.getAdminService().getEventContext().userId;
+		return session.getPixelsService().retrieveRndSettingsFor(pid, uid);
 	}
 
 	/** Gets the metadata's associated pixels ID, loading remotely as needed. */

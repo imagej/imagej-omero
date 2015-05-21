@@ -58,9 +58,11 @@ import omero.RLong;
 import omero.RString;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
+import omero.model.ChannelBinding;
 import omero.model.Image;
 import omero.model.Length;
 import omero.model.Pixels;
+import omero.model.RenderingDef;
 import omero.model.StatsInfo;
 import omero.model.Time;
 import omero.model.enums.UnitsLength;
@@ -70,6 +72,8 @@ import org.scijava.Priority;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.ColorRGB;
+import org.scijava.util.ColorRGBA;
 import org.scijava.util.ObjectArray;
 
 /**
@@ -240,6 +244,22 @@ public class OMEROFormat extends AbstractFormat {
 			return channels.get(c).dataMax;
 		}
 
+		public Double getDisplayMin(final int c) {
+			return channels.get(c).displayMin;
+		}
+
+		public Double getDisplayMax(final int c) {
+			return channels.get(c).displayMax;
+		}
+
+		public ColorRGB getChannelColor(final int c) {
+			return channels.get(c).color;
+		}
+
+		public String getChannelLUT(final int c) {
+			return channels.get(c).lut;
+		}
+
 		public Image getImage() {
 			return image;
 		}
@@ -336,6 +356,22 @@ public class OMEROFormat extends AbstractFormat {
 			channels.get(c).dataMax = max;
 		}
 
+		public void setDisplayMin(final int c, final Double min) {
+			channels.get(c).displayMin = min;
+		}
+
+		public void setDisplayMax(final int c, final Double max) {
+			channels.get(c).displayMax = max;
+		}
+
+		public void setChannelColor(final int c, final ColorRGB color) {
+			channels.get(c).color = color;
+		}
+
+		public void setChannelLUT(final int c, final String lut) {
+			channels.get(c).lut = lut;
+		}
+
 		public void setImage(final Image image) {
 			this.image = image;
 			if (image == null) return;
@@ -403,6 +439,12 @@ public class OMEROFormat extends AbstractFormat {
 		private class Channel {
 			@Field
 			private Double dataMin, dataMax;
+			@Field
+			private Double displayMin, displayMax;
+			@Field
+			private ColorRGB color;
+			@Field
+			private String lut;
 		}
 
 	}
@@ -423,10 +465,12 @@ public class OMEROFormat extends AbstractFormat {
 			// initialize OMERO session
 			final OMEROSession session;
 			final Pixels pix;
+			final RenderingDef renderingDef;
 			try {
 				session = createSession(meta);
 				pix = session.loadPixels(meta);
 				session.loadImageName(meta);
+				renderingDef = session.loadRenderingDef(meta);
 			}
 			catch (final ServerError err) {
 				throw communicationException(err);
@@ -453,11 +497,23 @@ public class OMEROFormat extends AbstractFormat {
 			// parse pixel type
 			meta.setPixelType(v(pix.getPixelsType().getValue()));
 
-			// parse channel min/max values
+			// parse channel min/max values and rendering settings
 			for (int c = 0; c < meta.getSizeC(); c++) {
 				final StatsInfo statsInfo = pix.getChannel(c).getStatsInfo();
 				meta.setChannelMin(c, v(statsInfo.getGlobalMin()));
 				meta.setChannelMax(c, v(statsInfo.getGlobalMax()));
+
+				final ChannelBinding channel = renderingDef.getChannelBinding(c);
+				meta.setDisplayMin(c, v(channel.getInputStart()));
+				meta.setDisplayMax(c, v(channel.getInputEnd()));
+
+				final Integer r = v(channel.getRed());
+				final Integer g = v(channel.getGreen());
+				final Integer b = v(channel.getBlue());
+				final Integer a = v(channel.getAlpha());
+				meta.setChannelColor(c, color(r, g, b, a));
+
+				meta.setChannelLUT(c, v(channel.getLookupTable()));
 			}
 
 			// terminate OMERO session
@@ -749,6 +805,13 @@ public class OMEROFormat extends AbstractFormat {
 
 	private static String unit(final UnitsLength unit) {
 		return OMEROUtils.unit(unit).getSymbol();
+	}
+
+	private static ColorRGB color(final Integer r, final Integer g,
+		final Integer b, final Integer a)
+	{
+		if (r == null || g == null || b == null) return null;
+		return a == null ? new ColorRGB(r, g, b) : new ColorRGBA(r, g, b, a);
 	}
 
 	private static Double v(final RDouble value) {
