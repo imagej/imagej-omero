@@ -445,6 +445,17 @@ public class OMEROFormat extends AbstractFormat {
 			private ColorRGB color;
 			@Field
 			private String lut;
+
+			@Override
+			public String toString() {
+				final StringBuilder sb = new StringBuilder();
+				sb.append("data range = [" + dataMin + ", " + dataMax + "]\n");
+				sb.append("display range = [" + displayMin + ", " + displayMax + "]\n");
+				sb.append("color = " + color + "\n");
+				sb.append("lut = " + lut);
+				return sb.toString();
+			}
+
 		}
 
 	}
