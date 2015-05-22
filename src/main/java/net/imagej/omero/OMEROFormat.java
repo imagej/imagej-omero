@@ -755,6 +755,8 @@ public class OMEROFormat extends AbstractFormat {
 		}
 	}
 
+	// -- Helper methods - exceptions --
+
 	private static FormatException communicationException(final Throwable cause) {
 		return new FormatException("Error communicating with OMERO", cause);
 	}
@@ -774,6 +776,8 @@ public class OMEROFormat extends AbstractFormat {
 		return new FormatException("Error writing to OMERO: imageIndex=" +
 			imageIndex + ", planeIndex=" + planeIndex, t);
 	}
+
+	// -- Helper methods - axes and units --
 
 	private static int value(final AxisType axisType, final long value) {
 		if (value < 0) return 0;
@@ -824,6 +828,8 @@ public class OMEROFormat extends AbstractFormat {
 		if (r == null || g == null || b == null) return null;
 		return a == null ? new ColorRGB(r, g, b) : new ColorRGBA(r, g, b, a);
 	}
+
+	// -- Helper methods - value unwrapping --
 
 	private static Double v(final RDouble value) {
 		return value == null ? null : value.getValue();
