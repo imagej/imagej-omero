@@ -52,7 +52,10 @@ import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imagej.axis.LinearAxis;
+import omero.RDouble;
 import omero.RInt;
+import omero.RLong;
+import omero.RString;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.model.Image;
@@ -245,7 +248,7 @@ public class OMEROFormat extends AbstractFormat {
 
 			// clear stale Image cache
 			final Image cachedImage = getImage();
-			if (cachedImage != null && cachedImage.getId().getValue() != imageID) {
+			if (cachedImage != null && v(cachedImage.getId()) != imageID) {
 				setImage(null);
 			}
 		}
@@ -255,7 +258,7 @@ public class OMEROFormat extends AbstractFormat {
 
 			// clear stale Pixels cache
 			final Pixels cachedPixels = getPixels();
-			if (cachedPixels != null && cachedPixels.getId().getValue() != pixelsID) {
+			if (cachedPixels != null && v(cachedPixels.getId()) != pixelsID) {
 				setPixels(null);
 			}
 		}
@@ -314,7 +317,7 @@ public class OMEROFormat extends AbstractFormat {
 
 			// sanity check for matching image IDs
 			final long existingID = getImageID();
-			final long id = image.getId().getValue();
+			final Long id = v(image.getId());
 			if (existingID != id) {
 				throw new IllegalArgumentException("existing image ID (" +
 					existingID + ") does not match the given Image (" + id + ")");
@@ -327,7 +330,7 @@ public class OMEROFormat extends AbstractFormat {
 
 			// sanity check for matching pixels IDs
 			final long existingID = getPixelsID();
-			final long id = pixels.getId().getValue();
+			final Long id = v(pixels.getId());
 			if (existingID != id) {
 				throw new IllegalArgumentException("existing pixels ID (" +
 					existingID + ") does not match the given Pixels (" + id + ")");
@@ -399,11 +402,11 @@ public class OMEROFormat extends AbstractFormat {
 			}
 
 			// parse pixel sizes
-			meta.setSizeX(pix.getSizeX().getValue());
-			meta.setSizeY(pix.getSizeY().getValue());
-			meta.setSizeZ(pix.getSizeZ().getValue());
-			meta.setSizeC(pix.getSizeC().getValue());
-			meta.setSizeT(pix.getSizeT().getValue());
+			meta.setSizeX(v(pix.getSizeX()));
+			meta.setSizeY(v(pix.getSizeY()));
+			meta.setSizeZ(v(pix.getSizeZ()));
+			meta.setSizeC(v(pix.getSizeC()));
+			meta.setSizeT(v(pix.getSizeT()));
 
 			// parse physical pixel sizes
 			meta.setPhysicalSizeX(pix.getPhysicalSizeX());
@@ -414,7 +417,7 @@ public class OMEROFormat extends AbstractFormat {
 			meta.setTimeIncrement(pix.getTimeIncrement());
 
 			// parse pixel type
-			meta.setPixelType(pix.getPixelsType().getValue().getValue());
+			meta.setPixelType(v(pix.getPixelsType().getValue()));
 
 			// terminate OMERO session
 			session.close();
@@ -528,7 +531,7 @@ public class OMEROFormat extends AbstractFormat {
 				try {
 					// store resultant image ID into the metadata
 					final Image image = store.save().getImage();
-					getMetadata().setImageID(image.getId().getValue());
+					getMetadata().setImageID(v(image.getId()));
 					store.close();
 				}
 				catch (final ServerError err) {
@@ -681,7 +684,7 @@ public class OMEROFormat extends AbstractFormat {
 		final RInt scale)
 	{
 		final DefaultLinearAxis axis = new DefaultLinearAxis(axisType);
-		calibrate(axis, i(origin), i(scale), "nm");
+		calibrate(axis, v(origin), v(scale), "nm");
 		return axis;
 	}
 
@@ -707,7 +710,19 @@ public class OMEROFormat extends AbstractFormat {
 		return OMEROUtils.unit(unit).getSymbol();
 	}
 
-	private static Integer i(final RInt value) {
+	private static Double v(final RDouble value) {
+		return value == null ? null : value.getValue();
+	}
+
+	private static Integer v(final RInt value) {
+		return value == null ? null : value.getValue();
+	}
+
+	private static Long v(final RLong value) {
+		return value == null ? null : value.getValue();
+	}
+
+	private static String v(final RString value) {
 		return value == null ? null : value.getValue();
 	}
 
