@@ -105,12 +105,10 @@ public class DefaultOMEROService extends AbstractService implements
 		if (choices != null && !choices.isEmpty()) {
 			param.values = (omero.RList) toOMERO(choices);
 		}
-		// TEMP: Disabled until OME issue #11472 is resolved
-		// https://trac.openmicroscopy.org.uk/ome/ticket/11472
-//		final Object min = item.getMinimumValue();
-//		if (min != null) param.min = toOMERO(min);
-//		final Object max = item.getMaximumValue();
-//		if (max != null) param.max = toOMERO(max);
+		final Object min = item.getMinimumValue();
+		if (min != null) param.min = toOMERO(min);
+		final Object max = item.getMaximumValue();
+		if (max != null) param.max = toOMERO(max);
 		return param;
 	}
 
