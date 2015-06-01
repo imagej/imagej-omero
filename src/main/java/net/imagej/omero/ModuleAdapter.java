@@ -138,7 +138,11 @@ public class ModuleAdapter extends AbstractContextual {
 		for (final ModuleItem<?> item : module.getInfo().outputs()) {
 			final omero.RType value =
 				omeroService.toOMERO(client, item.getValue(module));
-			client.setOutput(getOutputName(item), value);
+			final String name = getOutputName(item);
+			if (value == null) {
+				log.warn(info.getTitle() + ": output '" + name + "' is null");
+			}
+			else client.setOutput(name, value);
 		}
 
 		log.debug(info.getTitle() + ": completed execution");
