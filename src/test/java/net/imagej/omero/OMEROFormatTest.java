@@ -32,6 +32,7 @@ import io.scif.Checker;
 import io.scif.FormatException;
 import io.scif.MetadataService;
 import io.scif.SCIFIO;
+import net.imagej.patcher.LegacyInjector;
 
 import org.junit.Test;
 
@@ -41,6 +42,13 @@ import org.junit.Test;
  * @author Curtis Rueden
  */
 public class OMEROFormatTest {
+
+	static {
+		LegacyInjector.preinit();
+		scifio = new SCIFIO();
+	}
+
+	private static SCIFIO scifio;
 
 	/** Tests {@link OMEROFormat#getFormatName()}. */
 	@Test
@@ -103,6 +111,6 @@ public class OMEROFormatTest {
 	// -- Helper methods --
 
 	private OMEROFormat getFormat() {
-		return new SCIFIO().format().getFormatFromClass(OMEROFormat.class);
+		return scifio.format().getFormatFromClass(OMEROFormat.class);
 	}
 }
