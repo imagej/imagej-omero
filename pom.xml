@@ -111,8 +111,7 @@
 	</ciManagement>
 
 	<properties>
-		<omero.version>5.1.1-ice35</omero.version>
-		<scijava.jvm.version>1.7</scijava.jvm.version>
+		<omero.version>5.1.2-ice35</omero.version>
 	</properties>
 
 	<repositories>
@@ -174,6 +173,19 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<configuration>
+					<rules>
+						<enforceBytecodeVersion>
+							<excludes>
+								<exclude>ome:omero-client</exclude>
+								<exclude>com.sun:tools</exclude>
+							</excludes>
+						</enforceBytecodeVersion>
+					</rules>
+				</configuration>
+			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
