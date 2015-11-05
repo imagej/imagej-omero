@@ -100,6 +100,31 @@ public interface OMEROService extends ImageJService {
 		CannotCreateSessionException, SecurityException, DSOutOfServiceException,
 		ExecutionException, DSAccessException;
 
+	// CTR - What needs to happen to make ROIs work seamlessly:
+	// - ImageJ Common data model needs updating:
+	//  -- ImgPlus -> RichImage
+	//  -- RichImage support for default visualization settings
+	//  -- RichImage support for tree structure of RichImages
+	//  -- SCIFIO updated to use RichImage instead
+	// We want to maintain model / view separation. However:
+	// - Every setting of the view should be settable in the model?
+	//  -- E.g., some file formats specify LUTs.
+	//  -- E.g., OMERO specifies default rendering settings.
+	// Too many layers has confused people and makes operations more complex.
+	//
+	// Let's get rid of View completely, wrapping it into the
+	// data objects. And let's not bother having data objects share a
+	// common interface -- then we have Displays for non-SJ types like String
+	// without worrying about creating wrapper types.
+	//
+	// Let's get rid of the agnostic Display, in favor of only UI-specific
+	// Display implementations.
+	//
+	// To achieve Model/View separation, everything is coded against interfaces,
+	// so we can have DefaultRichImage and RichImageView or whatever that wraps
+	// another RichImage but overrides viewer settings like LUT, position, etc.
+	//
+
 	/**
 	 * Downloads the image with the given image ID from OMERO, storing the result
 	 * into a new ImageJ {@link Dataset}.
