@@ -33,50 +33,64 @@
 			<organization>UW-Madison LOCI</organization>
 			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
 			<roles>
-				<role>architect</role>
+				<role>founder</role>
+				<role>lead</role>
 				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
 			</roles>
 			<timezone>-6</timezone>
 		</developer>
 		<developer>
-			<id>joshmoore</id>
-			<name>Josh Moore</name>
-			<email>josh@glencoesoftware.com</email>
-			<url>https://www.openmicroscopy.org/site/about/development-teams/jason</url>
-			<organization>Swedlow Lab, University of Dundee</organization>
-			<organizationUrl>http://www.lifesci.dundee.ac.uk/gre/staff/jason-swedlow</organizationUrl>
+			<id>hinerm</id>
+			<name>Mark Hiner</name>
+			<email>hiner@wisc.edu</email>
+			<url>http://loci.wisc.edu/people/mark-hiner</url>
+			<organization>UW-Madison LOCI</organization>
+			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
 			<roles>
-				<role>architect</role>
-				<role>developer</role>
+				<role>maintainer</role>
 			</roles>
-			<timezone>+1</timezone>
+			<timezone>-6</timezone>
 		</developer>
 	</developers>
 	<contributors>
 		<contributor>
-			<name>Mark Hiner</name>
-			<email>hiner@wisc.edu</email>
-			<url>http://developer.imagej.net/users/hinerm</url>
-			<organization>UW-Madison LOCI</organization>
-			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
-			<roles>
-				<role>architect</role>
-				<role>developer</role>
-			</roles>
-			<timezone>-6</timezone>
-		</contributor>
-		<contributor>
-			<name>Jean-Marie Burel</name>
-			<email>j.burel@dundee.ac.uk</email>
+			<name>Josh Moore</name>
 			<url>https://www.openmicroscopy.org/site/about/development-teams/jason</url>
 			<organization>Swedlow Lab, University of Dundee</organization>
 			<organizationUrl>http://www.lifesci.dundee.ac.uk/gre/staff/jason-swedlow</organizationUrl>
-			<roles>
-				<role>developer</role>
-			</roles>
 			<timezone>+1</timezone>
+			<properties><id>joshmoore</id></properties>
 		</contributor>
-		<contributor><name>Niko Ehrenfeuchter</name></contributor>
+		<contributor>
+			<name>Jean-Marie Burel</name>
+			<url>https://www.openmicroscopy.org/site/about/development-teams/jason</url>
+			<organization>Swedlow Lab, University of Dundee</organization>
+			<organizationUrl>http://www.lifesci.dundee.ac.uk/gre/staff/jason-swedlow</organizationUrl>
+			<timezone>+1</timezone>
+			<properties><id>jburel</id></properties>
+		</contributor>
+		<contributor>
+			<name>Will Moore</name>
+			<url>https://www.openmicroscopy.org/site/about/development-teams/jason</url>
+			<organization>Swedlow Lab, University of Dundee</organization>
+			<organizationUrl>http://www.lifesci.dundee.ac.uk/gre/staff/jason-swedlow</organizationUrl>
+			<timezone>+1</timezone>
+			<properties><id>will-moore</id></properties>
+		</contributor>
+		<contributor>
+			<name>Niko Ehrenfeuchter</name>
+			<url>http://imagej.net/User:Ehrenfeu</url>
+			<properties><id>ehrenfeu</id></properties>
+		</contributor>
+		<contributor>
+			<name>Johannes Schindelin</name>
+			<url>http://imagej.net/User:Schindelin</url>
+			<properties><id>dscho</id></properties>
+		</contributor>
 	</contributors>
 
 	<mailingLists>
@@ -203,5 +217,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
