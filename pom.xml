@@ -15,6 +15,7 @@
 	<name>ImageJ/OMERO interoperability</name>
 	<description>Server- and client-side communication between ImageJ and OMERO.</description>
 	<inceptionYear>2013</inceptionYear>
+	<url>https://github.com/imagej/imagej-omero</url>
 	<licenses>
 		<license>
 			<name>GNU General Public License v2+</name>
