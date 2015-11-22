@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>imagej-omero</artifactId>
-	<version>0.3.3-SNAPSHOT</version>
+	<version>0.3.4-SNAPSHOT</version>
 
 	<name>ImageJ/OMERO interoperability</name>
 	<description>Server- and client-side communication between ImageJ and OMERO.</description>
