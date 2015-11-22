@@ -41,6 +41,8 @@ import java.util.Set;
 import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+import net.imagej.patcher.LegacyInjector;
+
 import omero.RArray;
 import omero.RBool;
 import omero.RDouble;
@@ -54,6 +56,8 @@ import omero.RString;
 import omero.RType;
 import omero.grid.Param;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.scijava.Context;
 import org.scijava.module.AbstractModuleItem;
@@ -68,11 +72,26 @@ import org.scijava.util.MersenneTwisterFast;
  */
 public class OMEROServiceTest {
 
+	static {
+		// NB: Necessary to avoid class-loading issues with the patched ImageJ1.
+		LegacyInjector.preinit();
+	}
+
+	private static OMEROService omeroService;
+
+	@BeforeClass
+	public static void beforeClass() {
+		omeroService = createService();
+	}
+
+	@AfterClass
+	public static void afterClass() {
+		if (omeroService != null) omeroService.getContext().dispose();
+	}
+
 	/** Tests {@link OMEROService#getJobParam(org.scijava.module.ModuleItem)}. */
 	@Test
 	public void testGetJobParam() {
-		final OMEROService omeroService = createService();
-
 		// -- test primitive types --
 
 		assertParam(omeroService, RBool.class, boolean.class);
@@ -131,15 +150,11 @@ public class OMEROServiceTest {
 		assertParam(omeroService, RString.class, BigInteger.class);
 		assertParam(omeroService, RString.class, ColorRGB.class);
 		assertParam(omeroService, RString.class, File.class);
-
-		omeroService.getContext().dispose();
 	}
 
 	/** Tests {@link OMEROService#prototype(Class)}. */
 	@Test
 	public void testPrototype() {
-		final OMEROService omeroService = createService();
-
 		// -- test primitive types --
 
 		assertPrototype(omeroService, RBool.class, boolean.class);
@@ -198,13 +213,11 @@ public class OMEROServiceTest {
 		assertPrototype(omeroService, RString.class, BigInteger.class);
 		assertPrototype(omeroService, RString.class, ColorRGB.class);
 		assertPrototype(omeroService, RString.class, File.class);
-
-		omeroService.getContext().dispose();
 	}
 
 	// -- Helper methods --
 
-	private OMEROService createService() {
+	private static OMEROService createService() {
 		return new Context(OMEROService.class).service(OMEROService.class);
 	}
 

@@ -46,6 +46,7 @@ import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
 import net.imagej.legacy.LegacyService;
+import net.imagej.patcher.LegacyInjector;
 
 import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
@@ -69,6 +70,11 @@ import org.scijava.util.ConversionUtils;
 public class DefaultOMEROService extends AbstractService implements
 	OMEROService, Optional
 {
+
+	static {
+		// NB: Necessary to avoid class-loading issues with the patched ImageJ1.
+		LegacyInjector.preinit();
+	}
 
 	// -- Parameters --
 
