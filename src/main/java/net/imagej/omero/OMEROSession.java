@@ -43,11 +43,11 @@ import omero.RLong;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.api.ServiceFactoryPrx;
+import omero.gateway.model.ImageData;
 import omero.model.IObject;
 import omero.model.Image;
 import omero.model.Pixels;
 import omero.model.PixelsType;
-import pojos.ImageData;
 
 /**
  * Helper class for managing OMERO client sessions.

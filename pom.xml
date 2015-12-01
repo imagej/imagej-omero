@@ -119,7 +119,7 @@
 	</ciManagement>
 
 	<properties>
-		<omero.version>5.1.2-ice35</omero.version>
+		<omero.version>5.2.0-ice35</omero.version>
 	</properties>
 
 	<repositories>
