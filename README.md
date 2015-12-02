@@ -1,4 +1,5 @@
 [![](http://jenkins.imagej.net/job/ImageJ-OMERO/lastBuild/badge/icon)](http://jenkins.imagej.net/job/ImageJ-OMERO/)
+[![Join the chat at https://gitter.im/imagej/imagej-omero](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/imagej/imagej-omero?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This project provides interoperability between
 [ImageJ](http://imagej.net/) and the [OMERO server](http://imagej.net/OMERO).
