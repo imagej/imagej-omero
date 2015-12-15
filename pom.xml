@@ -70,7 +70,7 @@
 			<url>https://www.openmicroscopy.org/site/about/development-teams/jason</url>
 			<organization>Swedlow Lab, University of Dundee</organization>
 			<organizationUrl>http://www.lifesci.dundee.ac.uk/gre/staff/jason-swedlow</organizationUrl>
-			<timezone>+1</timezone>
+			<timezone>0</timezone>
 			<properties><id>jburel</id></properties>
 		</contributor>
 		<contributor>
@@ -78,7 +78,7 @@
 			<url>https://www.openmicroscopy.org/site/about/development-teams/jason</url>
 			<organization>Swedlow Lab, University of Dundee</organization>
 			<organizationUrl>http://www.lifesci.dundee.ac.uk/gre/staff/jason-swedlow</organizationUrl>
-			<timezone>+1</timezone>
+			<timezone>0</timezone>
 			<properties><id>will-moore</id></properties>
 		</contributor>
 		<contributor>
