@@ -91,8 +91,10 @@ public final class TableUtils {
 				(omero.grid.DoubleColumn) omeroColumn;
 			omeroDColumn.values = doubleColumn.getArray();
 		}
-		throw new UnsupportedOperationException("Unsupported column type: " +
-			imageJColumn.getClass().getName());
+		else {
+			throw new UnsupportedOperationException("Unsupported column type: " +
+					imageJColumn.getClass().getName());
+		}
 	}
 
 	public static void populateImageJColumn(final omero.grid.Column omeroColumn,
