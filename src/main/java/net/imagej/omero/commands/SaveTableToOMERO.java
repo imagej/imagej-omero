@@ -25,6 +25,8 @@
 
 package net.imagej.omero.commands;
 
+import java.util.concurrent.ExecutionException;
+
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
 import net.imagej.omero.DefaultOMEROService;
@@ -35,6 +37,8 @@ import net.imagej.table.DefaultResultsTable;
 import net.imagej.table.ResultsTable;
 import net.imagej.table.Table;
 import omero.ServerError;
+import omero.gateway.exception.DSAccessException;
+import omero.gateway.exception.DSOutOfServiceException;
 
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
@@ -63,6 +67,9 @@ public class SaveTableToOMERO extends OMEROCommand {
 	@Parameter(required = false)
 	private Table<?, ?> table;
 
+	@Parameter
+	private long imageID;
+
 	@Override
 	public void run() {
 		final OMEROCredentials credentials = new OMEROCredentials();
@@ -74,7 +81,7 @@ public class SaveTableToOMERO extends OMEROCommand {
 		if (table == null) table = createBaseballTable();
 
 		try {
-			((DefaultOMEROService) omeroService).uploadTable(credentials, name, table);
+			((DefaultOMEROService) omeroService).uploadTable(credentials, name, table, imageID);
 		}
 		catch (ServerError exc) {
 			log.error(exc);
@@ -87,6 +94,18 @@ public class SaveTableToOMERO extends OMEROCommand {
 		catch (CannotCreateSessionException exc) {
 			log.error(exc);
 			cancel("Error talking to OMERO: " + exc.getMessage());
+		}
+		catch (ExecutionException exc) {
+			log.error(exc);
+			cancel("Error attaching table to OMERO image: " + exc.getMessage());
+		}
+		catch (DSOutOfServiceException exc) {
+			log.error(exc);
+			cancel("Error attaching table to OMERO image: " + exc.getMessage());
+		}
+		catch (DSAccessException exc) {
+			log.error(exc);
+			cancel("Error attaching table to OMERO image: " + exc.getMessage());
 		}
 	}
 

@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
@@ -53,7 +54,16 @@ import net.imagej.table.GenericTable;
 import net.imagej.table.ResultsTable;
 import net.imagej.table.Table;
 import omero.ServerError;
+import omero.gateway.SecurityContext;
+import omero.gateway.exception.DSAccessException;
+import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.facility.BrowseFacility;
+import omero.gateway.facility.DataManagerFacility;
 import omero.grid.TablePrx;
+import omero.model.FileAnnotation;
+import omero.model.FileAnnotationI;
+import omero.model.ImageAnnotationLink;
+import omero.model.ImageAnnotationLinkI;
 import omero.model.OriginalFile;
 import omero.model.OriginalFileI;
 
@@ -358,8 +368,10 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Override
 	public long uploadTable(final OMEROCredentials credentials,
-		final String name, final Table<?, ?> imageJTable) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException
+		final String name, final Table<?, ?> imageJTable, final long imageID)
+		throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException
 	{
 		final OMEROSession session = new OMEROSession(credentials);
 		TablePrx tableService = null;
@@ -382,6 +394,7 @@ public class DefaultOMEROService extends AbstractService implements
 				TableUtils.populateOMEROColumn(imageJTable.get(c), columns[c]);
 			}
 			tableService.addData(columns);
+			if (imageID != 0) attachAnnotation(session, imageID, tableService);
 		}
 		finally {
 			try {
@@ -566,4 +579,44 @@ public class DefaultOMEROService extends AbstractService implements
 		return collection.toArray(array);
 	}
 
+	/**
+	 * Attaches table file to OMERO image.
+	 * 
+	 * @throws ExecutionException
+	 * @throws DSAccessException
+	 * @throws DSOutOfServiceException
+	 */
+	private static void attachAnnotation(final OMEROSession session,
+		final long imageID, final TablePrx table) throws ServerError,
+		ExecutionException, DSOutOfServiceException, DSAccessException
+	{
+		// Create necessary facilities
+		DataManagerFacility dm =
+			session.getGateway().getFacility(DataManagerFacility.class);
+		BrowseFacility browse =
+			session.getGateway().getFacility(BrowseFacility.class);
+
+		// Get current sessions security context
+		SecurityContext ctx =
+			new SecurityContext(session.getExperimenter().getGroupId());
+
+		// Get original file from the table
+		OriginalFile file = table.getOriginalFile();
+
+		// Create file annotation for table file
+		FileAnnotation annotation = new FileAnnotationI();
+		// TODO assign annotation to a table namespace
+		annotation.setNs(omero.rtypes
+			.rstring(omero.constants.namespaces.NSBULKANNOTATIONS.value));
+		annotation.setFile(file);
+		// Save file annotation to database
+		annotation = (FileAnnotation) dm.saveAndReturnObject(ctx, annotation);
+
+		// Attach file to image with given ID
+		ImageAnnotationLink link = new ImageAnnotationLinkI();
+		link.setChild(annotation);
+		link.setParent(browse.getImage(ctx, imageID).asImage());
+		// Save linkage to database
+		link = (ImageAnnotationLink) dm.saveAndReturnObject(ctx, link);
+	}
 }
