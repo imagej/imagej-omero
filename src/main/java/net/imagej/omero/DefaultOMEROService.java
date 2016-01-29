@@ -443,11 +443,13 @@ public class DefaultOMEROService extends AbstractService implements
 
 			final int batchSize = 24 * 1024;
 			int currentRow = 0;
+
 			final Column<?>[] imageJColumns = new Column<?>[colCount];
+			final long[] colIndices = new long[colCount];
+			for (int c = 0; c < colIndices.length; c++)
+				colIndices[c] = c;
+
 			while (currentRow < rowCount) {
-				final long[] colIndices = new long[colCount];
-				for (int c = 0; c < colIndices.length; c++)
-					colIndices[c] = c;
 				final int rowsLeft = rowCount - currentRow;
 				final int rowsToRead = Math.min(batchSize, rowsLeft);
 				final omero.grid.Data data =
@@ -472,6 +474,8 @@ public class DefaultOMEROService extends AbstractService implements
 				}
 				currentRow += rowsToRead;
 			}
+			//Need to specify how many rows the table has for data to display
+			imageJTable.setRowCount(rowCount);
 			return imageJTable;
 		}
 		finally {
