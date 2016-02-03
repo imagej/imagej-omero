@@ -43,7 +43,13 @@ import omero.RLong;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.api.ServiceFactoryPrx;
+import omero.gateway.Gateway;
+import omero.gateway.LoginCredentials;
+import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.model.ExperimenterData;
 import omero.gateway.model.ImageData;
+import omero.log.Logger;
+import omero.log.SimpleLogger;
 import omero.model.IObject;
 import omero.model.Image;
 import omero.model.Pixels;
@@ -60,6 +66,8 @@ public class OMEROSession implements Closeable {
 
 	private omero.client client;
 	private ServiceFactoryPrx session;
+	private ExperimenterData experimenter;
+	private Gateway gateway;
 
 	// -- Constructors --
 
@@ -96,6 +104,8 @@ public class OMEROSession implements Closeable {
 		{
 			final String user = credentials.getUser();
 			final String password = credentials.getPassword();
+			setGateway();
+			setExperimenter(credentials);
 			session = client.createSession(user, password);
 			credentials.setSessionID(client.getSessionId());
 		}
@@ -121,6 +131,14 @@ public class OMEROSession implements Closeable {
 
 	public ServiceFactoryPrx getSession() {
 		return session;
+	}
+
+	public ExperimenterData getExperimenter() {
+		return this.experimenter;
+	}
+
+	public Gateway getGateway() {
+		return this.gateway;
 	}
 
 	/** Gets an OMERO {@code Pixels} descriptor, loading remotely as needed. */
@@ -237,6 +255,7 @@ public class OMEROSession implements Closeable {
 		if (client != null) client.__del__();
 		client = null;
 		session = null;
+		if (gateway != null) gateway.disconnect();
 	}
 
 	// -- Helper methods --
@@ -307,6 +326,38 @@ public class OMEROSession implements Closeable {
 				" axis is too large for OMERO: " + axisLength);
 		}
 		return (int) axisLength;
+	}
+
+	/**
+	 * Attempts to connect to the gateway using the given credentials. If it can
+	 * successfully connect, then it sets experimenter. 
+	 */
+	private void setExperimenter(OMEROCredentials credentials) throws ServerError
+	{
+		final LoginCredentials cred = new LoginCredentials();
+		cred.getServer().setHostname(credentials.getServer());
+		cred.getServer().setPort(credentials.getPort());
+		cred.getUser().setUsername(credentials.getUser());
+		cred.getUser().setPassword(credentials.getPassword());
+
+		if(this.gateway == null) setGateway();
+
+		try {
+			this.experimenter = this.gateway.connect(cred);
+		}
+		catch (DSOutOfServiceException exc) {
+			final ServerError err = new ServerError();
+			err.initCause(exc);
+			throw err;
+		}
+	}
+
+	/**
+	 * Creates a new gateway for the session.
+	 */
+	private void setGateway() {
+		final Logger simpleLogger = new SimpleLogger();
+		this.gateway = new Gateway(simpleLogger);
 	}
 
 }
