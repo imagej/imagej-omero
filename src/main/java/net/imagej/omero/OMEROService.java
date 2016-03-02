@@ -72,9 +72,16 @@ public interface OMEROService extends ImageJService {
 	 * method will be used transparently to convert the object into an OMERO image
 	 * ID.
 	 * </p>
+	 * @throws DSAccessException
+	 * @throws DSOutOfServiceException
+	 * @throws ExecutionException
+	 * @throws CannotCreateSessionException
+	 * @throws PermissionDeniedException
 	 */
 	omero.RType toOMERO(omero.client client, Object value)
-		throws omero.ServerError, IOException;
+		throws omero.ServerError, IOException, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException;
 
 	/**
 	 * Converts an OMERO parameter value to an ImageJ value of the given type.
@@ -85,7 +92,8 @@ public interface OMEROService extends ImageJService {
 	 * OMERO image ID into such an object.
 	 */
 	Object toImageJ(omero.client client, omero.RType value, Class<?> type)
-		throws omero.ServerError, IOException;
+		throws omero.ServerError, IOException, PermissionDeniedException,
+		CannotCreateSessionException;
 
 	/**
 	 * Downloads the image with the given image ID from OMERO, storing the result

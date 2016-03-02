@@ -240,7 +240,9 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Override
 	public omero.RType toOMERO(final omero.client client, final Object value)
-		throws omero.ServerError, IOException
+		throws omero.ServerError, IOException, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException
 	{
 		if (value instanceof Dataset) {
 			// upload image to OMERO, returning the resultant image ID
@@ -257,12 +259,18 @@ public class DefaultOMEROService extends AbstractService implements
 			// TODO: Support more aspects of image displays; e.g., multiple datasets.
 			return toOMERO(client, imageDisplayService.getActiveDataset(imageDisplay));
 		}
+		if (value instanceof Table) {
+			OMEROCredentials cred = createCredentials(client);
+			final long tableID = uploadTable(cred, "table", (Table<?, ?>) value, 0);
+			return toOMERO(client, tableID);
+		}
 		return toOMERO(value);
 	}
 
 	@Override
 	public Object toImageJ(final omero.client client, final omero.RType value,
-		final Class<?> type) throws omero.ServerError, IOException
+		final Class<?> type) throws omero.ServerError, IOException,
+		PermissionDeniedException, CannotCreateSessionException, SecurityException
 	{
 		if (value instanceof omero.RCollection) {
 			// collection of objects
@@ -375,6 +383,7 @@ public class DefaultOMEROService extends AbstractService implements
 	{
 		final OMEROSession session = new OMEROSession(credentials);
 		TablePrx tableService = null;
+		long id = -1;
 		try {
 			tableService =
 				session.getClient().getSession().sharedResources().newTable(1, name);
@@ -399,6 +408,7 @@ public class DefaultOMEROService extends AbstractService implements
 		finally {
 			try {
 				if (tableService != null) {
+					id = tableService.getOriginalFile().getId().getValue();
 					tableService.close();
 				}
 			}
@@ -406,8 +416,7 @@ public class DefaultOMEROService extends AbstractService implements
 				session.close();
 			}
 		}
-		// FIXME: Return the actual table ID.
-		return -1;
+		return id;
 	}
 
 	@Override
@@ -514,9 +523,12 @@ public class DefaultOMEROService extends AbstractService implements
 	 * a specified ID and convert the result to the appropriate type of ImageJ
 	 * object such as {@link Dataset}.</li>
 	 * </ol>
+	 * @throws CannotCreateSessionException
+	 * @throws PermissionDeniedException
 	 */
 	private <T> T convert(final omero.client client, final Object value,
-		final Class<T> type) throws omero.ServerError, IOException
+		final Class<T> type) throws omero.ServerError, IOException,
+		PermissionDeniedException, CannotCreateSessionException
 	{
 		if (value == null) return null;
 		if (type == null) {
@@ -558,6 +570,13 @@ public class DefaultOMEROService extends AbstractService implements
 				@SuppressWarnings("unchecked")
 				final T display = (T) displayService.createDisplay(dataset);
 				return display;
+			}
+			if (Table.class.isAssignableFrom(type)) {
+				final long tableID = ((Number) value).longValue();
+				final OMEROCredentials credentials = createCredentials(client);
+				@SuppressWarnings("unchecked")
+				final T table = (T) downloadTable(credentials, tableID);
+				return table;
 			}
 		}
 
@@ -618,5 +637,14 @@ public class DefaultOMEROService extends AbstractService implements
 		link.setParent(browse.getImage(ctx, imageID).asImage());
 		// Save linkage to database
 		link = (ImageAnnotationLink) dm.saveAndReturnObject(ctx, link);
+	}
+
+	private OMEROCredentials createCredentials(omero.client client) {
+		final OMEROCredentials credentials = new OMEROCredentials();
+		credentials.setServer(client.getProperty("omero.host"));
+		credentials.setPort(Integer.parseInt(client.getProperty("omero.port")));
+		credentials.setUser(client.getProperty("omero.user"));
+		credentials.setPassword(client.getProperty("omero.pass"));
+		return credentials;
 	}
 }
