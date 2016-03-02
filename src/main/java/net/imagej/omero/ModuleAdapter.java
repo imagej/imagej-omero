@@ -25,11 +25,15 @@
 
 package net.imagej.omero;
 
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -51,6 +55,12 @@ import omero.gateway.model.ExperimenterData;
 import omero.gateway.model.ImageData;
 import omero.log.Logger;
 import omero.log.SimpleLogger;
+import omero.model.FileAnnotation;
+import omero.model.FileAnnotationI;
+import omero.model.ImageAnnotationLink;
+import omero.model.ImageAnnotationLinkI;
+import omero.model.OriginalFile;
+import omero.model.OriginalFileI;
 
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
@@ -148,8 +158,14 @@ public class ModuleAdapter extends AbstractContextual {
 	 * @throws IOException
 	 * @throws ServerError
 	 * @throws ExecutionException
+	 * @throws CannotCreateSessionException
+	 * @throws PermissionDeniedException
+	 * @throws DSAccessException
+	 * @throws DSOutOfServiceException
 	 */
-	public void launch() throws ServerError, IOException, ExecutionException
+	public void launch() throws ServerError, IOException, ExecutionException,
+	PermissionDeniedException, CannotCreateSessionException,
+	DSOutOfServiceException, DSAccessException
 	{
 		// populate inputs
 		log.debug(info.getTitle() + ": populating inputs");
@@ -158,7 +174,7 @@ public class ModuleAdapter extends AbstractContextual {
 			final ModuleItem<?> input = getInput(name);
 			final Class<?> type = input.getType();
 			final Object value =
-				omeroService.toImageJ(client, client.getInput(name), type);
+					omeroService.toImageJ(client, client.getInput(name), type);
 			inputMap.put(input.getName(), value);
 		}
 
@@ -171,7 +187,7 @@ public class ModuleAdapter extends AbstractContextual {
 		log.debug(info.getTitle() + ": populating outputs");
 		for (final ModuleItem<?> item : module.getInfo().outputs()) {
 			final omero.RType value =
-				omeroService.toOMERO(client, item.getValue(module));
+					omeroService.toOMERO(client, item.getValue(module));
 			final String name = getOutputName(item);
 			if (value == null) {
 				log.warn(info.getTitle() + ": output '" + name + "' is null");
@@ -278,7 +294,7 @@ public class ModuleAdapter extends AbstractContextual {
 
 	/** Helper method for {@link #getInputName} and {@link #getOutputName}. */
 	private String
-		getName(final ModuleItem<?> item, final ModuleItem<?> imageItem)
+	getName(final ModuleItem<?> item, final ModuleItem<?> imageItem)
 	{
 		if (imageItem != null && item.getName().equals(imageItem.getName())) {
 			return IMAGE_NAME;
@@ -309,8 +325,8 @@ public class ModuleAdapter extends AbstractContextual {
 		for (final ModuleItem<?> item : items) {
 			final Class<?> type = item.getType();
 			if (Dataset.class.isAssignableFrom(type) ||
-				DatasetView.class.isAssignableFrom(type) ||
-				ImageDisplay.class.isAssignableFrom(type))
+					DatasetView.class.isAssignableFrom(type) ||
+					ImageDisplay.class.isAssignableFrom(type))
 			{
 				if (imageItem == null) imageItem = item;
 				else return null; // multiple image parameters
@@ -328,7 +344,7 @@ public class ModuleAdapter extends AbstractContextual {
 	}
 
 	/**
-	 * Attaches outputs to parent items of inputs in OMERO.
+	 * Attaches outputs to parent items of inputs or inputs themselves in OMERO.
 	 *
 	 * @throws ServerError
 	 * @throws ExecutionException
@@ -346,14 +362,13 @@ public class ModuleAdapter extends AbstractContextual {
 					getInputImages(browse, ctx, new ArrayList<ImageData>());
 
 			if(!images.isEmpty()) {
-				// Get OMERO datasets associated with inputs
-				// TODO Add check such that this is only done if the output contains an
-				// image
-				final ArrayList<DatasetData> datasets =
-						getDatasets(browse, ctx, user, images, new ArrayList<DatasetData>());
+				final ArrayList<DatasetData> datasets = new ArrayList<DatasetData>();
+			// Get OMERO datasets associated with inputs only if output contains an
+			// image
+				if(containsImage()) getDatasets(browse, ctx, user, images, datasets);
 
 				// attach specified outputs to inputs
-				attachOutputs(datasets, ctx, browse);
+				attachOutputs(datasets, ctx, browse, images);
 			}
 		}
 	}
@@ -365,7 +380,7 @@ public class ModuleAdapter extends AbstractContextual {
 		final LoginCredentials cred = new LoginCredentials();
 		cred.getServer().setHostname(client.getProperty("omero.host"));
 		cred.getServer()
-			.setPort(Integer.parseInt(client.getProperty("omero.port")));
+		.setPort(Integer.parseInt(client.getProperty("omero.port")));
 		cred.getUser().setUsername(client.getProperty("omero.user"));
 		cred.getUser().setPassword(client.getProperty("omero.pass"));
 
@@ -387,16 +402,22 @@ public class ModuleAdapter extends AbstractContextual {
 	 */
 	private ArrayList<ImageData> getInputImages(final BrowseFacility browse,
 		final SecurityContext ctx, final ArrayList<ImageData> images)
-		throws ServerError
-	{
+				throws ServerError
+				{
 		for (final String name : client.getInputKeys()) {
 			final Object value = client.getInput(name);
 			if (!(value instanceof RLong)) continue;
 			final long imageID = ((RLong) value).getValue();
-			images.add(browse.getImage(ctx, imageID));
+			try {
+				images.add(browse.getImage(ctx, imageID));
+			}
+			catch(NoSuchElementException err) {
+				log.error("ImageID: " + imageID + " is not valid");
+				return new ArrayList<ImageData>();
+			}
 		}
 		return images;
-	}
+				}
 
 	/**
 	 * Retrieves all the datasets associated with this user, and then loops over
@@ -406,9 +427,9 @@ public class ModuleAdapter extends AbstractContextual {
 	private ArrayList<DatasetData> getDatasets(final BrowseFacility browse,
 		final SecurityContext ctx, final ExperimenterData user,
 		final ArrayList<ImageData> images, final ArrayList<DatasetData> finalIDs)
-	{
+		{
 		final Collection<DatasetData> dataSetIDs =
-			browse.getDatasets(ctx, user.getId());
+				browse.getDatasets(ctx, user.getId());
 
 		for (final DatasetData dataset : dataSetIDs) {
 			@SuppressWarnings("unchecked")
@@ -420,7 +441,7 @@ public class ModuleAdapter extends AbstractContextual {
 			}
 		}
 		return finalIDs;
-	}
+		}
 
 	/**
 	 * Loops over outputs and attaches them to appropriate OMERO objects when
@@ -429,12 +450,19 @@ public class ModuleAdapter extends AbstractContextual {
 	 * @throws ServerError
 	 */
 	private void attachOutputs(final ArrayList<DatasetData> datasets,
-		final SecurityContext ctx, final BrowseFacility browse) throws ServerError
+		final SecurityContext ctx, final BrowseFacility browse, final
+		ArrayList<ImageData> images) throws ServerError
 	{
 		for (final String key : client.getOutputKeys()) {
-			if (!(client.getOutput(key) instanceof RLong)) continue;
-			final long id = ((RLong) client.getOutput(key)).getValue();
-			attachImageToDataset(id, datasets, ctx, browse);
+			omero.RType output = client.getOutput(key);
+			if (!(output instanceof RLong)) continue;
+			final long id = ((RLong) output).getValue();
+			if(key.equals("table")) {
+				attachTableToImages(id, images, ctx);
+			}
+			else {
+				if(!datasets.isEmpty()) attachImageToDataset(id, datasets, ctx, browse);
+			}
 		}
 	}
 
@@ -447,13 +475,13 @@ public class ModuleAdapter extends AbstractContextual {
 	{
 		try {
 			final DataManagerFacility dm =
-				gateway.getFacility(DataManagerFacility.class);
+					gateway.getFacility(DataManagerFacility.class);
 			final ImageData image = browse.getImage(ctx, imageID);
 			for (final DatasetData dset : datasets)
 				dm.addImageToDataset(ctx, image, dset);
 		}
 		catch (final ExecutionException err) {
-			log.error("Cannot create DataMangerFacility");
+			log.error("Cannot create DataManagerFacility");
 		}
 		catch (final DSOutOfServiceException err) {
 			log.error("Cannot attach image to dataset. ImageID: " + imageID +
@@ -463,5 +491,53 @@ public class ModuleAdapter extends AbstractContextual {
 			log.error("Cannot attach image to dataset. ImageID: " + imageID +
 				" Dataset(s): " + datasets.toString());
 		}
+	}
+
+	/**
+	 * Attaches a table to OMERO images(s).
+	 */
+	private void attachTableToImages(final long tableID, final
+		ArrayList<ImageData> images, final SecurityContext ctx) {
+
+		final OriginalFile tableFile = new OriginalFileI(tableID, false);
+		DataManagerFacility dm;
+		try {
+			dm = gateway.getFacility(DataManagerFacility.class);
+
+			FileAnnotation annotation = new FileAnnotationI();
+			// TODO assign annotation to a table namespace
+			annotation.setNs(omero.rtypes
+				.rstring(omero.constants.namespaces.NSBULKANNOTATIONS.value));
+			annotation.setFile(tableFile);
+			annotation = (FileAnnotation) dm.saveAndReturnObject(ctx, annotation);
+
+			for(ImageData i : images) {
+				ImageAnnotationLink link = new ImageAnnotationLinkI();
+				link.setChild(annotation);
+				link.setParent(i.asImage());
+				// Save linkage to database
+				link = (ImageAnnotationLink) dm.saveAndReturnObject(ctx, link);
+			}
+		}
+		catch (ExecutionException exc) {
+			log.error("Cannot create DataManagerFacility");
+		}
+		catch (DSOutOfServiceException exc) {
+			log.error("Cannot attach table to image. TableID: " + tableID +
+				" Image(s): " + images.toString());
+		}
+		catch (DSAccessException exc) {
+			log.error("Cannot attach table to image. TableID: " + tableID +
+				" Image(s): " + images.toString());
+		}
+	}
+
+	/** Checks if the output contains an image */
+	private boolean containsImage() throws ServerError {
+		for (final String key : client.getOutputKeys()) {
+			omero.RType output = client.getOutput(key);
+			if (output instanceof RLong && !key.equals("table")) return true;
+		}
+		return false;
 	}
 }
