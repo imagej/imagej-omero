@@ -71,8 +71,6 @@ public class OpenTableFromOMERO extends OMEROCommand {
 		credentials.setPassword(getPassword());
 		try {
 			table = ((DefaultOMEROService) omeroService).downloadTable(credentials, tableID);
-			log.info("GOT A TABLE: " + table);//TEMP
-			System.out.println("GOT A TABLE: " + table);
 		}
 		catch (ServerError exc) {
 			log.error(exc);
