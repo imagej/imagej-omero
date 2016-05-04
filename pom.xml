@@ -28,10 +28,7 @@
 		<developer>
 			<id>ctrueden</id>
 			<name>Curtis Rueden</name>
-			<email>ctrueden@wisc.edu</email>
-			<url>http://loci.wisc.edu/people/curtis-rueden</url>
-			<organization>UW-Madison LOCI</organization>
-			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
+			<url>http://imagej.net/User:Rueden</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -41,44 +38,28 @@
 				<role>support</role>
 				<role>maintainer</role>
 			</roles>
-			<timezone>-6</timezone>
 		</developer>
 		<developer>
 			<id>hinerm</id>
 			<name>Mark Hiner</name>
-			<email>hiner@wisc.edu</email>
-			<url>http://loci.wisc.edu/people/mark-hiner</url>
-			<organization>UW-Madison LOCI</organization>
-			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
+			<url>http://imagej.net/User:Hinerm</url>
 			<roles>
 				<role>maintainer</role>
 			</roles>
-			<timezone>-6</timezone>
 		</developer>
 	</developers>
 	<contributors>
 		<contributor>
 			<name>Josh Moore</name>
-			<url>https://www.openmicroscopy.org/site/about/development-teams/jason</url>
-			<organization>Swedlow Lab, University of Dundee</organization>
-			<organizationUrl>http://www.lifesci.dundee.ac.uk/gre/staff/jason-swedlow</organizationUrl>
-			<timezone>+1</timezone>
+			<url>http://imagej.net/User:Moore</url>
 			<properties><id>joshmoore</id></properties>
 		</contributor>
 		<contributor>
 			<name>Jean-Marie Burel</name>
-			<url>https://www.openmicroscopy.org/site/about/development-teams/jason</url>
-			<organization>Swedlow Lab, University of Dundee</organization>
-			<organizationUrl>http://www.lifesci.dundee.ac.uk/gre/staff/jason-swedlow</organizationUrl>
-			<timezone>0</timezone>
 			<properties><id>jburel</id></properties>
 		</contributor>
 		<contributor>
 			<name>Will Moore</name>
-			<url>https://www.openmicroscopy.org/site/about/development-teams/jason</url>
-			<organization>Swedlow Lab, University of Dundee</organization>
-			<organizationUrl>http://www.lifesci.dundee.ac.uk/gre/staff/jason-swedlow</organizationUrl>
-			<timezone>0</timezone>
 			<properties><id>will-moore</id></properties>
 		</contributor>
 		<contributor>
