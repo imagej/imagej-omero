@@ -33,8 +33,10 @@ import net.imagej.table.BoolColumn;
 import net.imagej.table.ByteColumn;
 import net.imagej.table.CharColumn;
 import net.imagej.table.Column;
+import net.imagej.table.DefaultBoolTable;
 import net.imagej.table.DefaultColumn;
 import net.imagej.table.DefaultGenericTable;
+import net.imagej.table.DefaultLongTable;
 import net.imagej.table.DefaultResultsTable;
 import net.imagej.table.DoubleColumn;
 import net.imagej.table.FloatColumn;
@@ -327,15 +329,29 @@ public final class TableUtils {
 	public static Table<?, ?> createImageJTable(
 		final omero.grid.Column[] omeroColumns)
 	{
-		// TODO Decide if we really need this case logic.
-		for (int c = 0; c < omeroColumns.length; c++) {
-			if (!(omeroColumns[c] instanceof omero.grid.DoubleColumn)) {
-				// not all doubles
+		omero.grid.Column prev = omeroColumns[0];
+		for (int c = 1; c < omeroColumns.length; c++) {
+			// if table contains a mixture of column types, return a GenericTable
+			if (!prev.getClass().equals(omeroColumns[c].getClass())) {
 				return new DefaultGenericTable();
 			}
+			prev = omeroColumns[c];
 		}
-		// all double columns, yay
-		return new DefaultResultsTable();
+
+		// Uniform column types
+		prev = omeroColumns[0];
+		if (prev instanceof omero.grid.DoubleColumn) {
+			return new DefaultResultsTable();
+		}
+		else if (prev instanceof omero.grid.LongColumn) {
+			return new DefaultLongTable();
+		}
+		else if (prev instanceof omero.grid.BoolColumn) {
+			return new DefaultBoolTable();
+		}
+		else {
+			return new DefaultGenericTable();
+		}
 	}
 
 	public static Column<?> createImageJColumn(final omero.grid.Column column) {
