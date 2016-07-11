@@ -257,7 +257,7 @@ public class DefaultOMEROService extends AbstractService implements
 			return toOMERO(client, imageDisplayService.getActiveDataset(imageDisplay));
 		}
 		if (value instanceof Table) {
-			OMEROCredentials cred = createCredentials(client);
+			final OMEROCredentials cred = createCredentials(client);
 			final long tableID = uploadTable(cred, "table", (Table<?, ?>) value, 0);
 			return toOMERO(client, tableID);
 		}
@@ -459,8 +459,8 @@ public class DefaultOMEROService extends AbstractService implements
 				assert (colCount == data.columns.length);
 				// Create columns
 				if (!colCreated) {
-					if (GenericTable.class.isInstance(imageJTable))
-						addTypedColumns( (GenericTable) imageJTable, data, rowCount);
+					if (GenericTable.class.isInstance(imageJTable)) addTypedColumns(
+						(GenericTable) imageJTable, data, rowCount);
 					// Append empty columns of table type
 					else imageJTable.appendColumns(colCount);
 					colCreated = true;
@@ -474,7 +474,7 @@ public class DefaultOMEROService extends AbstractService implements
 				}
 				currentRow += rowsToRead;
 			}
-			//Need to specify how many rows the table has for data to display
+			// Need to specify how many rows the table has for data to display
 			imageJTable.setRowCount(rowCount);
 			return imageJTable;
 		}
@@ -519,6 +519,7 @@ public class DefaultOMEROService extends AbstractService implements
 	 * a specified ID and convert the result to the appropriate type of ImageJ
 	 * object such as {@link Dataset}.</li>
 	 * </ol>
+	 *
 	 * @throws CannotCreateSessionException
 	 * @throws PermissionDeniedException
 	 */
@@ -596,7 +597,7 @@ public class DefaultOMEROService extends AbstractService implements
 
 	/**
 	 * Attaches table file to OMERO image.
-	 * 
+	 *
 	 * @throws ExecutionException
 	 * @throws DSAccessException
 	 * @throws DSOutOfServiceException
@@ -606,17 +607,17 @@ public class DefaultOMEROService extends AbstractService implements
 		ExecutionException, DSOutOfServiceException, DSAccessException
 	{
 		// Create necessary facilities
-		DataManagerFacility dm =
+		final DataManagerFacility dm =
 			session.getGateway().getFacility(DataManagerFacility.class);
-		BrowseFacility browse =
+		final BrowseFacility browse =
 			session.getGateway().getFacility(BrowseFacility.class);
 
 		// Get current sessions security context
-		SecurityContext ctx =
+		final SecurityContext ctx =
 			new SecurityContext(session.getExperimenter().getGroupId());
 
 		// Get original file from the table
-		OriginalFile file = table.getOriginalFile();
+		final OriginalFile file = table.getOriginalFile();
 
 		// Create file annotation for table file
 		FileAnnotation annotation = new FileAnnotationI();
@@ -635,7 +636,7 @@ public class DefaultOMEROService extends AbstractService implements
 		link = (ImageAnnotationLink) dm.saveAndReturnObject(ctx, link);
 	}
 
-	private OMEROCredentials createCredentials(omero.client client) {
+	private OMEROCredentials createCredentials(final omero.client client) {
 		final OMEROCredentials credentials = new OMEROCredentials();
 		credentials.setServer(client.getProperty("omero.host"));
 		credentials.setPort(Integer.parseInt(client.getProperty("omero.port")));
