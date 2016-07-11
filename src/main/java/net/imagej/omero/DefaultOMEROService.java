@@ -48,10 +48,7 @@ import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
 import net.imagej.table.Column;
-import net.imagej.table.DoubleColumn;
-import net.imagej.table.GenericColumn;
 import net.imagej.table.GenericTable;
-import net.imagej.table.ResultsTable;
 import net.imagej.table.Table;
 import omero.ServerError;
 import omero.gateway.SecurityContext;
@@ -452,6 +449,7 @@ public class DefaultOMEROService extends AbstractService implements
 			final long[] colIndices = new long[colCount];
 			for (int c = 0; c < colIndices.length; c++)
 				colIndices[c] = c;
+			boolean colCreated = false;
 
 			while (currentRow < rowCount) {
 				final int rowsLeft = rowCount - currentRow;
@@ -459,20 +457,18 @@ public class DefaultOMEROService extends AbstractService implements
 				final omero.grid.Data data =
 					tableService.read(colIndices, currentRow, currentRow + rowsToRead);
 				assert (colCount == data.columns.length);
+				// Create columns
+				if (!colCreated) {
+					if (GenericTable.class.isInstance(imageJTable))
+						addTypedColumns( (GenericTable) imageJTable, data, rowCount);
+					// Append empty columns of table type
+					else imageJTable.appendColumns(colCount);
+					colCreated = true;
+				}
 				for (int c = 0; c < colCount; c++) {
 					if (imageJColumns[c] == null) {
-						imageJColumns[c] = TableUtils.createImageJColumn(data.columns[c]);
-						imageJColumns[c].setSize(rowCount);
-						// FIXME generics
-						if (imageJTable instanceof GenericTable) {
-							((GenericTable) imageJTable).add((GenericColumn) imageJColumns[c]);
-						}
-						else if (imageJTable instanceof ResultsTable) {
-							((ResultsTable) imageJTable).add((DoubleColumn) imageJColumns[c]);
-						}
-						else throw new IllegalStateException("You did something wrong");
+						imageJColumns[c] = imageJTable.get(c);
 					}
-					// TODO: add fill API to ImageJ Column interface
 					TableUtils.populateImageJColumn(data.columns[c], imageJColumns[c],
 						currentRow);
 				}
@@ -646,5 +642,18 @@ public class DefaultOMEROService extends AbstractService implements
 		credentials.setUser(client.getProperty("omero.user"));
 		credentials.setPassword(client.getProperty("omero.pass"));
 		return credentials;
+	}
+
+	/**
+	 * Adds columns of different types to a {@link GenericTable}.
+	 */
+	private void addTypedColumns(final GenericTable imageJTable,
+		final omero.grid.Data data, final int rowCount)
+	{
+		for (int c = 0; c < data.columns.length; c++) {
+			final Column<?> col = TableUtils.createImageJColumn(data.columns[c]);
+			col.setSize(rowCount);
+			imageJTable.add(col);
+		}
 	}
 }
