@@ -324,6 +324,8 @@ public final class TableUtils {
 				imageJGenericColumn.set(r + offset, Array.get(data, r));
 			}
 		}
+		if (imageJColumn.getHeader() == null) imageJColumn
+			.setHeader(omeroColumn.name);
 	}
 
 	public static Table<?, ?> createImageJTable(
