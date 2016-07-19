@@ -309,8 +309,13 @@ public final class TableUtils {
 			final String[] data = ((omero.grid.StringColumn) omeroColumn).values;
 			final DefaultColumn<String> imageJStringColumn =
 				(DefaultColumn<String>) imageJColumn;
-			System.arraycopy(data, 0, imageJStringColumn.toArray(), offset,
-				data.length);
+			if (imageJStringColumn.getArray() == null) {
+				imageJStringColumn.setArray(data.clone());
+			}
+			else {
+				System.arraycopy(data, 0, imageJStringColumn.getArray(), offset,
+					data.length);
+			}
 		}
 		else {
 			final GenericColumn imageJGenericColumn = (GenericColumn) imageJColumn;
