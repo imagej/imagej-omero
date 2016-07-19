@@ -286,8 +286,7 @@ public final class TableUtils {
 			final DefaultColumn<DoubleArray> imageJDoubleArrayColumn =
 				(DefaultColumn<DoubleArray>) imageJColumn;
 			for (int i = 0; i < data.length; i++) {
-				System.arraycopy(data[i], 0, imageJDoubleArrayColumn.get(i).getArray(),
-					offset, data.length);
+				populateArrayColumn(offset, data, imageJDoubleArrayColumn, i);
 			}
 		}
 		else if (omeroColumn instanceof omero.grid.FloatArrayColumn) {
@@ -295,8 +294,7 @@ public final class TableUtils {
 			final DefaultColumn<FloatArray> imageJFloatArrayColumn =
 				(DefaultColumn<FloatArray>) imageJColumn;
 			for (int i = 0; i < data.length; i++) {
-				System.arraycopy(data[i], 0, imageJFloatArrayColumn.get(i).getArray(),
-					offset, data.length);
+				populateArrayColumn(offset, data, imageJFloatArrayColumn, i);
 			}
 		}
 		else if (omeroColumn instanceof omero.grid.LongArrayColumn) {
@@ -304,8 +302,7 @@ public final class TableUtils {
 			final DefaultColumn<LongArray> imageJLongArrayColumn =
 				(DefaultColumn<LongArray>) imageJColumn;
 			for (int i = 0; i < data.length; i++) {
-				System.arraycopy(data[i], 0, imageJLongArrayColumn.get(i).getArray(),
-					offset, data.length);
+				populateArrayColumn(offset, data, imageJLongArrayColumn, i);
 			}
 		}
 		else if (omeroColumn instanceof omero.grid.StringColumn) {
@@ -445,5 +442,59 @@ public final class TableUtils {
 			d[q] = i[q];
 		}
 		return d;
+	}
+
+	private static void populateArrayColumn(final int offset,
+		final long[][] data, final DefaultColumn<LongArray> imageJLongArrayColumn,
+		final int col)
+	{
+		if (imageJLongArrayColumn.get(col) == null) {
+			imageJLongArrayColumn.set(col, new LongArray(data[col].clone()));
+		}
+		else if (imageJLongArrayColumn.get(col) != null &&
+			imageJLongArrayColumn.get(col).getArray() == null)
+		{
+			imageJLongArrayColumn.get(col).setArray(data[col].clone());
+		}
+		else {
+			System.arraycopy(data[col], 0, imageJLongArrayColumn.get(col).getArray(),
+				offset, data.length);
+		}
+	}
+
+	private static void populateArrayColumn(final int offset,
+		final float[][] data,
+		final DefaultColumn<FloatArray> imageJFloatArrayColumn, final int col)
+	{
+		if (imageJFloatArrayColumn.get(col) == null) {
+			imageJFloatArrayColumn.set(col, new FloatArray(data[col].clone()));
+		}
+		else if (imageJFloatArrayColumn.get(col) != null &&
+			imageJFloatArrayColumn.get(col).getArray() == null)
+		{
+			imageJFloatArrayColumn.get(col).setArray(data[col].clone());
+		}
+		else {
+			System.arraycopy(data[col], 0,
+				imageJFloatArrayColumn.get(col).getArray(), offset, data.length);
+		}
+	}
+
+	private static void populateArrayColumn(final int offset,
+		final double[][] data,
+		final DefaultColumn<DoubleArray> imageJDoubleArrayColumn, final int col)
+	{
+		if (imageJDoubleArrayColumn.get(col) == null) {
+			imageJDoubleArrayColumn.set(col, new DoubleArray(data[col].clone()));
+		}
+		else if (imageJDoubleArrayColumn.get(col) != null &&
+			imageJDoubleArrayColumn.get(col).getArray() == null)
+		{
+			imageJDoubleArrayColumn.get(col).setArray(data[col].clone());
+		}
+		else {
+			System.arraycopy(data[col], 0, imageJDoubleArrayColumn.get(col)
+				.getArray(), offset, data.length);
+		}
 	}
 }
