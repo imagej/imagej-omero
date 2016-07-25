@@ -73,7 +73,11 @@ public final class TableUtils {
 		// For now, we hardcode.
 		final Class<?> type = imageJColumn.getType();
 		final omero.grid.Column omeroColumn;
-		if (type == Double.class || type == Float.class) {
+		if (OMERORefColumn.class.isInstance(imageJColumn)) {
+			omeroColumn =
+				createOMERORefColumn(((OMERORefColumn) imageJColumn).getOMERORef());
+		}
+		else if (type == Double.class  || type == Float.class) {
 			omeroColumn = new omero.grid.DoubleColumn();
 		}
 		else if (type == Boolean.class) {
@@ -106,12 +110,8 @@ public final class TableUtils {
 			throw new UnsupportedOperationException("Not yet implemented: " +
 				type.getName());
 			/* TODO:
-			ImageColumn
-			MaskColumn
-			PlateColumn
-			RoiColumn
-			WellColumn
-			*/
+			 * MaskColumn
+			 */
 		}
 		omeroColumn.name = imageJColumn.getHeader();
 		if (omeroColumn.name == null) omeroColumn.name = "" + index;
@@ -123,7 +123,11 @@ public final class TableUtils {
 		final omero.grid.Column omeroColumn)
 	{
 		final Class<?> type = imageJColumn.getType();
-		if (type == Double.class) {
+		if (OMERORefColumn.class.isInstance(imageJColumn)) {
+			populateOMERORefColumn(((OMERORefColumn) imageJColumn).getOMERORef(),
+				((OMERORefColumn) imageJColumn).getArray(), omeroColumn);
+		}
+		else if (type == Double.class) {
 			final DoubleColumn doubleColumn = (DoubleColumn) imageJColumn;
 			final omero.grid.DoubleColumn omeroDColumn =
 				(omero.grid.DoubleColumn) omeroColumn;
@@ -317,6 +321,26 @@ public final class TableUtils {
 					data.length);
 			}
 		}
+		else if (omeroColumn instanceof omero.grid.FileColumn) {
+			final long[] data = ((omero.grid.FileColumn) omeroColumn).values;
+			((OMERORefColumn) imageJColumn).fill(data, offset);
+		}
+		else if (omeroColumn instanceof omero.grid.ImageColumn) {
+			final long[] data = ((omero.grid.ImageColumn) omeroColumn).values;
+			((OMERORefColumn) imageJColumn).fill(data, offset);
+		}
+		else if (omeroColumn instanceof omero.grid.PlateColumn) {
+			final long[] data = ((omero.grid.PlateColumn) omeroColumn).values;
+			((OMERORefColumn) imageJColumn).fill(data, offset);
+		}
+		else if (omeroColumn instanceof omero.grid.RoiColumn) {
+			final long[] data = ((omero.grid.RoiColumn) omeroColumn).values;
+			((OMERORefColumn) imageJColumn).fill(data, offset);
+		}
+		else if (omeroColumn instanceof omero.grid.WellColumn) {
+			final long[] data = ((omero.grid.WellColumn) omeroColumn).values;
+			((OMERORefColumn) imageJColumn).fill(data, offset);
+		}
 		else {
 			final GenericColumn imageJGenericColumn = (GenericColumn) imageJColumn;
 			final Field field = ClassUtils.getField(omeroColumn.getClass(), "values");
@@ -369,14 +393,13 @@ public final class TableUtils {
 			return new DoubleColumn(column.name);
 		}
 		if (column instanceof omero.grid.FileColumn) {
-			return new DefaultColumn<File>(File.class, column.name);
+			return new OMERORefColumn(column.name, OMERORef.FILE);
 		}
 		if (column instanceof omero.grid.FloatArrayColumn) {
 			return new DefaultColumn<FloatArray>(FloatArray.class, column.name);
 		}
 		if (column instanceof omero.grid.ImageColumn) {
-			// TODO: Implement ImageColumn for efficiency.
-//		  return new GenericColumn(column.name);
+			return new OMERORefColumn(column.name, OMERORef.IMAGE);
 		}
 		if (column instanceof omero.grid.LongArrayColumn) {
 			return new DefaultColumn<LongArray>(LongArray.class, column.name);
@@ -389,19 +412,16 @@ public final class TableUtils {
 //		  return new GenericColumn(column.name);
 		}
 		if (column instanceof omero.grid.PlateColumn) {
-			// TODO: Implement PlateColumn for efficiency.
-//		  return new GenericColumn(column.name);
+			return new OMERORefColumn(column.name, OMERORef.PLATE);
 		}
 		if (column instanceof omero.grid.RoiColumn) {
-			// TODO: Implement RoiColumn for efficiency.
-//		  return new GenericColumn(column.name);
+			return new OMERORefColumn(column.name, OMERORef.ROI);
 		}
 		if (column instanceof omero.grid.StringColumn) {
 			return new DefaultColumn<String>(String.class, column.name);
 		}
 		if (column instanceof omero.grid.WellColumn) {
-			// TODO: Implement WellColumn for efficiency.
-//		  return new GenericColumn(column.name);
+			return new OMERORefColumn(column.name, OMERORef.WELL);
 		}
 		throw new IllegalArgumentException("Unsupported column type: " +
 			column.getClass().getName());
@@ -500,6 +520,49 @@ public final class TableUtils {
 		else {
 			System.arraycopy(data[col], 0, imageJDoubleArrayColumn.get(col)
 				.getArray(), offset, data.length);
+		}
+	}
+
+	private static omero.grid.Column createOMERORefColumn(final OMERORef refType)
+	{
+		if (refType == OMERORef.FILE) {
+			return new omero.grid.FileColumn();
+		}
+		else if (refType == OMERORef.IMAGE) {
+			return new omero.grid.ImageColumn();
+		}
+		else if (refType == OMERORef.PLATE) {
+			return new omero.grid.PlateColumn();
+		}
+		else if (refType == OMERORef.ROI) {
+			return new omero.grid.RoiColumn();
+		}
+		else if (refType == OMERORef.WELL) {
+			return new omero.grid.WellColumn();
+		}
+		else {
+			throw new UnsupportedOperationException(
+				"Not yet implemented reference column for " + refType.name());
+		}
+	}
+
+	private static void populateOMERORefColumn(final OMERORef refType,
+		final long[] values, final omero.grid.Column omeroColumn)
+	{
+		if (refType == OMERORef.FILE) {
+			((omero.grid.FileColumn) omeroColumn).values = values.clone();
+		}
+		else if (refType == OMERORef.IMAGE) {
+			((omero.grid.ImageColumn) omeroColumn).values = values.clone();
+		}
+		else if (refType == OMERORef.PLATE) {
+			((omero.grid.PlateColumn) omeroColumn).values = values.clone();
+		}
+		else if (refType == OMERORef.ROI) {
+			((omero.grid.RoiColumn) omeroColumn).values = values.clone();
+		}
+		else if (refType == OMERORef.WELL) {
+			((omero.grid.WellColumn) omeroColumn).values = values.clone();
 		}
 	}
 }
