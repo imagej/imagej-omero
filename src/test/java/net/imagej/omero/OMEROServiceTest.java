@@ -53,8 +53,8 @@ import omero.RString;
 import omero.RType;
 import omero.grid.Param;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.scijava.Context;
 import org.scijava.module.AbstractModuleItem;
@@ -69,15 +69,15 @@ import org.scijava.util.MersenneTwisterFast;
  */
 public class OMEROServiceTest {
 
-	private static OMEROService omeroService;
+	private OMEROService omeroService;
 
-	@BeforeClass
-	public static void beforeClass() {
-		omeroService = createService();
+	@Before
+	public void setUp() {
+		omeroService = new Context(OMEROService.class).service(OMEROService.class);
 	}
 
-	@AfterClass
-	public static void afterClass() {
+	@After
+	public void tearDown() {
 		if (omeroService != null) omeroService.getContext().dispose();
 	}
 
@@ -206,10 +206,6 @@ public class OMEROServiceTest {
 	}
 
 	// -- Helper methods --
-
-	private static OMEROService createService() {
-		return new Context(OMEROService.class).service(OMEROService.class);
-	}
 
 	private <T> ModuleItem<T> createItem(final Class<T> type) {
 		return new TestModuleItem<T>(type);

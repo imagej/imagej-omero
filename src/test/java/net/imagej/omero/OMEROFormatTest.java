@@ -33,8 +33,8 @@ import io.scif.FormatException;
 import io.scif.MetadataService;
 import io.scif.SCIFIO;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -44,15 +44,15 @@ import org.junit.Test;
  */
 public class OMEROFormatTest {
 
-	private static SCIFIO scifio;
+	private SCIFIO scifio;
 
-	@BeforeClass
-	public static void beforeClass() {
+	@Before
+	public void setUp() {
 		scifio = new SCIFIO();
 	}
 
-	@AfterClass
-	public static void afterClass() {
+	@After
+	public void tearDown() {
 		if (scifio != null) scifio.context().dispose();
 	}
 
