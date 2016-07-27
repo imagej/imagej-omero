@@ -27,7 +27,6 @@ package net.imagej.omero;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
-import ij.ImagePlus;
 import io.scif.Metadata;
 import io.scif.services.DatasetIOService;
 
@@ -47,8 +46,6 @@ import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
-import net.imagej.legacy.LegacyService;
-import net.imagej.patcher.LegacyInjector;
 import net.imagej.table.Column;
 import net.imagej.table.DoubleColumn;
 import net.imagej.table.GenericColumn;
@@ -83,11 +80,6 @@ public class DefaultOMEROService extends AbstractService implements
 	OMEROService, Optional
 {
 
-	static {
-		// NB: Necessary to avoid class-loading issues with the patched ImageJ1.
-		LegacyInjector.preinit();
-	}
-
 	// -- Parameters --
 
 	@Parameter
@@ -104,9 +96,6 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Parameter
 	private ObjectService objectService;
-
-	@Parameter
-	private LegacyService legacyService;
 
 	@Parameter
 	private ConvertService convertService;
@@ -135,8 +124,7 @@ public class DefaultOMEROService extends AbstractService implements
 		// image types
 		if (Dataset.class.isAssignableFrom(type) ||
 			DatasetView.class.isAssignableFrom(type) ||
-			ImageDisplay.class.isAssignableFrom(type) ||
-			ImagePlus.class.isAssignableFrom(type))
+			ImageDisplay.class.isAssignableFrom(type))
 		{
 			// use an image ID
 			return omero.rtypes.rlong(0);
@@ -258,12 +246,6 @@ public class DefaultOMEROService extends AbstractService implements
 			final ImageDisplay imageDisplay = (ImageDisplay) value;
 			// TODO: Support more aspects of image displays; e.g., multiple datasets.
 			return toOMERO(client, imageDisplayService.getActiveDataset(imageDisplay));
-		}
-		if (value instanceof ImagePlus) {
-			final ImagePlus imp = (ImagePlus) value;
-			final ImageDisplay imageDisplay =
-				legacyService.getImageMap().registerLegacyImage(imp);
-			return toOMERO(client, imageDisplay);
 		}
 		return toOMERO(value);
 	}
@@ -563,12 +545,6 @@ public class DefaultOMEROService extends AbstractService implements
 				@SuppressWarnings("unchecked")
 				final T display = (T) displayService.createDisplay(dataset);
 				return display;
-			}
-			if (ImagePlus.class.isAssignableFrom(type)) {
-				final ImageDisplay display = convert(client, value, ImageDisplay.class);
-				@SuppressWarnings("unchecked")
-				final T imp = (T) legacyService.getImageMap().registerDisplay(display);
-				return imp;
 			}
 		}
 

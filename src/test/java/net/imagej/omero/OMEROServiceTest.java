@@ -26,7 +26,6 @@
 package net.imagej.omero;
 
 import static org.junit.Assert.assertEquals;
-import ij.ImagePlus;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -41,8 +40,6 @@ import java.util.Set;
 import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
-import net.imagej.patcher.LegacyInjector;
-
 import omero.RArray;
 import omero.RBool;
 import omero.RDouble;
@@ -71,11 +68,6 @@ import org.scijava.util.MersenneTwisterFast;
  * @author Curtis Rueden
  */
 public class OMEROServiceTest {
-
-	static {
-		// NB: Necessary to avoid class-loading issues with the patched ImageJ1.
-		LegacyInjector.preinit();
-	}
 
 	private static OMEROService omeroService;
 
@@ -142,7 +134,6 @@ public class OMEROServiceTest {
 		assertParam(omeroService, RLong.class, Dataset.class);
 		assertParam(omeroService, RLong.class, DatasetView.class);
 		assertParam(omeroService, RLong.class, ImageDisplay.class);
-		assertParam(omeroService, RLong.class, ImagePlus.class);
 
 		// -- test other object types --
 
@@ -205,7 +196,6 @@ public class OMEROServiceTest {
 		assertPrototype(omeroService, RLong.class, Dataset.class);
 		assertPrototype(omeroService, RLong.class, DatasetView.class);
 		assertPrototype(omeroService, RLong.class, ImageDisplay.class);
-		assertPrototype(omeroService, RLong.class, ImagePlus.class);
 
 		// -- test other object types --
 
