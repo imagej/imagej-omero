@@ -477,7 +477,7 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public void close() {
-			if (session != null) session.close();
+			if (session != null) ((DefaultOMEROSession) session).close();
 			session = null;
 			store = null;
 		}
@@ -562,7 +562,7 @@ public class OMEROFormat extends AbstractFormat {
 				}
 			}
 			store = null;
-			if (session != null) session.close();
+			if (session != null) ((DefaultOMEROSession) session).close();
 			session = null;
 		}
 
@@ -692,7 +692,7 @@ public class OMEROFormat extends AbstractFormat {
 		throws FormatException
 	{
 		try {
-			return new OMEROSession(meta.getCredentials());
+			return new DefaultOMEROSession(meta.getCredentials());
 		}
 		catch (final ServerError err) {
 			throw communicationException(err);
