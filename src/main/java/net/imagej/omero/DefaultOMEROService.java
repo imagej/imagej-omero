@@ -378,7 +378,7 @@ public class DefaultOMEROService extends AbstractService implements
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
-		final OMEROSession session = new OMEROSession(credentials);
+		final OMEROSession session = new DefaultOMEROSession(credentials);
 		TablePrx tableService = null;
 		long id = -1;
 		try {
@@ -410,7 +410,7 @@ public class DefaultOMEROService extends AbstractService implements
 				}
 			}
 			finally {
-				session.close();
+				((DefaultOMEROSession) session).close();
 			}
 		}
 		return id;
@@ -421,7 +421,7 @@ public class DefaultOMEROService extends AbstractService implements
 		final long tableID) throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException
 	{
-		final OMEROSession session = new OMEROSession(credentials);
+		final OMEROSession session = new DefaultOMEROSession(credentials);
 		TablePrx tableService = null;
 		try {
 			final OriginalFile tableFile = new OriginalFileI(tableID, false);
@@ -485,7 +485,7 @@ public class DefaultOMEROService extends AbstractService implements
 				}
 			}
 			finally {
-				session.close();
+				((DefaultOMEROSession) session).close();
 			}
 		}
 	}
