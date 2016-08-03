@@ -150,6 +150,14 @@
 		</dependency>
 
 		<!-- Test dependencies -->
+		<!-- JMockit must come before junit -->
+		<dependency>
+			<groupId>org.jmockit</groupId>
+			<artifactId>jmockit</artifactId>
+			<version>1.8</version>
+			<scope>test</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -176,6 +184,12 @@
 								<exclude>com.sun:tools</exclude>
 							</excludes>
 						</enforceBytecodeVersion>
+						<banClasses>
+							<ignoreClasses>
+								<ignoreClass>org.junit.runner.Runner</ignoreClass>
+								<ignoreClass>junit.framework.TestResult*</ignoreClass>
+							</ignoreClasses>
+						</banClasses>
 					</rules>
 				</configuration>
 			</plugin>
