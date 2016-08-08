@@ -53,6 +53,7 @@ import org.scijava.util.DoubleArray;
 import org.scijava.util.FloatArray;
 import org.scijava.util.IntArray;
 import org.scijava.util.LongArray;
+import org.scijava.util.PrimitiveArray;
 import org.scijava.util.ShortArray;
 
 /**
@@ -66,6 +67,7 @@ public final class TableUtils {
 		// NB: Prevent instantiation of utility class.
 	}
 
+	@SuppressWarnings("unchecked")
 	public static omero.grid.Column createOMEROColumn(
 		final Column<?> imageJColumn, final int index)
 	{
@@ -103,8 +105,16 @@ public final class TableUtils {
 		else if (type == File.class) {
 			omeroColumn = new omero.grid.FileColumn();
 		}
-		else if (type == String.class || type == Character.class) {
+		else if (type == Character.class) {
 			omeroColumn = new omero.grid.StringColumn();
+			// NB: Must set the maximum length of Strings contained in this column
+			((omero.grid.StringColumn) omeroColumn).size = 1l;
+		}
+		else if (type == String.class) {
+			omeroColumn = new omero.grid.StringColumn();
+			// NB: Must set the maximum length of Strings contained in this column
+			((omero.grid.StringColumn) omeroColumn).size =
+				longestString(((DefaultColumn<String>) imageJColumn).getArray());
 		}
 		else {
 			throw new UnsupportedOperationException("Not yet implemented: " +
@@ -580,4 +590,15 @@ public final class TableUtils {
 			((omero.grid.WellColumn) omeroColumn).values = ar.clone();
 		}
 	}
+
+	private static long longestString(final String[] array) {
+		long longest = 0;
+		for(int i = 0; i < array.length; i++) {
+			if(array[i] != null && array[i].length() > longest) {
+				longest = array[i].length();
+			}
+		}
+		return longest;
+	}
+
 }
