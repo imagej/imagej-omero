@@ -200,6 +200,7 @@ public final class TableUtils {
 				(omero.grid.DoubleArrayColumn) omeroColumn;
 			final double[][] values = new double[defaultColumn.size()][];
 			for (int i = 0; i < values.length; i++) {
+				if (defaultColumn.get(i) == null) continue;
 				values[i] = new double[defaultColumn.get(i).size()];
 				System.arraycopy(defaultColumn.get(i).getArray(), 0, values[i], 0,
 					defaultColumn.get(i).size());
@@ -213,6 +214,7 @@ public final class TableUtils {
 				(omero.grid.FloatArrayColumn) omeroColumn;
 			final float[][] values = new float[defaultColumn.size()][];
 			for (int i = 0; i < values.length; i++) {
+				if (defaultColumn.get(i) == null) continue;
 				values[i] = new float[defaultColumn.get(i).size()];
 				System.arraycopy(defaultColumn.get(i).getArray(), 0, values[i], 0,
 					defaultColumn.get(i).size());
@@ -226,6 +228,7 @@ public final class TableUtils {
 				(omero.grid.LongArrayColumn) omeroColumn;
 			final long[][] values = new long[defaultColumn.size()][];
 			for (int i = 0; i < values.length; i++) {
+				if (defaultColumn.get(i) == null) continue;
 				values[i] = new long[defaultColumn.get(i).size()];
 				System.arraycopy(defaultColumn.get(i).getArray(), 0, values[i], 0,
 					defaultColumn.get(i).size());
@@ -239,6 +242,7 @@ public final class TableUtils {
 				(omero.grid.LongArrayColumn) omeroColumn;
 			final long[][] values = new long[defaultColumn.size()][];
 			for (int i = 0; i < values.length; i++) {
+				if (defaultColumn.get(i) == null) continue;
 				values[i] = toLongArray(defaultColumn.get(i).getArray(), s);
 			}
 			omeroLAColumn.values = values;
@@ -250,6 +254,7 @@ public final class TableUtils {
 				(omero.grid.LongArrayColumn) omeroColumn;
 			final long[][] values = new long[defaultColumn.size()][];
 			for (int i = 0; i < values.length; i++) {
+				if (defaultColumn.get(i) == null) continue;
 				values[i] = toLongArray(defaultColumn.get(i).getArray(), s);
 			}
 			omeroLAColumn.values = values;
@@ -261,6 +266,7 @@ public final class TableUtils {
 				(omero.grid.LongArrayColumn) omeroColumn;
 			final long[][] values = new long[defaultColumn.size()][];
 			for (int i = 0; i < values.length; i++) {
+				if (defaultColumn.get(i) == null) continue;
 				values[i] = toLongArray(defaultColumn.get(i).getArray(), s);
 			}
 			omeroLAColumn.values = values;
@@ -272,6 +278,7 @@ public final class TableUtils {
 				(omero.grid.LongArrayColumn) omeroColumn;
 			final long[][] values = new long[defaultColumn.size()][];
 			for (int i = 0; i < values.length; i++) {
+				if (defaultColumn.get(i) == null) continue;
 				values[i] = toLongArray(defaultColumn.get(i).getArray(), s);
 			}
 			omeroLAColumn.values = values;
