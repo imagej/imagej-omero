@@ -85,7 +85,7 @@ public class SaveTableToOMERO extends OMEROCommand {
 		}
 		catch (ServerError exc) {
 			log.error(exc);
-			cancel("Error talking to OMERO: " + exc.getMessage());
+			cancel("Error talking to OMERO: " + exc.message);
 		}
 		catch (PermissionDeniedException exc) {
 			log.error(exc);
