@@ -45,6 +45,7 @@ import net.imagej.table.IntColumn;
 import net.imagej.table.LongColumn;
 import net.imagej.table.ShortColumn;
 import net.imagej.table.Table;
+import omero.ServerError;
 
 import org.scijava.util.BoolArray;
 import org.scijava.util.ByteArray;
@@ -69,7 +70,7 @@ public final class TableUtils {
 
 	@SuppressWarnings("unchecked")
 	public static omero.grid.Column createOMEROColumn(
-		final Column<?> imageJColumn, final int index)
+		final Column<?> imageJColumn, final int index) throws ServerError
 	{
 		// FIXME: need ImageJ to remember type of column via a getType() method
 		// For now, we hardcode.
@@ -92,15 +93,24 @@ public final class TableUtils {
 		}
 		else if (type == DoubleArray.class) {
 			omeroColumn = new omero.grid.DoubleArrayColumn();
+			// NB: Must set the width of arrays contained in this column
+			((omero.grid.DoubleArrayColumn) omeroColumn).size =
+				width((DefaultColumn<PrimitiveArray<?, ?>>) imageJColumn);
 		}
 		else if (type == FloatArray.class) {
 			omeroColumn = new omero.grid.FloatArrayColumn();
+			// NB: Must set the width of arrays contained in this column
+			((omero.grid.FloatArrayColumn) omeroColumn).size =
+				width((DefaultColumn<PrimitiveArray<?, ?>>) imageJColumn);
 		}
 		else if (type == LongArray.class || type == IntArray.class ||
 			type == ShortArray.class || type == ByteArray.class ||
 			type == BoolArray.class)
 		{
 			omeroColumn = new omero.grid.LongArrayColumn();
+			// NB: Must set the width of arrays contained in this column
+			((omero.grid.LongArrayColumn) omeroColumn).size =
+				width((DefaultColumn<PrimitiveArray<?, ?>>) imageJColumn);
 		}
 		else if (type == File.class) {
 			omeroColumn = new omero.grid.FileColumn();
@@ -593,12 +603,27 @@ public final class TableUtils {
 
 	private static long longestString(final String[] array) {
 		long longest = 0;
-		for(int i = 0; i < array.length; i++) {
-			if(array[i] != null && array[i].length() > longest) {
+		for (int i = 0; i < array.length; i++) {
+			if (array[i] != null && array[i].length() > longest) {
 				longest = array[i].length();
 			}
 		}
 		return longest;
+	}
+
+	private static long width(final DefaultColumn<PrimitiveArray<?, ?>> col)
+		throws ServerError
+	{
+		long width = 0;
+		if (col.get(0) != null) width = col.get(0).size();
+		// All arrays in an OMERO array column must have equal widths
+		for (int i = 0; i < col.size(); i++) {
+			if (col.get(i) != null && col.get(i).size() != width) {
+				throw new omero.ServerError(null, null,
+					"Arrays in column must have equal widths");
+			}
+		}
+		return width;
 	}
 
 }
