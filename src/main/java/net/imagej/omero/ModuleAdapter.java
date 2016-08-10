@@ -192,6 +192,9 @@ public class ModuleAdapter extends AbstractContextual {
 			if (value == null) {
 				log.warn(info.getTitle() + ": output '" + name + "' is null");
 			}
+			else if (net.imagej.table.Table.class.isAssignableFrom(item.getType())) {
+				client.setOutput(name + "table", value);
+			}
 			else client.setOutput(name, value);
 		}
 
@@ -457,7 +460,7 @@ public class ModuleAdapter extends AbstractContextual {
 			omero.RType output = client.getOutput(key);
 			if (!(output instanceof RLong)) continue;
 			final long id = ((RLong) output).getValue();
-			if(key.equals("table")) {
+			if(key.contains("table")) {
 				attachTableToImages(id, images, ctx);
 			}
 			else {
@@ -536,7 +539,7 @@ public class ModuleAdapter extends AbstractContextual {
 	private boolean containsImage() throws ServerError {
 		for (final String key : client.getOutputKeys()) {
 			omero.RType output = client.getOutput(key);
-			if (output instanceof RLong && !key.equals("table")) return true;
+			if (output instanceof RLong && !key.contains("table")) return true;
 		}
 		return false;
 	}
