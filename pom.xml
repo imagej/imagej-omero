@@ -39,6 +39,14 @@
 				<role>maintainer</role>
 			</roles>
 		</developer>
+		<developer>
+			<id>awalter17</id>
+			<name>Alison Walter</name>
+			<url>http://imagej.net/User:Awalter2</url>
+			<roles>
+				<role>developer</role>
+			</roles>
+		</developer>
 	</developers>
 	<contributors>
 		<contributor>
