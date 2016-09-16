@@ -151,7 +151,9 @@ public class DefaultOMEROSession implements OMEROSession {
 	public Pixels loadPixels(final OMEROFormat.Metadata meta) throws ServerError {
 		// return cached Pixels if available
 		Pixels pixels = meta.getPixels();
-		if (pixels != null) return pixels;
+		if (pixels != null) {
+			return pixels;
+		}
 
 		// NB: We cannot write:
 		//
@@ -175,10 +177,14 @@ public class DefaultOMEROSession implements OMEROSession {
 	public Image loadImage(final OMEROFormat.Metadata meta) throws ServerError {
 		// return cached Image if available
 		Image image = meta.getImage();
-		if (image != null) return image;
+		if (image != null) {
+			return image;
+		}
 
 		final long imageID = meta.getImageID();
-		if (imageID == 0) throw new IllegalArgumentException("Image ID is unset");
+		if (imageID == 0) {
+			throw new IllegalArgumentException("Image ID is unset");
+		}
 
 		// load the Image from the remote server
 		final List<Long> ids = Arrays.asList(imageID);
@@ -197,7 +203,9 @@ public class DefaultOMEROSession implements OMEROSession {
 	public long loadPixelsID(final OMEROFormat.Metadata meta) throws ServerError {
 		// return cached pixels ID if available
 		long pixelsID = meta.getPixelsID();
-		if (pixelsID != 0) return pixelsID;
+		if (pixelsID != 0) {
+			return pixelsID;
+		}
 
 		// obtain pixels ID from image ID
 		pixelsID = loadImage(meta).getPixels(0).getId().getValue();

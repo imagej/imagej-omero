@@ -25,16 +25,16 @@
 
 package net.imagej.omero;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import io.scif.FormatException;
 import io.scif.Metadata;
-import io.scif.Reader;
-import io.scif.Writer;
 import io.scif.config.SCIFIOConfig;
 import io.scif.config.SCIFIOConfig.ImgMode;
+import io.scif.filters.ChannelFiller;
+import io.scif.filters.PlaneSeparator;
+import io.scif.filters.ReaderFilter;
 import io.scif.img.ImgIOException;
 import io.scif.img.ImgOpener;
+import io.scif.img.ImgUtilityService;
 import io.scif.img.SCIFIOImgPlus;
 import io.scif.services.DatasetIOService;
 import io.scif.services.FormatService;
@@ -45,7 +45,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -53,10 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import net.imagej.Dataset;
@@ -68,7 +64,22 @@ import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
 import net.imglib2.type.numeric.RealType;
-import ome.services.formats.OmeroReader;
+
+import org.scijava.Optional;
+import org.scijava.convert.ConvertService;
+import org.scijava.display.DisplayService;
+import org.scijava.log.LogService;
+import org.scijava.module.ModuleItem;
+import org.scijava.object.ObjectService;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
+import org.scijava.service.AbstractService;
+import org.scijava.service.Service;
+import org.scijava.util.ClassUtils;
+import org.scijava.util.ConversionUtils;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 import omero.RType;
 import omero.ServerError;
 import omero.gateway.SecurityContext;
@@ -84,19 +95,7 @@ import omero.model.ImageAnnotationLinkI;
 import omero.model.OriginalFile;
 import omero.model.OriginalFileI;
 import utils.NonClosingOMEROSession;
-
-import org.scijava.Optional;
-import org.scijava.convert.ConvertService;
-import org.scijava.display.DisplayService;
-import org.scijava.log.LogService;
-import org.scijava.module.ModuleItem;
-import org.scijava.object.ObjectService;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.service.AbstractService;
-import org.scijava.service.Service;
-import org.scijava.util.ClassUtils;
-import org.scijava.util.ConversionUtils;
+import utils.SCIFIOUtilMethods;
 
 /**
  * Default ImageJ service for managing OMERO data conversion.
@@ -130,6 +129,9 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Parameter
 	private ConvertService convertService;
+
+	@Parameter
+	private ImgUtilityService imgUtils;
 
 	// -- OMEROService methods --
 
@@ -232,9 +234,9 @@ public class DefaultOMEROService extends AbstractService implements
 		if (value instanceof Map) {
 			final Map<?, ?> map = (Map<?, ?>) value;
 			final HashMap<String, omero.RType> val =
-				new HashMap<String, omero.RType>();
-			for (final Object key : map.keySet()) {
-				val.put(key.toString(), toOMERO(map.get(key)));
+				new HashMap<>();
+			for (Entry<?, ?> e : map.entrySet()){
+				val.put(e.getKey().toString(), toOMERO(e.getValue()));
 			}
 			return omero.rtypes.rmap(val);
 		}
@@ -373,7 +375,7 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	public <T extends RealType<T>> Stream<T> streamImagesFromOmero() {
-		// TODO Implement?
+		// TODO Implement
 		return null;
 	}
 
@@ -390,8 +392,12 @@ public class DefaultOMEROService extends AbstractService implements
 		final OMEROFormat format = formatService.getFormatFromClass(
 			OMEROFormat.class);
 		OMEROFormat.Reader reader = (OMEROFormat.Reader) format.createReader();
-
 		reader.setSession(session);
+
+		// Reader filter stuff
+		ReaderFilter rf = new ReaderFilter(reader);
+		rf.enable(ChannelFiller.class);
+		rf.enable(PlaneSeparator.class).separate(SCIFIOUtilMethods.axesToSplit(rf));
 
 		// Config
 		SCIFIOConfig config = new SCIFIOConfig();
@@ -402,18 +408,20 @@ public class DefaultOMEROService extends AbstractService implements
 		try {
 			// read images
 			for (Long id : ids) {
-				String omeroSourceKey = "";
-				reader.setSource(omeroSourceKey);
+				final String omeroSource = "omero:" + "DUMMY" + "&imageID=" + id;
+				reader.setSource(omeroSource);
+
+				SCIFIOImgPlus<?> img = opener.openImgs(rf, config).get(0);
+				images.add((ImgPlus<T>) img); // FIXME
 
 			}
 		}
 		catch (Exception e) {
-			// gotta catch them all TODO REMOVE this
+			// gotta catch them all
+			// TODO REMOVE this
 		}
 
-		List<SCIFIOImgPlus<?>> imgs = opener.openImgs(reader);
 
-		images.add((ImgPlus<T>) imgs.get(0)); // FIXME
 
 		images.stream();
 

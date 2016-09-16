@@ -406,7 +406,7 @@ public class OMEROFormat extends AbstractFormat {
 
 			final Pixels pix;
 			try {
-				if (session != null) {
+				if (session == null) {
 					session = createSession(meta);
 				}
 				pix = session.loadPixels(meta);
