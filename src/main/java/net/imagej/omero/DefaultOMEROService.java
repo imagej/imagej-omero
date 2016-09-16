@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -27,8 +27,17 @@ package net.imagej.omero;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
+import io.scif.FormatException;
 import io.scif.Metadata;
+import io.scif.Reader;
+import io.scif.Writer;
+import io.scif.config.SCIFIOConfig;
+import io.scif.config.SCIFIOConfig.ImgMode;
+import io.scif.img.ImgIOException;
+import io.scif.img.ImgOpener;
+import io.scif.img.SCIFIOImgPlus;
 import io.scif.services.DatasetIOService;
+import io.scif.services.FormatService;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -36,20 +45,31 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import net.imagej.Dataset;
+import net.imagej.ImgPlus;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
 import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
+import net.imglib2.type.numeric.RealType;
+import ome.services.formats.OmeroReader;
+import omero.RType;
 import omero.ServerError;
 import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
@@ -63,6 +83,7 @@ import omero.model.ImageAnnotationLink;
 import omero.model.ImageAnnotationLinkI;
 import omero.model.OriginalFile;
 import omero.model.OriginalFileI;
+import utils.NonClosingOMEROSession;
 
 import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
@@ -79,7 +100,7 @@ import org.scijava.util.ConversionUtils;
 
 /**
  * Default ImageJ service for managing OMERO data conversion.
- * 
+ *
  * @author Curtis Rueden
  */
 @Plugin(type = Service.class)
@@ -94,6 +115,9 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Parameter
 	private DatasetIOService datasetIOService;
+
+	@Parameter
+	private FormatService formatService;
 
 	@Parameter
 	private DisplayService displayService;
@@ -129,9 +153,8 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public omero.RType prototype(final Class<?> type) {
 		// image types
-		if (Dataset.class.isAssignableFrom(type) ||
-			DatasetView.class.isAssignableFrom(type) ||
-			ImageDisplay.class.isAssignableFrom(type))
+		if (Dataset.class.isAssignableFrom(type) || DatasetView.class
+			.isAssignableFrom(type) || ImageDisplay.class.isAssignableFrom(type))
 		{
 			// use an image ID
 			return omero.rtypes.rlong(0);
@@ -254,7 +277,8 @@ public class DefaultOMEROService extends AbstractService implements
 		if (value instanceof ImageDisplay) {
 			final ImageDisplay imageDisplay = (ImageDisplay) value;
 			// TODO: Support more aspects of image displays; e.g., multiple datasets.
-			return toOMERO(client, imageDisplayService.getActiveDataset(imageDisplay));
+			return toOMERO(client, imageDisplayService.getActiveDataset(
+				imageDisplay));
 		}
 		if (value instanceof Table) {
 			final OMEROCredentials cred = createCredentials(client);
@@ -276,10 +300,10 @@ public class DefaultOMEROService extends AbstractService implements
 			final Collection<Object> collection;
 			if (value instanceof omero.RArray || value instanceof omero.RList) {
 				// NB: See special handling for omero.RArray below.
-				collection = new ArrayList<Object>();
+				collection = new ArrayList<>();
 			}
 			else if (value instanceof omero.RSet) {
-				collection = new HashSet<Object>();
+				collection = new HashSet<>();
 			}
 			else {
 				log.error("Unsupported collection: " + value.getClass().getName());
@@ -307,9 +331,9 @@ public class DefaultOMEROService extends AbstractService implements
 		if (value instanceof omero.RMap) {
 			// map of objects
 			final Map<String, omero.RType> omeroMap = ((omero.RMap) value).getValue();
-			final Map<String, Object> map = new HashMap<String, Object>();
-			for (final String key : omeroMap.keySet()) {
-				map.put(key, toImageJ(client, omeroMap.get(key), null));
+			final Map<String, Object> map = new HashMap<>();
+			for (Entry<String, RType> entry : omeroMap.entrySet()) {
+				map.put(entry.getKey(), toImageJ(client, entry.getValue(), null));
 			}
 			return map;
 		}
@@ -325,15 +349,12 @@ public class DefaultOMEROService extends AbstractService implements
 		catch (final NoSuchMethodException exc) {
 			log.debug(exc);
 		}
-		catch (final IllegalArgumentException exc) {
+		catch (final IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException exc)
+		{
 			log.error(exc);
 		}
-		catch (final IllegalAccessException exc) {
-			log.error(exc);
-		}
-		catch (final InvocationTargetException exc) {
-			log.error(exc);
-		}
+
 		log.error("Unsupported type: " + value.getClass().getName());
 		return null;
 	}
@@ -345,10 +366,58 @@ public class DefaultOMEROService extends AbstractService implements
 		// TODO: Reuse existing client instead of creating a new connection.
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
-		final String omeroSource =
-			"omero:" + credentials(client) + "&imageID=" + imageID;
+		final String omeroSource = "omero:" + credentials(client) + "&imageID=" +
+			imageID;
 
 		return datasetIOService.open(omeroSource);
+	}
+
+	public <T extends RealType<T>> Stream<T> streamImagesFromOmero() {
+		// TODO Implement?
+		return null;
+	}
+
+	@Override
+	public <T extends RealType<T>> Collection<ImgPlus<T>> downloadImageSet(
+		final OMEROCredentials credentials, Collection<Long> ids)
+		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
+		FormatException, ImgIOException
+	{
+		final List<ImgPlus<T>> images = new LinkedList<>(); // to store the result
+
+		final OMEROSession session = new NonClosingOMEROSession(credentials);
+
+		final OMEROFormat format = formatService.getFormatFromClass(
+			OMEROFormat.class);
+		OMEROFormat.Reader reader = (OMEROFormat.Reader) format.createReader();
+
+		reader.setSession(session);
+
+		// Config
+		SCIFIOConfig config = new SCIFIOConfig();
+		config.imgOpenerSetComputeMinMax(false); // skip min max compute
+		config.imgOpenerSetImgModes(ImgMode.PLANAR); // prefer planar
+
+		ImgOpener opener = new ImgOpener(getContext());
+		try {
+			// read images
+			for (Long id : ids) {
+				String omeroSourceKey = "";
+				reader.setSource(omeroSourceKey);
+
+			}
+		}
+		catch (Exception e) {
+			// gotta catch them all TODO REMOVE this
+		}
+
+		List<SCIFIOImgPlus<?>> imgs = opener.openImgs(reader);
+
+		images.add((ImgPlus<T>) imgs.get(0)); // FIXME
+
+		images.stream();
+
+		return null;
 	}
 
 	@Override
@@ -358,9 +427,9 @@ public class DefaultOMEROService extends AbstractService implements
 		// TODO: Reuse existing client instead of creating a new connection.
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
-		final String omeroDestination =
-			"name=" + dataset.getName() + "&" + credentials(client) //
-				+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
+		final String omeroDestination = "name=" + dataset.getName() + "&" +
+			credentials(client) //
+			+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
 
 		final Metadata metadata = datasetIOService.save(dataset, omeroDestination);
 
@@ -372,23 +441,22 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public long uploadTable(final OMEROCredentials credentials,
-		final String name, final Table<?, ?> imageJTable, final long imageID)
-		throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+	public long uploadTable(final OMEROCredentials credentials, final String name,
+		final Table<?, ?> imageJTable, final long imageID) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException
 	{
 		final OMEROSession session = new DefaultOMEROSession(credentials);
 		TablePrx tableService = null;
 		long id = -1;
 		try {
-			tableService =
-				session.getClient().getSession().sharedResources().newTable(1, name);
+			tableService = session.getClient().getSession().sharedResources()
+				.newTable(1, name);
 			if (tableService == null) {
 				throw new omero.ServerError(null, null, "Could not create table");
 			}
-			final omero.grid.Column[] columns =
-				new omero.grid.Column[imageJTable.getColumnCount()];
+			final omero.grid.Column[] columns = new omero.grid.Column[imageJTable
+				.getColumnCount()];
 			for (int c = 0; c < columns.length; c++) {
 				columns[c] = TableUtils.createOMEROColumn(imageJTable.get(c), c);
 			}
@@ -425,8 +493,8 @@ public class DefaultOMEROService extends AbstractService implements
 		TablePrx tableService = null;
 		try {
 			final OriginalFile tableFile = new OriginalFileI(tableID, false);
-			tableService =
-				session.getClient().getSession().sharedResources().openTable(tableFile);
+			tableService = session.getClient().getSession().sharedResources()
+				.openTable(tableFile);
 			if (tableService == null) {
 				throw new omero.ServerError(null, null, "Could not open table");
 			}
@@ -438,8 +506,8 @@ public class DefaultOMEROService extends AbstractService implements
 			final int rowCount = (int) rawRowCount;
 			final omero.grid.Column[] omeroColumns = tableService.getHeaders();
 
-			final Table<?, ?> imageJTable =
-				TableUtils.createImageJTable(omeroColumns);
+			final Table<?, ?> imageJTable = TableUtils.createImageJTable(
+				omeroColumns);
 			final int colCount = tableService.getHeaders().length;
 
 			final int batchSize = 24 * 1024;
@@ -454,8 +522,8 @@ public class DefaultOMEROService extends AbstractService implements
 			while (currentRow < rowCount) {
 				final int rowsLeft = rowCount - currentRow;
 				final int rowsToRead = Math.min(batchSize, rowsLeft);
-				final omero.grid.Data data =
-					tableService.read(colIndices, currentRow, currentRow + rowsToRead);
+				final omero.grid.Data data = tableService.read(colIndices, currentRow,
+					currentRow + rowsToRead);
 				assert (colCount == data.columns.length);
 				// Create columns
 				if (!colCreated) {
@@ -580,8 +648,8 @@ public class DefaultOMEROService extends AbstractService implements
 		// use SciJava Common's automagical conversion routine
 		final T converted = convertService.convert(value, type);
 		if (converted == null) {
-			log.error("Cannot convert: " + value.getClass().getName() + " to " +
-				type.getName());
+			log.error("Cannot convert: " + value.getClass().getName() + " to " + type
+				.getName());
 		}
 		return converted;
 	}
@@ -607,14 +675,14 @@ public class DefaultOMEROService extends AbstractService implements
 		ExecutionException, DSOutOfServiceException, DSAccessException
 	{
 		// Create necessary facilities
-		final DataManagerFacility dm =
-			session.getGateway().getFacility(DataManagerFacility.class);
-		final BrowseFacility browse =
-			session.getGateway().getFacility(BrowseFacility.class);
+		final DataManagerFacility dm = session.getGateway().getFacility(
+			DataManagerFacility.class);
+		final BrowseFacility browse = session.getGateway().getFacility(
+			BrowseFacility.class);
 
 		// Get current sessions security context
-		final SecurityContext ctx =
-			new SecurityContext(session.getExperimenter().getGroupId());
+		final SecurityContext ctx = new SecurityContext(session.getExperimenter()
+			.getGroupId());
 
 		// Get original file from the table
 		final OriginalFile file = table.getOriginalFile();
@@ -622,8 +690,8 @@ public class DefaultOMEROService extends AbstractService implements
 		// Create file annotation for table file
 		FileAnnotation annotation = new FileAnnotationI();
 		// TODO assign annotation to a table namespace
-		annotation.setNs(omero.rtypes
-			.rstring(omero.constants.namespaces.NSBULKANNOTATIONS.value));
+		annotation.setNs(omero.rtypes.rstring(
+			omero.constants.namespaces.NSBULKANNOTATIONS.value));
 		annotation.setFile(file);
 		// Save file annotation to database
 		annotation = (FileAnnotation) dm.saveAndReturnObject(ctx, annotation);

@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -27,15 +27,20 @@ package net.imagej.omero;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
+import io.scif.FormatException;
+import io.scif.img.ImgIOException;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
+import net.imagej.ImgPlus;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.table.Table;
+import net.imglib2.type.numeric.RealType;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
@@ -44,7 +49,7 @@ import org.scijava.module.ModuleItem;
 
 /**
  * Interface for ImageJ services that manage OMERO data conversion.
- * 
+ *
  * @author Curtis Rueden
  */
 public interface OMEROService extends ImageJService {
@@ -124,5 +129,10 @@ public interface OMEROService extends ImageJService {
 	 */
 	Table<?, ?> downloadTable(OMEROCredentials credentials, long tableID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException;
+
+
+	<T extends RealType<T>> Collection<ImgPlus<T>> downloadImageSet(OMEROCredentials creds,
+		Collection<Long> ids) throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException, FormatException, ImgIOException;
 
 }
