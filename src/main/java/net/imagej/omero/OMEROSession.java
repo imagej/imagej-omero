@@ -25,9 +25,10 @@
 
 package net.imagej.omero;
 
+import io.scif.FormatException;
+
 import java.io.Closeable;
 
-import io.scif.FormatException;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.api.ServiceFactoryPrx;
@@ -74,5 +75,8 @@ public interface OMEROSession extends Closeable {
 	 */
 	RawPixelsStorePrx createPixels(OMEROFormat.Metadata meta) throws ServerError,
 		FormatException;
+
+	@Override
+	void close(); // NB: To hide the IOException defined by Closable
 
 }
