@@ -280,7 +280,7 @@ public class DefaultOMEROService extends AbstractService implements
 			Object element = null; // NB: Save 1st non-null element for later use.
 			for (final omero.RType rType : omeroCollection) {
 				final Object converted = toImageJ(client, rType, null);
-				if (element != null) element = converted;
+				if (converted != null) element = converted;
 				collection.add(converted);
 			}
 			if (value instanceof omero.RArray) {
