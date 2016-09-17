@@ -63,17 +63,17 @@ import org.scijava.util.ColorRGB;
 import org.scijava.util.MersenneTwisterFast;
 
 /**
- * Tests {@link DefaultOMEROService}.
+ * Tests {@link DefaultOMEROConversionService}.
  * 
  * @author Curtis Rueden
  */
 public class OMEROServiceTest {
 
-	private OMEROService omeroService;
+	private OMEROConversionService omeroService;
 
 	@Before
 	public void setUp() {
-		omeroService = new Context(OMEROService.class).service(OMEROService.class);
+		omeroService = new Context(OMEROConversionService.class).service(OMEROConversionService.class);
 	}
 
 	@After
@@ -81,7 +81,7 @@ public class OMEROServiceTest {
 		if (omeroService != null) omeroService.getContext().dispose();
 	}
 
-	/** Tests {@link OMEROService#getJobParam(org.scijava.module.ModuleItem)}. */
+	/** Tests {@link OMEROConversionService#getJobParam(org.scijava.module.ModuleItem)}. */
 	@Test
 	public void testGetJobParam() {
 		// -- test primitive types --
@@ -143,7 +143,7 @@ public class OMEROServiceTest {
 		assertParam(omeroService, RString.class, File.class);
 	}
 
-	/** Tests {@link OMEROService#prototype(Class)}. */
+	/** Tests {@link OMEROConversionService#prototype(Class)}. */
 	@Test
 	public void testPrototype() {
 		// -- test primitive types --
@@ -211,7 +211,7 @@ public class OMEROServiceTest {
 		return new TestModuleItem<T>(type);
 	}
 
-	private <T> void assertParam(final OMEROService omeroService,
+	private <T> void assertParam(final OMEROConversionService omeroService,
 		final Class<?> omero, final Class<T> pojo)
 	{
 		final ModuleItem<T> item = createItem(pojo);
@@ -221,7 +221,7 @@ public class OMEROServiceTest {
 		assertEquals(item.getDescription(), param.description);
 	}
 
-	private void assertPrototype(final OMEROService omeroService,
+	private void assertPrototype(final OMEROConversionService omeroService,
 		final Class<?> omero, final Class<?> pojo)
 	{
 		final RType proto = omeroService.prototype(pojo);

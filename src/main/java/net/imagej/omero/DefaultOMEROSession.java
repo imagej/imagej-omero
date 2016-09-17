@@ -25,8 +25,6 @@
 
 package net.imagej.omero;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
 import io.scif.util.FormatTools;
@@ -38,6 +36,9 @@ import java.util.List;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 import omero.RLong;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;

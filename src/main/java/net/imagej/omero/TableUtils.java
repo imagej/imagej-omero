@@ -45,7 +45,6 @@ import net.imagej.table.IntColumn;
 import net.imagej.table.LongColumn;
 import net.imagej.table.ShortColumn;
 import net.imagej.table.Table;
-import omero.ServerError;
 
 import org.scijava.util.BoolArray;
 import org.scijava.util.ByteArray;
@@ -56,6 +55,8 @@ import org.scijava.util.IntArray;
 import org.scijava.util.LongArray;
 import org.scijava.util.PrimitiveArray;
 import org.scijava.util.ShortArray;
+
+import omero.ServerError;
 
 /**
  * Utility class for working with converting between ImageJ and OMERO tables.

@@ -25,17 +25,7 @@
 
 package net.imagej.omero;
 
-import io.scif.FormatException;
-import io.scif.Metadata;
-import io.scif.config.SCIFIOConfig;
-import io.scif.config.SCIFIOConfig.ImgMode;
-import io.scif.filters.ChannelFiller;
-import io.scif.filters.PlaneSeparator;
-import io.scif.filters.ReaderFilter;
-import io.scif.img.ImgIOException;
-import io.scif.img.ImgOpener;
 import io.scif.img.ImgUtilityService;
-import io.scif.img.SCIFIOImgPlus;
 import io.scif.services.DatasetIOService;
 import io.scif.services.FormatService;
 
@@ -47,23 +37,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Stream;
 
 import net.imagej.Dataset;
-import net.imagej.ImgPlus;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
-import net.imagej.table.Column;
-import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
-import net.imglib2.type.numeric.RealType;
 
 import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
@@ -81,21 +65,8 @@ import org.scijava.util.ConversionUtils;
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
 import omero.RType;
-import omero.ServerError;
-import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
-import omero.gateway.facility.BrowseFacility;
-import omero.gateway.facility.DataManagerFacility;
-import omero.grid.TablePrx;
-import omero.model.FileAnnotation;
-import omero.model.FileAnnotationI;
-import omero.model.ImageAnnotationLink;
-import omero.model.ImageAnnotationLinkI;
-import omero.model.OriginalFile;
-import omero.model.OriginalFileI;
-import utils.NonClosingOMEROSession;
-import utils.SCIFIOUtilMethods;
 
 /**
  * Default ImageJ service for managing OMERO data conversion.
@@ -103,8 +74,8 @@ import utils.SCIFIOUtilMethods;
  * @author Curtis Rueden
  */
 @Plugin(type = Service.class)
-public class DefaultOMEROService extends AbstractService implements
-	OMEROService, Optional
+public class DefaultOMEROConversionService extends AbstractService implements
+	OMEROConversionService, Optional
 {
 
 	// -- Parameters --
@@ -132,6 +103,9 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Parameter
 	private ImgUtilityService imgUtils;
+
+	@Parameter
+	private OMEROTransferService omeroTransfer;
 
 	// -- OMEROService methods --
 
@@ -233,9 +207,8 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 		if (value instanceof Map) {
 			final Map<?, ?> map = (Map<?, ?>) value;
-			final HashMap<String, omero.RType> val =
-				new HashMap<>();
-			for (Entry<?, ?> e : map.entrySet()){
+			final HashMap<String, omero.RType> val = new HashMap<>();
+			for (Entry<?, ?> e : map.entrySet()) {
 				val.put(e.getKey().toString(), toOMERO(e.getValue()));
 			}
 			return omero.rtypes.rmap(val);
@@ -268,7 +241,7 @@ public class DefaultOMEROService extends AbstractService implements
 	{
 		if (value instanceof Dataset) {
 			// upload image to OMERO, returning the resultant image ID
-			final long imageID = uploadImage(client, (Dataset) value);
+			final long imageID = omeroTransfer.uploadImage(client, (Dataset) value);
 			return toOMERO(client, imageID);
 		}
 		if (value instanceof DatasetView) {
@@ -284,7 +257,8 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 		if (value instanceof Table) {
 			final OMEROCredentials cred = createCredentials(client);
-			final long tableID = uploadTable(cred, "table", (Table<?, ?>) value, 0);
+			final long tableID = omeroTransfer.uploadTable(cred, "table",
+				(Table<?, ?>) value, 0);
 			return toOMERO(client, tableID);
 		}
 		return toOMERO(value);
@@ -361,211 +335,6 @@ public class DefaultOMEROService extends AbstractService implements
 		return null;
 	}
 
-	@Override
-	public Dataset downloadImage(final omero.client client, final long imageID)
-		throws omero.ServerError, IOException
-	{
-		// TODO: Reuse existing client instead of creating a new connection.
-		// Will need to rethink how SCIFIO conveys source and destination metadata.
-		// The RandomAccessInput/OutputStream design is probably too narrow.
-		final String omeroSource = "omero:" + credentials(client) + "&imageID=" +
-			imageID;
-
-		return datasetIOService.open(omeroSource);
-	}
-
-	public <T extends RealType<T>> Stream<T> streamImagesFromOmero() {
-		// TODO Implement
-		return null;
-	}
-
-	@Override
-	public <T extends RealType<T>> Collection<ImgPlus<T>> downloadImageSet(
-		final OMEROCredentials credentials, Collection<Long> ids)
-		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
-		FormatException, ImgIOException
-	{
-		final List<ImgPlus<T>> images = new LinkedList<>(); // to store the result
-
-		final OMEROSession session = new NonClosingOMEROSession(credentials);
-
-		final OMEROFormat format = formatService.getFormatFromClass(
-			OMEROFormat.class);
-		OMEROFormat.Reader reader = (OMEROFormat.Reader) format.createReader();
-		reader.setSession(session);
-
-		// Reader filter stuff
-		ReaderFilter rf = new ReaderFilter(reader);
-		rf.enable(ChannelFiller.class);
-		rf.enable(PlaneSeparator.class).separate(SCIFIOUtilMethods.axesToSplit(rf));
-
-		// Config
-		SCIFIOConfig config = new SCIFIOConfig();
-		config.imgOpenerSetComputeMinMax(false); // skip min max compute
-		config.imgOpenerSetImgModes(ImgMode.PLANAR); // prefer planar
-
-		ImgOpener opener = new ImgOpener(getContext());
-		try {
-			// read images
-			for (Long id : ids) {
-				final String omeroSource = "omero:" + "DUMMY" + "&imageID=" + id;
-				reader.setSource(omeroSource);
-
-				SCIFIOImgPlus<?> img = opener.openImgs(rf, config).get(0);
-				images.add((ImgPlus<T>) img); // FIXME
-
-			}
-		}
-		catch (Exception e) {
-			// gotta catch them all
-			// TODO REMOVE this
-		}
-
-
-
-		images.stream();
-
-		return null;
-	}
-
-	@Override
-	public long uploadImage(final omero.client client, final Dataset dataset)
-		throws omero.ServerError, IOException
-	{
-		// TODO: Reuse existing client instead of creating a new connection.
-		// Will need to rethink how SCIFIO conveys source and destination metadata.
-		// The RandomAccessInput/OutputStream design is probably too narrow.
-		final String omeroDestination = "name=" + dataset.getName() + "&" +
-			credentials(client) //
-			+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
-
-		final Metadata metadata = datasetIOService.save(dataset, omeroDestination);
-
-		if (metadata instanceof OMEROFormat.Metadata) {
-			final OMEROFormat.Metadata omeroMeta = (OMEROFormat.Metadata) metadata;
-			return omeroMeta.getImageID();
-		}
-		return -1;
-	}
-
-	@Override
-	public long uploadTable(final OMEROCredentials credentials, final String name,
-		final Table<?, ?> imageJTable, final long imageID) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
-	{
-		final OMEROSession session = new DefaultOMEROSession(credentials);
-		TablePrx tableService = null;
-		long id = -1;
-		try {
-			tableService = session.getClient().getSession().sharedResources()
-				.newTable(1, name);
-			if (tableService == null) {
-				throw new omero.ServerError(null, null, "Could not create table");
-			}
-			final omero.grid.Column[] columns = new omero.grid.Column[imageJTable
-				.getColumnCount()];
-			for (int c = 0; c < columns.length; c++) {
-				columns[c] = TableUtils.createOMEROColumn(imageJTable.get(c), c);
-			}
-			tableService.initialize(columns);
-			// TODO: Can reuse OMERO column structs (from 0 index every time)
-			// to append rows in batches, in case there are too many.
-			// If we do this, we can report progress better.
-			for (int c = 0; c < columns.length; c++) {
-				TableUtils.populateOMEROColumn(imageJTable.get(c), columns[c]);
-			}
-			tableService.addData(columns);
-			if (imageID != 0) attachAnnotation(session, imageID, tableService);
-		}
-		finally {
-			try {
-				if (tableService != null) {
-					id = tableService.getOriginalFile().getId().getValue();
-					tableService.close();
-				}
-			}
-			finally {
-				((DefaultOMEROSession) session).close();
-			}
-		}
-		return id;
-	}
-
-	@Override
-	public Table<?, ?> downloadTable(final OMEROCredentials credentials,
-		final long tableID) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException
-	{
-		final OMEROSession session = new DefaultOMEROSession(credentials);
-		TablePrx tableService = null;
-		try {
-			final OriginalFile tableFile = new OriginalFileI(tableID, false);
-			tableService = session.getClient().getSession().sharedResources()
-				.openTable(tableFile);
-			if (tableService == null) {
-				throw new omero.ServerError(null, null, "Could not open table");
-			}
-			final long rawRowCount = tableService.getNumberOfRows();
-			if (rawRowCount > Integer.MAX_VALUE) {
-				throw new IllegalArgumentException("Table too large: " + rawRowCount +
-					" rows");
-			}
-			final int rowCount = (int) rawRowCount;
-			final omero.grid.Column[] omeroColumns = tableService.getHeaders();
-
-			final Table<?, ?> imageJTable = TableUtils.createImageJTable(
-				omeroColumns);
-			final int colCount = tableService.getHeaders().length;
-
-			final int batchSize = 24 * 1024;
-			int currentRow = 0;
-
-			final Column<?>[] imageJColumns = new Column<?>[colCount];
-			final long[] colIndices = new long[colCount];
-			for (int c = 0; c < colIndices.length; c++)
-				colIndices[c] = c;
-			boolean colCreated = false;
-
-			while (currentRow < rowCount) {
-				final int rowsLeft = rowCount - currentRow;
-				final int rowsToRead = Math.min(batchSize, rowsLeft);
-				final omero.grid.Data data = tableService.read(colIndices, currentRow,
-					currentRow + rowsToRead);
-				assert (colCount == data.columns.length);
-				// Create columns
-				if (!colCreated) {
-					if (GenericTable.class.isInstance(imageJTable)) addTypedColumns(
-						(GenericTable) imageJTable, data, rowCount);
-					// Append empty columns of table type
-					else imageJTable.appendColumns(colCount);
-					colCreated = true;
-				}
-				for (int c = 0; c < colCount; c++) {
-					if (imageJColumns[c] == null) {
-						imageJColumns[c] = imageJTable.get(c);
-					}
-					TableUtils.populateImageJColumn(data.columns[c], imageJColumns[c],
-						currentRow);
-				}
-				currentRow += rowsToRead;
-			}
-			// Need to specify how many rows the table has for data to display
-			imageJTable.setRowCount(rowCount);
-			return imageJTable;
-		}
-		finally {
-			try {
-				if (tableService != null) {
-					tableService.close();
-				}
-			}
-			finally {
-				((DefaultOMEROSession) session).close();
-			}
-		}
-	}
-
 	// -- Helper methods --
 
 	/**
@@ -629,7 +398,7 @@ public class DefaultOMEROService extends AbstractService implements
 				final long imageID = ((Number) value).longValue();
 				// TODO: Consider consequences of this cast more carefully.
 				@SuppressWarnings("unchecked")
-				final T dataset = (T) downloadImage(client, imageID);
+				final T dataset = (T) omeroTransfer.downloadImage(client, imageID);
 				return dataset;
 			}
 			if (DatasetView.class.isAssignableFrom(type)) {
@@ -648,7 +417,7 @@ public class DefaultOMEROService extends AbstractService implements
 				final long tableID = ((Number) value).longValue();
 				final OMEROCredentials credentials = createCredentials(client);
 				@SuppressWarnings("unchecked")
-				final T table = (T) downloadTable(credentials, tableID);
+				final T table = (T) omeroTransfer.downloadTable(credentials, tableID);
 				return table;
 			}
 		}
@@ -671,47 +440,6 @@ public class DefaultOMEROService extends AbstractService implements
 		return collection.toArray(array);
 	}
 
-	/**
-	 * Attaches table file to OMERO image.
-	 *
-	 * @throws ExecutionException
-	 * @throws DSAccessException
-	 * @throws DSOutOfServiceException
-	 */
-	private static void attachAnnotation(final OMEROSession session,
-		final long imageID, final TablePrx table) throws ServerError,
-		ExecutionException, DSOutOfServiceException, DSAccessException
-	{
-		// Create necessary facilities
-		final DataManagerFacility dm = session.getGateway().getFacility(
-			DataManagerFacility.class);
-		final BrowseFacility browse = session.getGateway().getFacility(
-			BrowseFacility.class);
-
-		// Get current sessions security context
-		final SecurityContext ctx = new SecurityContext(session.getExperimenter()
-			.getGroupId());
-
-		// Get original file from the table
-		final OriginalFile file = table.getOriginalFile();
-
-		// Create file annotation for table file
-		FileAnnotation annotation = new FileAnnotationI();
-		// TODO assign annotation to a table namespace
-		annotation.setNs(omero.rtypes.rstring(
-			omero.constants.namespaces.NSBULKANNOTATIONS.value));
-		annotation.setFile(file);
-		// Save file annotation to database
-		annotation = (FileAnnotation) dm.saveAndReturnObject(ctx, annotation);
-
-		// Attach file to image with given ID
-		ImageAnnotationLink link = new ImageAnnotationLinkI();
-		link.setChild(annotation);
-		link.setParent(browse.getImage(ctx, imageID).asImage());
-		// Save linkage to database
-		link = (ImageAnnotationLink) dm.saveAndReturnObject(ctx, link);
-	}
-
 	private OMEROCredentials createCredentials(final omero.client client) {
 		final OMEROCredentials credentials = new OMEROCredentials();
 		credentials.setServer(client.getProperty("omero.host"));
@@ -719,18 +447,5 @@ public class DefaultOMEROService extends AbstractService implements
 		credentials.setUser(client.getProperty("omero.user"));
 		credentials.setPassword(client.getProperty("omero.pass"));
 		return credentials;
-	}
-
-	/**
-	 * Adds columns of different types to a {@link GenericTable}.
-	 */
-	private void addTypedColumns(final GenericTable imageJTable,
-		final omero.grid.Data data, final int rowCount)
-	{
-		for (int c = 0; c < data.columns.length; c++) {
-			final Column<?> col = TableUtils.createImageJColumn(data.columns[c]);
-			col.setSize(rowCount);
-			imageJTable.add(col);
-		}
 	}
 }

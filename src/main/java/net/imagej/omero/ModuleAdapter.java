@@ -25,9 +25,6 @@
 
 package net.imagej.omero;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,6 +38,21 @@ import java.util.concurrent.Future;
 import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+
+import org.scijava.AbstractContextual;
+import org.scijava.Context;
+import org.scijava.ItemVisibility;
+import org.scijava.Versioned;
+import org.scijava.command.Command;
+import org.scijava.log.LogService;
+import org.scijava.module.Module;
+import org.scijava.module.ModuleInfo;
+import org.scijava.module.ModuleItem;
+import org.scijava.module.ModuleService;
+import org.scijava.plugin.Parameter;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 import omero.RLong;
 import omero.ServerError;
 import omero.gateway.Gateway;
@@ -61,18 +73,6 @@ import omero.model.ImageAnnotationLink;
 import omero.model.ImageAnnotationLinkI;
 import omero.model.OriginalFile;
 import omero.model.OriginalFileI;
-
-import org.scijava.AbstractContextual;
-import org.scijava.Context;
-import org.scijava.ItemVisibility;
-import org.scijava.Versioned;
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.module.Module;
-import org.scijava.module.ModuleInfo;
-import org.scijava.module.ModuleItem;
-import org.scijava.module.ModuleService;
-import org.scijava.plugin.Parameter;
 
 /**
  * Adapts an ImageJ {@link Module} (such as a {@link Command}) to be usable as
@@ -96,7 +96,7 @@ public class ModuleAdapter extends AbstractContextual {
 	private LogService log;
 
 	@Parameter
-	private OMEROService omeroService;
+	private OMEROConversionService omeroService;
 
 	@Parameter
 	private ModuleService moduleService;

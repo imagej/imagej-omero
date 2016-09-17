@@ -25,8 +25,6 @@
 
 package net.imagej.omero;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import io.scif.AbstractChecker;
 import io.scif.AbstractFormat;
 import io.scif.AbstractMetadata;
@@ -55,6 +53,14 @@ import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imagej.axis.LinearAxis;
+
+import org.scijava.Priority;
+import org.scijava.log.LogService;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 import omero.RInt;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
@@ -73,11 +79,6 @@ import omero.model.Pixels;
 import omero.model.Time;
 import omero.model.enums.UnitsLength;
 import omero.model.enums.UnitsTime;
-
-import org.scijava.Priority;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
 
 /**
  * A SCIFIO {@link Format} which provides read/write access to pixels on an
