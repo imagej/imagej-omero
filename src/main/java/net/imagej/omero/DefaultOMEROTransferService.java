@@ -5,8 +5,6 @@ import io.scif.FormatException;
 import io.scif.Metadata;
 import io.scif.config.SCIFIOConfig;
 import io.scif.config.SCIFIOConfig.ImgMode;
-import io.scif.filters.ChannelFiller;
-import io.scif.filters.PlaneSeparator;
 import io.scif.filters.ReaderFilter;
 import io.scif.img.ImgIOException;
 import io.scif.img.ImgOpener;
@@ -27,14 +25,15 @@ import net.imagej.display.ImageDisplayService;
 import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
-import net.imglib2.type.numeric.RealType;
 
 import org.scijava.convert.ConvertService;
 import org.scijava.display.DisplayService;
 import org.scijava.log.LogService;
 import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
 import org.scijava.service.AbstractService;
+import org.scijava.service.Service;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
@@ -52,8 +51,8 @@ import omero.model.ImageAnnotationLinkI;
 import omero.model.OriginalFile;
 import omero.model.OriginalFileI;
 import utils.NonClosingOMEROSession;
-import utils.SCIFIOUtilMethods;
 
+@Plugin(type = Service.class)
 public class DefaultOMEROTransferService extends AbstractService implements
 	OMEROTransferService
 {
@@ -235,47 +234,59 @@ public class DefaultOMEROTransferService extends AbstractService implements
 	}
 
 	@Override
-	public <T extends RealType<T>> Collection<ImgPlus<T>> downloadImageSet(
+	public Collection<ImgPlus<?>> downloadImageSet(
 		final OMEROCredentials credentials, Collection<Long> ids)
-		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
-		FormatException, ImgIOException
+		throws IOException
 	{
-		final List<ImgPlus<T>> images = new LinkedList<>(); // to store the result
+		final List<ImgPlus<?>> images = new LinkedList<>(); // to store the result
+
+		NonClosingOMEROSession session = null;
 
 		try {
+			session = new NonClosingOMEROSession(credentials);
 
-			final OMEROSession session = new NonClosingOMEROSession(credentials);
-
+			// Reader filter stuff
 			final OMEROFormat format = formatService.getFormatFromClass(
 				OMEROFormat.class);
 			OMEROFormat.Reader reader = (OMEROFormat.Reader) format.createReader();
 			reader.setSession(session);
 
-			// Reader filter stuff
 			ReaderFilter rf = new ReaderFilter(reader);
-			rf.enable(ChannelFiller.class);
-			rf.enable(PlaneSeparator.class).separate(SCIFIOUtilMethods.axesToSplit(
-				rf));
+//			rf.enable(ChannelFiller.class);
+//			rf.enable(PlaneSeparator.class).separate(SCIFIOUtilMethods.axesToSplit(rf));
 
 			// Config
 			SCIFIOConfig config = new SCIFIOConfig();
 			config.imgOpenerSetComputeMinMax(false); // skip min max compute
 			config.imgOpenerSetImgModes(ImgMode.PLANAR); // prefer planar
 
+			// Parser
+			OMEROFormat.Parser parser = (OMEROFormat.Parser) format.createParser();
+			parser.setSession(session);
+
 			ImgOpener opener = new ImgOpener(getContext());
+
 			// read images
 			for (Long id : ids) {
 				final String omeroSource = "omero:" + "DUMMY" + "&imageID=" + id;
-				reader.setSource(omeroSource);
+				OMEROFormat.Metadata metadata = parser.parse(omeroSource, config);
+				rf.setMetadata(metadata);
+				rf.setSource(omeroSource);
+				reader.setPixelStore();
 
 				SCIFIOImgPlus<?> img = opener.openImgs(rf, config).get(0);
-				images.add((ImgPlus<T>) img); // FIXME
+				images.add(img); // FIXME
 
 			}
+			// close the connection
+			session.terminate();
+
 		}
 		catch (Exception e) {
-			// gotta catch them all
-			// TODO REMOVE this
+			if (session != null) {
+				session.terminate();
+			}
+			throw new IOException("Failed to read from ", e);
 		}
 
 		return images;

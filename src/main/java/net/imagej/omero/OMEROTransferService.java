@@ -58,9 +58,7 @@ public interface OMEROTransferService extends Service {
 	Table<?, ?> downloadTable(OMEROCredentials credentials, long tableID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException;
 
-	<T extends RealType<T>> Collection<ImgPlus<T>> downloadImageSet(
-		OMEROCredentials creds, Collection<Long> ids) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, FormatException,
-		ImgIOException;
+	Collection<ImgPlus<?>> downloadImageSet(OMEROCredentials creds,
+		Collection<Long> ids) throws IOException;
 
 }

@@ -330,7 +330,9 @@ public class OMEROFormat extends AbstractFormat {
 
 		public void setImage(final Image image) {
 			this.image = image;
-			if (image == null) return;
+			if (image == null) {
+				return;
+			}
 
 			// sanity check for matching image IDs
 			final long existingID = getImageID();
@@ -343,7 +345,9 @@ public class OMEROFormat extends AbstractFormat {
 
 		public void setPixels(final Pixels pixels) {
 			this.pixels = pixels;
-			if (pixels == null) return;
+			if (pixels == null) {
+				return;
+			}
 
 			// sanity check for matching pixels IDs
 			final long existingID = getPixelsID();
@@ -361,7 +365,9 @@ public class OMEROFormat extends AbstractFormat {
 			// TODO: Consider whether this check is really the right approach.
 			// It is present because otherwise, the uninitialized format-specific
 			// metadata fields overwrite the values populated by the ImgSaver.
-			if (getImageCount() > 0) return; // already populated
+			if (getImageCount() > 0) {
+				return; // already populated
+			}
 
 			// construct dimensional axes
 			final LinearAxis xAxis = axis(Axes.X, physSizeX);
@@ -460,7 +466,9 @@ public class OMEROFormat extends AbstractFormat {
 			final SCIFIOConfig config) throws FormatException, IOException
 		{
 			// TODO: Consider whether to reuse OMERO session from the parsing step.
-			if (session == null) initSession();
+			if (session == null) {
+				initSession();
+			}
 
 			final int[] zct = zct(imageIndex, planeIndex, getMetadata());
 			try {
@@ -484,13 +492,19 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public void close() {
-			if (session != null) session.close();
+			if (session != null) {
+				session.close();
+			}
 			session = null;
 			store = null;
 		}
 
-		public void setSession(OMEROSession session) throws ServerError {
+		public void setSession(OMEROSession session) {
 			this.session = session;
+		}
+
+		// TODO MAYBE put in metadata?
+		public void setPixelStore() throws ServerError{
 			store = session.openPixels(getMetadata());
 		}
 
