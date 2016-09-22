@@ -274,9 +274,8 @@ public class DefaultOMEROTransferService extends AbstractService implements
 				rf.setSource(omeroSource);
 				reader.setPixelStore();
 
-				SCIFIOImgPlus<?> img = opener.openImgs(rf, config).get(0);
-				images.add(img); // FIXME
-
+				List<SCIFIOImgPlus<?>> imgs = opener.openImgs(rf, config);
+				images.addAll(imgs);
 			}
 			// close the connection
 			session.terminate();
@@ -286,7 +285,7 @@ public class DefaultOMEROTransferService extends AbstractService implements
 			if (session != null) {
 				session.terminate();
 			}
-			throw new IOException("Failed to read from ", e);
+			throw new IOException("Failed to read from omero server:", e);
 		}
 
 		return images;
