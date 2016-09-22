@@ -123,7 +123,6 @@ public class UploadTableTest {
 				tableMock.getOriginalFile();
 				fileMock.getId();
 				tableMock.close();
-				sessionMock.close();
 
 				// Tests
 				// NB: Tests must occur in verification
@@ -181,7 +180,6 @@ public class UploadTableTest {
 				tableMock.getOriginalFile();
 				fileMock.getId();
 				tableMock.close();
-				sessionMock.close();
 
 				// Tests
 				// NB: Tests must occur in verification
@@ -235,7 +233,6 @@ public class UploadTableTest {
 				tableMock.getOriginalFile();
 				fileMock.getId();
 				tableMock.close();
-				sessionMock.close();
 
 				// Tests
 				// NB: Tests must occur in verification
@@ -297,7 +294,6 @@ public class UploadTableTest {
 				tableMock.getOriginalFile();
 				fileMock.getId();
 				tableMock.close();
-				sessionMock.close();
 
 				// Tests
 				// NB: Tests must occur in verification
@@ -358,7 +354,6 @@ public class UploadTableTest {
 				tableMock.getOriginalFile();
 				fileMock.getId();
 				tableMock.close();
-				sessionMock.close();
 
 				// Tests
 				// NB: Tests must occur in verification
@@ -427,7 +422,6 @@ public class UploadTableTest {
 				tableMock.getOriginalFile();
 				fileMock.getId();
 				tableMock.close();
-				sessionMock.close();
 
 				// Tests
 				// NB: Tests must occur in verification
@@ -499,7 +493,6 @@ public class UploadTableTest {
 				tableMock.getOriginalFile();
 				fileMock.getId();
 				tableMock.close();
-				sessionMock.close();
 
 				// Tests
 				// NB: Tests must occur in verification
@@ -561,7 +554,6 @@ public class UploadTableTest {
 				tableMock.getOriginalFile();
 				fileMock.getId();
 				tableMock.close();
-				sessionMock.close();
 
 				// Tests
 				// NB: Tests must occur in verification
@@ -632,7 +624,6 @@ public class UploadTableTest {
 				tableMock.getOriginalFile();
 				fileMock.getId();
 				tableMock.close();
-				sessionMock.close();
 
 				// Tests
 				// NB: Tests must occur in verification

@@ -533,7 +533,6 @@ public class DownloadTableTest {
 				result = testData;
 
 				tableMock.close();
-				sessionMock.close();
 			}
 		};
 	}
@@ -554,7 +553,6 @@ public class DownloadTableTest {
 				tableMock.getHeaders();
 				tableMock.read((long[]) any, anyLong, anyLong);
 				tableMock.close();
-				sessionMock.close();
 			}
 		};
 	}

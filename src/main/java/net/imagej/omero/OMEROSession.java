@@ -75,4 +75,9 @@ public interface OMEROSession extends Closeable {
 	RawPixelsStorePrx createPixels(OMEROFormat.Metadata meta) throws ServerError,
 		FormatException;
 
+	// -- Closeable methods --
+
+	@Override
+	void close();
+
 }

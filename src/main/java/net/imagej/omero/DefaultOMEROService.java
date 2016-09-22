@@ -378,10 +378,9 @@ public class DefaultOMEROService extends AbstractService implements
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
-		final OMEROSession session = new DefaultOMEROSession(credentials);
 		TablePrx tableService = null;
 		long id = -1;
-		try {
+		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
 			tableService =
 				session.getClient().getSession().sharedResources().newTable(1, name);
 			if (tableService == null) {
@@ -403,14 +402,9 @@ public class DefaultOMEROService extends AbstractService implements
 			if (imageID != 0) attachAnnotation(session, imageID, tableService);
 		}
 		finally {
-			try {
-				if (tableService != null) {
-					id = tableService.getOriginalFile().getId().getValue();
-					tableService.close();
-				}
-			}
-			finally {
-				((DefaultOMEROSession) session).close();
+			if (tableService != null) {
+				id = tableService.getOriginalFile().getId().getValue();
+				tableService.close();
 			}
 		}
 		return id;
@@ -421,9 +415,8 @@ public class DefaultOMEROService extends AbstractService implements
 		final long tableID) throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException
 	{
-		final OMEROSession session = new DefaultOMEROSession(credentials);
 		TablePrx tableService = null;
-		try {
+		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
 			final OriginalFile tableFile = new OriginalFileI(tableID, false);
 			tableService =
 				session.getClient().getSession().sharedResources().openTable(tableFile);
@@ -479,13 +472,8 @@ public class DefaultOMEROService extends AbstractService implements
 			return imageJTable;
 		}
 		finally {
-			try {
-				if (tableService != null) {
-					tableService.close();
-				}
-			}
-			finally {
-				((DefaultOMEROSession) session).close();
+			if (tableService != null) {
+				tableService.close();
 			}
 		}
 	}
