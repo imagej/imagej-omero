@@ -17,7 +17,13 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Spliterator;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import net.imagej.Dataset;
 import net.imagej.ImgPlus;
@@ -281,14 +287,115 @@ public class DefaultOMEROTransferService extends AbstractService implements
 			session.terminate();
 
 		}
-		catch (Exception e) {
+		catch (IOException | ImgIOException | FormatException | ServerError
+				| PermissionDeniedException | CannotCreateSessionException e)
+		{
 			if (session != null) {
 				session.terminate();
 			}
 			throw new IOException("Failed to read from omero server:", e);
 		}
-
 		return images;
+	}
+
+	@Override
+	public Stream<ImgPlus<?>> streamDownloadImageSet(OMEROCredentials creds,
+		Collection<Long> ids)
+	{
+
+		Queue<Long> elements = new PriorityQueue<>(ids);
+		final NonClosingOMEROSession session;
+		final OMEROFormat format;
+		final OMEROFormat.Reader reader;
+		ReaderFilter rf;
+		SCIFIOConfig config;
+		OMEROFormat.Parser parser;
+		ImgOpener opener;
+
+		try {
+			session = new NonClosingOMEROSession(creds);
+
+			// Reader filter stuff
+			format = formatService.getFormatFromClass(OMEROFormat.class);
+			reader = (OMEROFormat.Reader) format.createReader();
+			reader.setSession(session);
+
+//					rf.enable(ChannelFiller.class);
+//					rf.enable(PlaneSeparator.class).separate(SCIFIOUtilMethods.axesToSplit(rf));
+			rf = new ReaderFilter(reader);
+
+			// Config
+			config = new SCIFIOConfig();
+			config.imgOpenerSetComputeMinMax(false); // skip min max compute
+			config.imgOpenerSetImgModes(ImgMode.PLANAR); // prefer planar
+
+			// Parser
+			parser = (OMEROFormat.Parser) format.createParser();
+			parser.setSession(session);
+
+			opener = new ImgOpener(getContext());
+		}
+		catch (CannotCreateSessionException | PermissionDeniedException
+				| ServerError | FormatException e)
+		{
+			return null;
+			// TODO Handle
+		}
+
+		Spliterator<ImgPlus<?>> omeroSplitterator = new Spliterator<ImgPlus<?>>() {
+
+			@Override
+			public Spliterator<ImgPlus<?>> trySplit() {
+				// Currently no support for splitting
+				return null;
+			}
+
+			@Override
+			public long estimateSize() {
+				return elements.size();
+			}
+
+			@Override
+			public int characteristics() {
+				return IMMUTABLE;
+			}
+
+			@Override
+			public boolean tryAdvance(Consumer<? super ImgPlus<?>> action) {
+				// there are elements to read
+				if (!elements.isEmpty()) {
+					try {
+						long id = elements.poll();
+						// read images
+						final String omeroSource = "omero:" + "DUMMY" + "&imageID=" + id;
+						OMEROFormat.Metadata metadata = parser.parse(omeroSource, config);
+						rf.setMetadata(metadata);
+						rf.setSource(omeroSource);
+						reader.setPixelStore();
+
+						List<SCIFIOImgPlus<?>> imgs = opener.openImgs(rf, config);
+						action.accept(imgs.get(0)); // return more than one img
+					}
+					catch (IOException | ImgIOException | FormatException
+							| ServerError e)
+					{
+						log.error("Failed to read from omero server", e);
+						session.terminate();
+						return false;
+
+					}
+					if (elements.isEmpty()) {
+						session.terminate();
+					}
+					return true;
+				}
+				// No more images available.
+				return false;
+			}
+		};
+
+		return StreamSupport.stream(omeroSplitterator, false);
+
 	}
 
 	/**

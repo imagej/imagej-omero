@@ -1,17 +1,14 @@
 
 package net.imagej.omero;
 
-import io.scif.FormatException;
-import io.scif.img.ImgIOException;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 import net.imagej.Dataset;
 import net.imagej.ImgPlus;
 import net.imagej.table.Table;
-import net.imglib2.type.numeric.RealType;
 
 import org.scijava.service.Service;
 
@@ -58,7 +55,25 @@ public interface OMEROTransferService extends Service {
 	Table<?, ?> downloadTable(OMEROCredentials credentials, long tableID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException;
 
-	Collection<ImgPlus<?>> downloadImageSet(OMEROCredentials creds,
+	/**
+	 * Downloads all images given by id.
+	 * 
+	 * @param credentials the credentials for the server
+	 * @param ids the ids of the images to download
+	 * @return A collection containing the images
+	 * @throws IOException
+	 */
+	Collection<ImgPlus<?>> downloadImageSet(OMEROCredentials credentials,
 		Collection<Long> ids) throws IOException;
+
+	/**
+	 * Returns a stream that downloads images on demand from an omero server.
+	 * 
+	 * @param creds the credentials for the server
+	 * @param ids the ids of the images to download
+	 * @return A stream containing the downloaded images
+	 */
+	Stream<ImgPlus<?>> streamDownloadImageSet(OMEROCredentials creds,
+		Collection<Long> ids);
 
 }
