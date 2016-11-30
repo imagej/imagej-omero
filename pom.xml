@@ -1,21 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>net.imagej</groupId>
-		<artifactId>pom-imagej</artifactId>
-		<version>16.4.2</version>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>12.0.0</version>
 		<relativePath />
 	</parent>
 
+	<groupId>net.imagej</groupId>
 	<artifactId>imagej-omero</artifactId>
 	<version>0.4.1-SNAPSHOT</version>
 
 	<name>ImageJ/OMERO interoperability</name>
 	<description>Server- and client-side communication between ImageJ and OMERO.</description>
-	<inceptionYear>2013</inceptionYear>
 	<url>https://github.com/imagej/imagej-omero</url>
+	<inceptionYear>2013</inceptionYear>
+	<organization>
+		<name>ImageJ</name>
+		<url>http://imagej.net/</url>
+	</organization>
 	<licenses>
 		<license>
 			<name>GNU General Public License v2+</name>
@@ -105,6 +110,14 @@
 	</ciManagement>
 
 	<properties>
+		<package-name>net.imagej</package-name>
+
+		<license.licenseName>gpl_v2</license.licenseName>
+		<license.copyrightOwners>Open Microscopy Environment:
+	- Board of Regents of the University of Wisconsin-Madison
+	- Glencoe Software, Inc.
+	- University of Dundee</license.copyrightOwners>
+	<license.projectName>ImageJ software for multidimensional image processing and analysis.</license.projectName>
 		<omero.version>5.2.0-ice35</omero.version>
 	</properties>
 
@@ -188,17 +201,6 @@
 							<packageName>net.imagej.omero</packageName>
 						</manifest>
 					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>license-maven-plugin</artifactId>
-				<configuration>
-					<licenseName>gpl_v2</licenseName>
-					<organizationName>Open Microscopy Environment:
-	- Board of Regents of the University of Wisconsin-Madison
-	- Glencoe Software, Inc.
-	- University of Dundee</organizationName>
 				</configuration>
 			</plugin>
 		</plugins>
