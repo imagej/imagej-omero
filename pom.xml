@@ -110,7 +110,7 @@
 	</ciManagement>
 
 	<properties>
-		<package-name>net.imagej</package-name>
+		<package-name>net.imagej.omero</package-name>
 
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Open Microscopy Environment:
@@ -177,32 +177,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<configuration>
-					<rules>
-						<enforceBytecodeVersion>
-							<excludes>
-								<exclude>ome:omero-client</exclude>
-								<exclude>com.sun:tools</exclude>
-							</excludes>
-						</enforceBytecodeVersion>
-					</rules>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<packageName>net.imagej.omero</packageName>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>
