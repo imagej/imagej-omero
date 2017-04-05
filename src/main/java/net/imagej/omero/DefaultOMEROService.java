@@ -305,7 +305,7 @@ public class DefaultOMEROService extends AbstractService implements
 			return map;
 		}
 
-		// Use getValue() method if one exists for this type.
+		// HACK: Use getValue() method if one exists for this type.
 		// Reflection is necessary because there is no common interface
 		// with the getValue() method implemented by each subclass.
 		try {
