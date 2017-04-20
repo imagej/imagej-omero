@@ -28,18 +28,18 @@ package net.imagej.omero;
 import java.io.IOException;
 
 import net.imagej.Dataset;
+import net.imagej.ImageJService;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 
 import org.scijava.module.ModuleItem;
-import org.scijava.service.Service;
 
 /**
  * Interface for ImageJ services that manage OMERO data conversion.
  * 
  * @author Curtis Rueden
  */
-public interface OMEROService extends Service {
+public interface OMEROService extends ImageJService {
 
 	/** Converts an ImageJ module parameter to an OMERO job parameter. */
 	omero.grid.Param getJobParam(ModuleItem<?> item);
