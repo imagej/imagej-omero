@@ -27,9 +27,12 @@ package net.imagej.omero.rois.converter;
 
 import java.util.List;
 
+import net.imglib2.realtransform.AffineGet;
+import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.roi.BoundaryType;
 
 import omero.gateway.model.ShapeData;
+import omero.model.AffineTransformI;
 import omero.model.Annotation;
 import omero.model.Shape;
 import omero.model.TagAnnotation;
@@ -69,5 +72,46 @@ public class RoiConverters {
 		}
 		// If no such tag found, use Closed
 		return BoundaryType.CLOSED;
+	}
+
+	/**
+	 * Converts an OMERO {@link omero.model.AffineTransform AffineTransform} to an
+	 * ImgLib2 {@link AffineTransform2D}.
+	 *
+	 * @param transformFromSource the OMERO AffineTransform to be converted
+	 * @return an AffineTransform2D with the same transformation as the OMERO
+	 *         AffineTransform
+	 */
+	public static AffineGet createAffine(
+		final omero.model.AffineTransform transformFromSource)
+	{
+		final AffineTransform2D transformToSource = new AffineTransform2D();
+		transformToSource.set(new double[] { transformFromSource.getA00()
+			.getValue(), transformFromSource.getA01().getValue(), transformFromSource
+				.getA02().getValue(), transformFromSource.getA10().getValue(),
+			transformFromSource.getA11().getValue(), transformFromSource.getA12()
+				.getValue() });
+		return transformToSource.inverse();
+	}
+
+	/**
+	 * Converts an ImgLib2 {@link AffineTransform2D} to an OMERO
+	 * {@link omero.model.AffineTransform AffineTransform}.
+	 *
+	 * @param transformFromSource an AffineTransform2D to be converted
+	 * @return an OMERO AffineTransform with the same transformation as the
+	 *         AffineTransform2D
+	 */
+	public static omero.model.AffineTransform createAffine(
+		final AffineTransform2D transformFromSource)
+	{
+		final omero.model.AffineTransform transform = new AffineTransformI();
+		transform.setA00(omero.rtypes.rdouble(transformFromSource.get(0, 0)));
+		transform.setA01(omero.rtypes.rdouble(transformFromSource.get(0, 1)));
+		transform.setA02(omero.rtypes.rdouble(transformFromSource.get(0, 2)));
+		transform.setA10(omero.rtypes.rdouble(transformFromSource.get(1, 0)));
+		transform.setA11(omero.rtypes.rdouble(transformFromSource.get(1, 1)));
+		transform.setA12(omero.rtypes.rdouble(transformFromSource.get(1, 2)));
+		return transform;
 	}
 }
