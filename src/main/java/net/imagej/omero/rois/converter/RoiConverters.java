@@ -30,12 +30,14 @@ import java.util.List;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.MaskPredicate;
 
 import omero.gateway.model.ShapeData;
 import omero.model.AffineTransformI;
 import omero.model.Annotation;
 import omero.model.Shape;
 import omero.model.TagAnnotation;
+import omero.model.TagAnnotationI;
 
 /**
  * Utility class for working with ROI converters.
@@ -113,5 +115,24 @@ public class RoiConverters {
 		transform.setA11(omero.rtypes.rdouble(transformFromSource.get(1, 1)));
 		transform.setA12(omero.rtypes.rdouble(transformFromSource.get(1, 2)));
 		return transform;
+	}
+
+	/**
+	 * Creates a {@link TagAnnotation} which contains the boundary behavior of
+	 * this Mask.
+	 *
+	 * @param mask a {@link MaskPredicate} whose boundary behavior will be
+	 *          represented in the annotation
+	 * @return an annotation which contains information about the masks boundary
+	 *         behavior
+	 */
+	public static <L> TagAnnotation createAnnotation(
+		final MaskPredicate<L> mask)
+	{
+		final TagAnnotation tag = new TagAnnotationI();
+		tag.setName(omero.rtypes.rstring("boundaryType"));
+		tag.setTextValue(omero.rtypes.rstring(mask.boundaryType().toString()
+			.toLowerCase()));
+		return tag;
 	}
 }
