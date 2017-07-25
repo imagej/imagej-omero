@@ -25,13 +25,15 @@
 
 package net.imagej.omero;
 
+import io.scif.FormatException;
+
 import java.io.Closeable;
 
-import io.scif.FormatException;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.api.ServiceFactoryPrx;
 import omero.gateway.Gateway;
+import omero.gateway.SecurityContext;
 import omero.gateway.model.ExperimenterData;
 import omero.model.Image;
 import omero.model.Pixels;
@@ -43,6 +45,9 @@ public interface OMEROSession extends Closeable {
 
 	/** Gets the {@code ServiceFactoryPrx} associated with this OMEROSession */
 	ServiceFactoryPrx getSession();
+
+	/** Gets the {@code SecurityContext} associated with this OMEROSession */
+	SecurityContext getSecurityContext();
 
 	/** Gets the {@code Experimenter} associated with this OMEROSession */
 	ExperimenterData getExperimenter();

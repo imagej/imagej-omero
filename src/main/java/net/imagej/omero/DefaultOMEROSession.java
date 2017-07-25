@@ -25,13 +25,10 @@
 
 package net.imagej.omero;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
 import io.scif.util.FormatTools;
 
-import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -39,12 +36,16 @@ import java.util.List;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 import omero.RLong;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.api.ServiceFactoryPrx;
 import omero.gateway.Gateway;
 import omero.gateway.LoginCredentials;
+import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.ExperimenterData;
 import omero.gateway.model.ImageData;
@@ -68,6 +69,7 @@ public class DefaultOMEROSession implements OMEROSession {
 	private ServiceFactoryPrx session;
 	private ExperimenterData experimenter;
 	private Gateway gateway;
+	private SecurityContext ctx;
 
 	// -- Constructors --
 
@@ -107,6 +109,7 @@ public class DefaultOMEROSession implements OMEROSession {
 			final String password = credentials.getPassword();
 			setGateway();
 			setExperimenter(credentials);
+			setSecurityContext(credentials);
 			session = client.createSession(user, password);
 			credentials.setSessionID(client.getSessionId());
 		}
@@ -134,6 +137,11 @@ public class DefaultOMEROSession implements OMEROSession {
 	@Override
 	public ServiceFactoryPrx getSession() {
 		return session;
+	}
+
+	@Override
+	public SecurityContext getSecurityContext() {
+		return ctx;
 	}
 
 	@Override
@@ -325,6 +333,16 @@ public class DefaultOMEROSession implements OMEROSession {
 				" axis is too large for OMERO: " + axisLength);
 		}
 		return (int) axisLength;
+	}
+
+	/**
+	 * Creates a SecurityConext which is linked to the group the user belongs to.
+	 */
+	private void setSecurityContext(final OMEROCredentials credentials)
+		throws ServerError
+	{
+		if (experimenter == null) setExperimenter(credentials);
+		ctx = new SecurityContext(experimenter.getGroupId());
 	}
 
 	/**
