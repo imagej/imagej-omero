@@ -93,7 +93,7 @@ public interface OMEROService extends ImageJService {
 	 */
 	Object toImageJ(omero.client client, omero.RType value, Class<?> type)
 		throws omero.ServerError, IOException, PermissionDeniedException,
-		CannotCreateSessionException;
+		CannotCreateSessionException, DSOutOfServiceException;
 
 	/**
 	 * Downloads the image with the given image ID from OMERO, storing the result
@@ -123,6 +123,7 @@ public interface OMEROService extends ImageJService {
 	 * new ImageJ {@link Table}.
 	 */
 	Table<?, ?> downloadTable(OMEROCredentials credentials, long tableID)
-		throws ServerError, PermissionDeniedException, CannotCreateSessionException;
+		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
+		DSOutOfServiceException;
 
 }

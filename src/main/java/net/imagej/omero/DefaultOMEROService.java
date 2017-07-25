@@ -25,8 +25,6 @@
 
 package net.imagej.omero;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import io.scif.Metadata;
 import io.scif.services.DatasetIOService;
 
@@ -50,19 +48,6 @@ import net.imagej.display.ImageDisplayService;
 import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
-import omero.ServerError;
-import omero.gateway.SecurityContext;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
-import omero.gateway.facility.BrowseFacility;
-import omero.gateway.facility.DataManagerFacility;
-import omero.grid.TablePrx;
-import omero.model.FileAnnotation;
-import omero.model.FileAnnotationI;
-import omero.model.ImageAnnotationLink;
-import omero.model.ImageAnnotationLinkI;
-import omero.model.OriginalFile;
-import omero.model.OriginalFileI;
 
 import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
@@ -76,6 +61,21 @@ import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.util.ClassUtils;
 import org.scijava.util.ConversionUtils;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
+import omero.ServerError;
+import omero.gateway.exception.DSAccessException;
+import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.facility.BrowseFacility;
+import omero.gateway.facility.DataManagerFacility;
+import omero.grid.TablePrx;
+import omero.model.FileAnnotation;
+import omero.model.FileAnnotationI;
+import omero.model.ImageAnnotationLink;
+import omero.model.ImageAnnotationLinkI;
+import omero.model.OriginalFile;
+import omero.model.OriginalFileI;
 
 /**
  * Default ImageJ service for managing OMERO data conversion.
@@ -267,7 +267,8 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public Object toImageJ(final omero.client client, final omero.RType value,
 		final Class<?> type) throws omero.ServerError, IOException,
-		PermissionDeniedException, CannotCreateSessionException, SecurityException
+		PermissionDeniedException, CannotCreateSessionException, SecurityException,
+		DSOutOfServiceException
 	{
 		if (value instanceof omero.RCollection) {
 			// collection of objects
@@ -381,8 +382,8 @@ public class DefaultOMEROService extends AbstractService implements
 		TablePrx tableService = null;
 		long id = -1;
 		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
-			tableService =
-				session.getClient().getSession().sharedResources().newTable(1, name);
+			tableService = session.getGateway().getSharedResources(session
+				.getSecurityContext()).newTable(1, name);
 			if (tableService == null) {
 				throw new omero.ServerError(null, null, "Could not create table");
 			}
@@ -413,13 +414,13 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public Table<?, ?> downloadTable(final OMEROCredentials credentials,
 		final long tableID) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException
+		CannotCreateSessionException, DSOutOfServiceException
 	{
 		TablePrx tableService = null;
 		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
 			final OriginalFile tableFile = new OriginalFileI(tableID, false);
-			tableService =
-				session.getClient().getSession().sharedResources().openTable(tableFile);
+			tableService = session.getGateway().getSharedResources(session
+				.getSecurityContext()).openTable(tableFile);
 			if (tableService == null) {
 				throw new omero.ServerError(null, null, "Could not open table");
 			}
@@ -510,10 +511,12 @@ public class DefaultOMEROService extends AbstractService implements
 	 *
 	 * @throws CannotCreateSessionException
 	 * @throws PermissionDeniedException
+	 * @throws DSOutOfServiceException
 	 */
 	private <T> T convert(final omero.client client, final Object value,
 		final Class<T> type) throws omero.ServerError, IOException,
-		PermissionDeniedException, CannotCreateSessionException
+		PermissionDeniedException, CannotCreateSessionException,
+		DSOutOfServiceException
 	{
 		if (value == null) return null;
 		if (type == null) {

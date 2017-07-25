@@ -28,11 +28,7 @@ package net.imagej.omero;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
-import mockit.VerificationsInOrder;
+
 import net.imagej.table.BoolColumn;
 import net.imagej.table.BoolTable;
 import net.imagej.table.DefaultColumn;
@@ -41,12 +37,6 @@ import net.imagej.table.LongColumn;
 import net.imagej.table.LongTable;
 import net.imagej.table.ResultsTable;
 import net.imagej.table.Table;
-import omero.ServerError;
-import omero.api.ServiceFactoryPrx;
-import omero.grid.SharedResourcesPrx;
-import omero.grid.TablePrx;
-import omero.model.OriginalFile;
-import omero.model.OriginalFileI;
 
 import org.junit.After;
 import org.junit.Before;
@@ -54,6 +44,20 @@ import org.junit.Test;
 import org.scijava.Context;
 import org.scijava.util.DoubleArray;
 import org.scijava.util.LongArray;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
+import mockit.Mocked;
+import mockit.NonStrictExpectations;
+import mockit.VerificationsInOrder;
+import omero.ServerError;
+import omero.gateway.Gateway;
+import omero.gateway.SecurityContext;
+import omero.gateway.exception.DSOutOfServiceException;
+import omero.grid.SharedResourcesPrx;
+import omero.grid.TablePrx;
+import omero.model.OriginalFile;
+import omero.model.OriginalFileI;
 
 /**
  * Tests {@link DefaultOMEROService#downloadTable(OMEROCredentials, long)}.
@@ -80,25 +84,25 @@ public class DownloadTableTest {
 
 	@Test
 	public void downloadBoolTable(@Mocked final DefaultOMEROSession sessionMock,
-		@Mocked final omero.client clientMock,
-		@Mocked final ServiceFactoryPrx sfMock,
+		@Mocked final Gateway gatewayMock, @Mocked final SecurityContext scMock,
 		@Mocked final SharedResourcesPrx srMock, @Mocked final TablePrx tableMock)
-		throws PermissionDeniedException, CannotCreateSessionException, ServerError
+		throws PermissionDeniedException, CannotCreateSessionException, ServerError,
+		DSOutOfServiceException
 	{
 		// Setup OMERO data structures
 		final omero.grid.Column[] cols = new omero.grid.Column[3];
 		final omero.grid.BoolColumn bOne = new omero.grid.BoolColumn();
 		bOne.name = "Header 1";
-		bOne.values =
-			new boolean[] { true, true, true, true, false, false, false, false };
+		bOne.values = new boolean[] { true, true, true, true, false, false, false,
+			false };
 		final omero.grid.BoolColumn bTwo = new omero.grid.BoolColumn();
 		bTwo.name = "Header 2";
-		bTwo.values =
-			new boolean[] { true, true, false, false, true, true, false, false };
+		bTwo.values = new boolean[] { true, true, false, false, true, true, false,
+			false };
 		final omero.grid.BoolColumn bThree = new omero.grid.BoolColumn();
 		bThree.name = "Header 3";
-		bThree.values =
-			new boolean[] { true, false, true, false, true, false, true, false };
+		bThree.values = new boolean[] { true, false, true, false, true, false, true,
+			false };
 		cols[0] = bOne;
 		cols[1] = bTwo;
 		cols[2] = bThree;
@@ -108,14 +112,14 @@ public class DownloadTableTest {
 
 		// Create expectations
 		// NB: Cannot pass parameters to @Before methods
-		setUpMethodCalls(sessionMock, clientMock, sfMock, srMock, tableMock, cols,
+		setUpMethodCalls(sessionMock, gatewayMock, scMock, srMock, tableMock, cols,
 			testData, new long[] { 0, 1, 2 }, 8);
 
-		final Table<?, ?> imageJTable =
-			((DefaultOMEROService) service).downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
+			.downloadTable(credentials, 0);
 
 		// Verify method calls occurred in expected order
-		verify(sessionMock, clientMock, sfMock, srMock, tableMock);
+		verify(sessionMock, gatewayMock, scMock, srMock, tableMock);
 
 		// Tests
 		assertTrue(BoolTable.class.isInstance(imageJTable));
@@ -136,17 +140,17 @@ public class DownloadTableTest {
 
 	@Test
 	public void downloadLongTable(@Mocked final DefaultOMEROSession sessionMock,
-		@Mocked final omero.client clientMock,
-		@Mocked final ServiceFactoryPrx sfMock,
+		@Mocked final Gateway gatewayMock, @Mocked final SecurityContext scMock,
 		@Mocked final SharedResourcesPrx srMock, @Mocked final TablePrx tableMock)
-		throws PermissionDeniedException, CannotCreateSessionException, ServerError
+		throws PermissionDeniedException, CannotCreateSessionException, ServerError,
+		DSOutOfServiceException
 	{
 		// Setup OMERO data structures
 		final omero.grid.Column[] cols = new omero.grid.Column[4];
 		final omero.grid.LongColumn lOne = new omero.grid.LongColumn();
 		lOne.name = "Header 1";
-		lOne.values =
-			new long[] { 0l, -9223372036854775808l, 9223372036854775807l };
+		lOne.values = new long[] { 0l, -9223372036854775808l,
+			9223372036854775807l };
 		final omero.grid.LongColumn lTwo = new omero.grid.LongColumn();
 		lTwo.name = "Header 2";
 		lTwo.values = new long[] { 134l, 5415145l, 4775807l };
@@ -166,14 +170,14 @@ public class DownloadTableTest {
 
 		// Create expectations
 		// NB: Cannot pass parameters to @Before methods
-		setUpMethodCalls(sessionMock, clientMock, sfMock, srMock, tableMock, cols,
+		setUpMethodCalls(sessionMock, gatewayMock, scMock, srMock, tableMock, cols,
 			testData, new long[] { 0, 1, 2, 3 }, 3);
 
-		final Table<?, ?> imageJTable =
-			((DefaultOMEROService) service).downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
+			.downloadTable(credentials, 0);
 
 		// Verify method calls occurred in expected order
-		verify(sessionMock, clientMock, sfMock, srMock, tableMock);
+		verify(sessionMock, gatewayMock, scMock, srMock, tableMock);
 
 		// Tests
 		assertTrue(LongTable.class.isInstance(imageJTable));
@@ -194,23 +198,22 @@ public class DownloadTableTest {
 	}
 
 	@Test
-	public void downloadDoubleTable(
-		@Mocked final DefaultOMEROSession sessionMock,
-		@Mocked final omero.client clientMock,
-		@Mocked final ServiceFactoryPrx sfMock,
+	public void downloadDoubleTable(@Mocked final DefaultOMEROSession sessionMock,
+		@Mocked final Gateway gatewayMock, @Mocked final SecurityContext scMock,
 		@Mocked final SharedResourcesPrx srMock, @Mocked final TablePrx tableMock)
-		throws PermissionDeniedException, CannotCreateSessionException, ServerError
+		throws PermissionDeniedException, CannotCreateSessionException, ServerError,
+		DSOutOfServiceException
 	{
 		// Setup OMERO data structures
 		final omero.grid.Column[] cols = new omero.grid.Column[2];
 		final omero.grid.DoubleColumn dOne = new omero.grid.DoubleColumn();
 		dOne.name = "Header 1";
-		dOne.values =
-			new double[] { 0.125, -0.5, 923014712408917.25, -241.03125, 0.0 };
+		dOne.values = new double[] { 0.125, -0.5, 923014712408917.25, -241.03125,
+			0.0 };
 		final omero.grid.DoubleColumn dTwo = new omero.grid.DoubleColumn();
 		dTwo.name = "Header 2";
-		dTwo.values =
-			new double[] { 1002.125, 908082.5, 59871249.0625, -7.25, 4.5 };
+		dTwo.values = new double[] { 1002.125, 908082.5, 59871249.0625, -7.25,
+			4.5 };
 		cols[0] = dOne;
 		cols[1] = dTwo;
 
@@ -219,14 +222,14 @@ public class DownloadTableTest {
 
 		// Create expectations
 		// NB: Cannot pass parameters to @Before methods
-		setUpMethodCalls(sessionMock, clientMock, sfMock, srMock, tableMock, cols,
+		setUpMethodCalls(sessionMock, gatewayMock, scMock, srMock, tableMock, cols,
 			testData, new long[] { 0, 1 }, 5);
 
-		final Table<?, ?> imageJTable =
-			((DefaultOMEROService) service).downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
+			.downloadTable(credentials, 0);
 
 		// Verify method calls occurred in expected order
-		verify(sessionMock, clientMock, sfMock, srMock, tableMock);
+		verify(sessionMock, gatewayMock, scMock, srMock, tableMock);
 
 		// Tests
 		assertTrue(ResultsTable.class.isInstance(imageJTable));
@@ -248,18 +251,17 @@ public class DownloadTableTest {
 	@Test
 	public void downloadLongArrayTable(
 		@Mocked final DefaultOMEROSession sessionMock,
-		@Mocked final omero.client clientMock,
-		@Mocked final ServiceFactoryPrx sfMock,
+		@Mocked final Gateway gatewayMock, @Mocked final SecurityContext scMock,
 		@Mocked final SharedResourcesPrx srMock, @Mocked final TablePrx tableMock)
-		throws PermissionDeniedException, CannotCreateSessionException, ServerError
+		throws PermissionDeniedException, CannotCreateSessionException, ServerError,
+		DSOutOfServiceException
 	{
 		// Setup OMERO data structures
 		final omero.grid.Column[] cols = new omero.grid.Column[2];
 		final omero.grid.LongArrayColumn laOne = new omero.grid.LongArrayColumn();
 		laOne.name = "Header 1";
-		laOne.values =
-			new long[][] { { 0l, -9223372036854775808l },
-				{ 134l, 9223372036854775807l } };
+		laOne.values = new long[][] { { 0l, -9223372036854775808l }, { 134l,
+			9223372036854775807l } };
 		final omero.grid.LongArrayColumn laTwo = new omero.grid.LongArrayColumn();
 		laTwo.name = "Header 2";
 		laTwo.values = new long[][] { { -2139847, 1023894 }, { 12, 23415 } };
@@ -271,14 +273,14 @@ public class DownloadTableTest {
 
 		// Create expectations
 		// NB: Cannot pass parameters to @Before methods
-		setUpMethodCalls(sessionMock, clientMock, sfMock, srMock, tableMock, cols,
+		setUpMethodCalls(sessionMock, gatewayMock, scMock, srMock, tableMock, cols,
 			testData, new long[] { 0, 1 }, 2);
 
-		final Table<?, ?> imageJTable =
-			((DefaultOMEROService) service).downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
+			.downloadTable(credentials, 0);
 
 		// Verify method calls occurred in expected order
-		verify(sessionMock, clientMock, sfMock, srMock, tableMock);
+		verify(sessionMock, gatewayMock, scMock, srMock, tableMock);
 
 		// Tests
 		assertTrue(GenericTable.class.isInstance(imageJTable));
@@ -293,20 +295,19 @@ public class DownloadTableTest {
 			for (int c = 0; c < imageJTable.getColumnCount(); c++) {
 				assertTrue(DefaultColumn.class.isInstance(imageJTable.get(c)));
 				assertTrue(imageJTable.get(c).getType() == LongArray.class);
-				assertArrayEquals(((DefaultColumn<LongArray>) imageJTable.get(c))
-					.get(r).getArray(), ((omero.grid.LongArrayColumn) cols[c]).values[r]);
+				assertArrayEquals(((DefaultColumn<LongArray>) imageJTable.get(c)).get(r)
+					.getArray(), ((omero.grid.LongArrayColumn) cols[c]).values[r]);
 			}
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void downloadStringTable(
-		@Mocked final DefaultOMEROSession sessionMock,
-		@Mocked final omero.client clientMock,
-		@Mocked final ServiceFactoryPrx sfMock,
+	public void downloadStringTable(@Mocked final DefaultOMEROSession sessionMock,
+		@Mocked final Gateway gatewayMock, @Mocked final SecurityContext scMock,
 		@Mocked final SharedResourcesPrx srMock, @Mocked final TablePrx tableMock)
-		throws PermissionDeniedException, CannotCreateSessionException, ServerError
+		throws PermissionDeniedException, CannotCreateSessionException, ServerError,
+		DSOutOfServiceException
 	{
 		// Setup OMERO data structures
 		final omero.grid.Column[] cols = new omero.grid.Column[3];
@@ -328,14 +329,14 @@ public class DownloadTableTest {
 
 		// Create expectations
 		// NB: Cannot pass parameters to @Before methods
-		setUpMethodCalls(sessionMock, clientMock, sfMock, srMock, tableMock, cols,
+		setUpMethodCalls(sessionMock, gatewayMock, scMock, srMock, tableMock, cols,
 			testData, new long[] { 0, 1, 2 }, 3);
 
-		final Table<?, ?> imageJTable =
-			((DefaultOMEROService) service).downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
+			.downloadTable(credentials, 0);
 
 		// Verify method calls occurred in expected order
-		verify(sessionMock, clientMock, sfMock, srMock, tableMock);
+		verify(sessionMock, gatewayMock, scMock, srMock, tableMock);
 
 		// Tests
 		assertTrue(GenericTable.class.isInstance(imageJTable));
@@ -359,10 +360,10 @@ public class DownloadTableTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void downloadMixedTable(@Mocked final DefaultOMEROSession sessionMock,
-		@Mocked final omero.client clientMock,
-		@Mocked final ServiceFactoryPrx sfMock,
+		@Mocked final Gateway gatewayMock, @Mocked final SecurityContext scMock,
 		@Mocked final SharedResourcesPrx srMock, @Mocked final TablePrx tableMock)
-		throws PermissionDeniedException, CannotCreateSessionException, ServerError
+		throws PermissionDeniedException, CannotCreateSessionException, ServerError,
+		DSOutOfServiceException
 	{
 		// Setup OMERO data structures
 		final omero.grid.Column[] cols = new omero.grid.Column[4];
@@ -375,9 +376,8 @@ public class DownloadTableTest {
 		final omero.grid.DoubleArrayColumn mThree =
 			new omero.grid.DoubleArrayColumn();
 		mThree.name = "Header 3";
-		mThree.values =
-			new double[][] { { 0.125, 3879123.5, -93.25 },
-				{ 0, -123353.03125, -5.5 }, { 100.25, 0.125, -9000.5 } };
+		mThree.values = new double[][] { { 0.125, 3879123.5, -93.25 }, { 0,
+			-123353.03125, -5.5 }, { 100.25, 0.125, -9000.5 } };
 		final omero.grid.LongColumn mFour = new omero.grid.LongColumn();
 		mFour.name = "Header 4";
 		mFour.values = new long[] { -9028131908l, 0, 12 };
@@ -391,14 +391,14 @@ public class DownloadTableTest {
 
 		// Create expectations
 		// NB: Cannot pass parameters to @Before methods
-		setUpMethodCalls(sessionMock, clientMock, sfMock, srMock, tableMock, cols,
+		setUpMethodCalls(sessionMock, gatewayMock, scMock, srMock, tableMock, cols,
 			testData, new long[] { 0, 1, 2, 3 }, 3);
 
-		final Table<?, ?> imageJTable =
-			((DefaultOMEROService) service).downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
+			.downloadTable(credentials, 0);
 
 		// Verify method calls occurred in expected order
-		verify(sessionMock, clientMock, sfMock, srMock, tableMock);
+		verify(sessionMock, gatewayMock, scMock, srMock, tableMock);
 
 		// Tests
 		assertTrue(GenericTable.class.isInstance(imageJTable));
@@ -428,9 +428,8 @@ public class DownloadTableTest {
 		}
 
 		for (int r = 0; r < imageJTable.getRowCount(); r++) {
-			assertArrayEquals(((DefaultColumn<DoubleArray>) imageJTable.get(2))
-				.get(r).getArray(), ((omero.grid.DoubleArrayColumn) cols[2]).values[r],
-				0);
+			assertArrayEquals(((DefaultColumn<DoubleArray>) imageJTable.get(2)).get(r)
+				.getArray(), ((omero.grid.DoubleArrayColumn) cols[2]).values[r], 0);
 		}
 
 		for (int r = 0; r < imageJTable.getRowCount(); r++) {
@@ -441,10 +440,10 @@ public class DownloadTableTest {
 
 	@Test
 	public void downloadRefTable(@Mocked final DefaultOMEROSession sessionMock,
-		@Mocked final omero.client clientMock,
-		@Mocked final ServiceFactoryPrx sfMock,
+		@Mocked final Gateway gatewayMock, @Mocked final SecurityContext scMock,
 		@Mocked final SharedResourcesPrx srMock, @Mocked final TablePrx tableMock)
-		throws PermissionDeniedException, CannotCreateSessionException, ServerError
+		throws PermissionDeniedException, CannotCreateSessionException, ServerError,
+		DSOutOfServiceException
 	{
 		// Setup OMERO data structures
 		final omero.grid.Column[] cols = new omero.grid.Column[3];
@@ -466,14 +465,14 @@ public class DownloadTableTest {
 
 		// Create expectations
 		// NB: Cannot pass parameters to @Before methods
-		setUpMethodCalls(sessionMock, clientMock, sfMock, srMock, tableMock, cols,
+		setUpMethodCalls(sessionMock, gatewayMock, scMock, srMock, tableMock, cols,
 			testData, new long[] { 0, 1, 2 }, 3);
 
-		final Table<?, ?> imageJTable =
-			((DefaultOMEROService) service).downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
+			.downloadTable(credentials, 0);
 
 		// Verify method calls occurred in expected order
-		verify(sessionMock, clientMock, sfMock, srMock, tableMock);
+		verify(sessionMock, gatewayMock, scMock, srMock, tableMock);
 
 		// Tests
 		assertTrue(GenericTable.class.isInstance(imageJTable));
@@ -499,23 +498,25 @@ public class DownloadTableTest {
 	// -- Helper methods --
 
 	private void setUpMethodCalls(final DefaultOMEROSession sessionMock,
-		final omero.client clientMock, final ServiceFactoryPrx sfMock,
+		final Gateway gatewayMock, final SecurityContext scMock,
 		final SharedResourcesPrx srMock, final TablePrx tableMock,
 		final omero.grid.Column[] cols, final omero.grid.Data testData,
 		final long[] ind, final int rows) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException
+		PermissionDeniedException, CannotCreateSessionException,
+		DSOutOfServiceException
 	{
 		new NonStrictExpectations() {
+
 			{
 				// Expect constructors
 				new DefaultOMEROSession(withNotNull());
 				new OriginalFileI(anyLong, false);
 
-				sessionMock.getClient();
-				result = clientMock;
-				clientMock.getSession();
-				result = sfMock;
-				sfMock.sharedResources();
+				sessionMock.getGateway();
+				result = gatewayMock;
+				sessionMock.getSecurityContext();
+				result = scMock;
+				gatewayMock.getSharedResources(scMock);
 				result = srMock;
 				srMock.openTable((OriginalFile) any);
 				result = tableMock;
@@ -538,15 +539,16 @@ public class DownloadTableTest {
 	}
 
 	private void verify(final DefaultOMEROSession sessionMock,
-		final omero.client clientMock, final ServiceFactoryPrx sfMock,
+		final Gateway gatewayMock, final SecurityContext scMock,
 		final SharedResourcesPrx srMock, final TablePrx tableMock)
-		throws ServerError
+		throws ServerError, DSOutOfServiceException
 	{
 		new VerificationsInOrder() {
+
 			{
-				sessionMock.getClient();
-				clientMock.getSession();
-				sfMock.sharedResources();
+				sessionMock.getGateway();
+				sessionMock.getSecurityContext();
+				gatewayMock.getSharedResources(scMock);
 				srMock.openTable((OriginalFile) any);
 				tableMock.getNumberOfRows();
 				tableMock.getHeaders();
