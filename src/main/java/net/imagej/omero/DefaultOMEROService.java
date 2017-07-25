@@ -64,6 +64,7 @@ import org.scijava.util.ConversionUtils;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
+import Glacier2.Session;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
@@ -381,7 +382,15 @@ public class DefaultOMEROService extends AbstractService implements
 	{
 		TablePrx tableService = null;
 		long id = -1;
-		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
+
+		// NB: Session cannot be handled by try-with-resource, because the
+		// tableService must be closed before the session. If the session closes
+		// before the tableService, then the SecurityContext the tableService was
+		// linked to doesn't exist and closing it throws an error.
+		@SuppressWarnings("resource")
+		OMEROSession session = null;
+		try {
+			session = new DefaultOMEROSession(credentials);
 			tableService = session.getGateway().getSharedResources(session
 				.getSecurityContext()).newTable(1, name);
 			if (tableService == null) {
@@ -407,6 +416,7 @@ public class DefaultOMEROService extends AbstractService implements
 				id = tableService.getOriginalFile().getId().getValue();
 				tableService.close();
 			}
+			if (session != null) session.close();
 		}
 		return id;
 	}
@@ -417,7 +427,15 @@ public class DefaultOMEROService extends AbstractService implements
 		CannotCreateSessionException, DSOutOfServiceException
 	{
 		TablePrx tableService = null;
-		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
+
+		// NB: Session cannot be handled by try-with-resource, because the
+		// tableService must be closed before the session. If the session closes
+		// before the tableService, then the SecurityContext the tableService was
+		// linked to doesn't exist and closing it throws an error.
+		@SuppressWarnings("resource")
+		OMEROSession session = null;
+		try {
+			session = new DefaultOMEROSession(credentials);
 			final OriginalFile tableFile = new OriginalFileI(tableID, false);
 			tableService = session.getGateway().getSharedResources(session
 				.getSecurityContext()).openTable(tableFile);
@@ -473,9 +491,8 @@ public class DefaultOMEROService extends AbstractService implements
 			return imageJTable;
 		}
 		finally {
-			if (tableService != null) {
-				tableService.close();
-			}
+			if (tableService != null) tableService.close();
+			if (session != null) session.close();
 		}
 	}
 
