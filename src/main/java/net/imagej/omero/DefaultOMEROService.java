@@ -595,14 +595,10 @@ public class DefaultOMEROService extends AbstractService implements
 		ExecutionException, DSOutOfServiceException, DSAccessException
 	{
 		// Create necessary facilities
-		final DataManagerFacility dm =
-			session.getGateway().getFacility(DataManagerFacility.class);
-		final BrowseFacility browse =
-			session.getGateway().getFacility(BrowseFacility.class);
-
-		// Get current sessions security context
-		final SecurityContext ctx =
-			new SecurityContext(session.getExperimenter().getGroupId());
+		final DataManagerFacility dm = session.getGateway().getFacility(
+			DataManagerFacility.class);
+		final BrowseFacility browse = session.getGateway().getFacility(
+			BrowseFacility.class);
 
 		// Get original file from the table
 		final OriginalFile file = table.getOriginalFile();
@@ -610,18 +606,21 @@ public class DefaultOMEROService extends AbstractService implements
 		// Create file annotation for table file
 		FileAnnotation annotation = new FileAnnotationI();
 		// TODO assign annotation to a table namespace
-		annotation.setNs(omero.rtypes
-			.rstring(omero.constants.namespaces.NSBULKANNOTATIONS.value));
+		annotation.setNs(omero.rtypes.rstring(
+			omero.constants.namespaces.NSBULKANNOTATIONS.value));
 		annotation.setFile(file);
 		// Save file annotation to database
-		annotation = (FileAnnotation) dm.saveAndReturnObject(ctx, annotation);
+		annotation = (FileAnnotation) dm.saveAndReturnObject(session
+			.getSecurityContext(), annotation);
 
 		// Attach file to image with given ID
 		ImageAnnotationLink link = new ImageAnnotationLinkI();
 		link.setChild(annotation);
-		link.setParent(browse.getImage(ctx, imageID).asImage());
+		link.setParent(browse.getImage(session.getSecurityContext(), imageID)
+			.asImage());
 		// Save linkage to database
-		link = (ImageAnnotationLink) dm.saveAndReturnObject(ctx, link);
+		link = (ImageAnnotationLink) dm.saveAndReturnObject(session
+			.getSecurityContext(), link);
 	}
 
 	private OMEROCredentials createCredentials(final omero.client client) {

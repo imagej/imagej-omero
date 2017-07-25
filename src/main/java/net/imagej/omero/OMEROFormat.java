@@ -596,7 +596,7 @@ public class OMEROFormat extends AbstractFormat {
 			try {
 				final Gateway gateway = session.getGateway();
 				final ExperimenterData user = session.getExperimenter();
-				final SecurityContext ctx = new SecurityContext(user.getGroupId());
+				final SecurityContext ctx = session.getSecurityContext();
 				final BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
 				final DataManagerFacility dmf =
 						gateway.getFacility(DataManagerFacility.class);
