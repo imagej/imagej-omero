@@ -68,16 +68,10 @@ import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
-import omero.gateway.facility.DataManagerFacility;
 import omero.gateway.facility.TablesFacility;
+import omero.gateway.model.ImageData;
 import omero.gateway.model.TableData;
 import omero.gateway.model.TableDataColumn;
-import omero.grid.TablePrx;
-import omero.model.FileAnnotation;
-import omero.model.FileAnnotationI;
-import omero.model.ImageAnnotationLink;
-import omero.model.ImageAnnotationLinkI;
-import omero.model.OriginalFile;
 
 /**
  * Default ImageJ service for managing OMERO data conversion.
@@ -375,49 +369,37 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public long uploadTable(final OMEROCredentials credentials,
-		final String name, final Table<?, ?> imageJTable, final long imageID)
-		throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+	public long uploadTable(final OMEROCredentials credentials, final String name,
+		final Table<?, ?> imageJTable, final long imageID) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException
 	{
-		TablePrx tableService = null;
 		long id = -1;
+		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
+			final TableDataColumn[] omeroColumns = new TableDataColumn[imageJTable
+				.getColumnCount()];
+			final Object[][] data = new Object[imageJTable.getColumnCount()][];
 
-		// NB: Session cannot be handled by try-with-resource, because the
-		// tableService must be closed before the session. If the session closes
-		// before the tableService, then the SecurityContext the tableService was
-		// linked to doesn't exist and closing it throws an error.
-		@SuppressWarnings("resource")
-		OMEROSession session = null;
-		try {
-			session = new DefaultOMEROSession(credentials);
-			tableService = session.getGateway().getSharedResources(session
-				.getSecurityContext()).newTable(1, name);
-			if (tableService == null) {
-				throw new omero.ServerError(null, null, "Could not create table");
+			for (int c = 0; c < imageJTable.getColumnCount(); c++) {
+				omeroColumns[c] = TableUtils.createOMEROColumn(imageJTable.get(c), c);
+				data[c] = TableUtils.populateOMEROColumn(imageJTable.get(c),
+					convertService);
 			}
-			final omero.grid.Column[] columns =
-				new omero.grid.Column[imageJTable.getColumnCount()];
-			for (int c = 0; c < columns.length; c++) {
-				columns[c] = TableUtils.createOMEROColumn(imageJTable.get(c), c);
-			}
-			tableService.initialize(columns);
-			// TODO: Can reuse OMERO column structs (from 0 index every time)
-			// to append rows in batches, in case there are too many.
-			// If we do this, we can report progress better.
-			for (int c = 0; c < columns.length; c++) {
-				TableUtils.populateOMEROColumn(imageJTable.get(c), columns[c]);
-			}
-			tableService.addData(columns);
-			if (imageID != 0) attachAnnotation(session, imageID, tableService);
-		}
-		finally {
-			if (tableService != null) {
-				id = tableService.getOriginalFile().getId().getValue();
-				tableService.close();
-			}
-			if (session != null) session.close();
+
+			// Get image
+			final BrowseFacility browseFacility = session.getGateway().getFacility(
+				BrowseFacility.class);
+			final ImageData image = browseFacility.getImage(session
+				.getSecurityContext(), imageID);
+
+			// Create table and attach to image
+			final TableData omeroTable = new TableData(omeroColumns, data);
+			omeroTable.setNumberOfRows(imageJTable.getRowCount());
+			final TablesFacility tablesFacility = session.getGateway().getFacility(
+				TablesFacility.class);
+			final TableData stored = tablesFacility.addTable(session
+				.getSecurityContext(), image, name, omeroTable);
+			id = stored.getOriginalFileId();
 		}
 		return id;
 	}
@@ -573,46 +555,6 @@ public class DefaultOMEROService extends AbstractService implements
 		@SuppressWarnings("unchecked")
 		final T[] array = (T[]) Array.newInstance(type, 0);
 		return collection.toArray(array);
-	}
-
-	/**
-	 * Attaches table file to OMERO image.
-	 *
-	 * @throws ExecutionException
-	 * @throws DSAccessException
-	 * @throws DSOutOfServiceException
-	 */
-	private static void attachAnnotation(final OMEROSession session,
-		final long imageID, final TablePrx table) throws ServerError,
-		ExecutionException, DSOutOfServiceException, DSAccessException
-	{
-		// Create necessary facilities
-		final DataManagerFacility dm = session.getGateway().getFacility(
-			DataManagerFacility.class);
-		final BrowseFacility browse = session.getGateway().getFacility(
-			BrowseFacility.class);
-
-		// Get original file from the table
-		final OriginalFile file = table.getOriginalFile();
-
-		// Create file annotation for table file
-		FileAnnotation annotation = new FileAnnotationI();
-		// TODO assign annotation to a table namespace
-		annotation.setNs(omero.rtypes.rstring(
-			omero.constants.namespaces.NSBULKANNOTATIONS.value));
-		annotation.setFile(file);
-		// Save file annotation to database
-		annotation = (FileAnnotation) dm.saveAndReturnObject(session
-			.getSecurityContext(), annotation);
-
-		// Attach file to image with given ID
-		ImageAnnotationLink link = new ImageAnnotationLinkI();
-		link.setChild(annotation);
-		link.setParent(browse.getImage(session.getSecurityContext(), imageID)
-			.asImage());
-		// Save linkage to database
-		link = (ImageAnnotationLink) dm.saveAndReturnObject(session
-			.getSecurityContext(), link);
 	}
 
 	private OMEROCredentials createCredentials(final omero.client client) {
