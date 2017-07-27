@@ -48,7 +48,6 @@ import org.scijava.util.LongArray;
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
 import mockit.Mocked;
-import mockit.NonStrictExpectations;
 import mockit.VerificationsInOrder;
 import omero.ServerError;
 import omero.gateway.Gateway;

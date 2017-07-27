@@ -25,49 +25,9 @@
 
 package net.imagej.omero;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.concurrent.ExecutionException;
-
-import net.imagej.table.BoolColumn;
-import net.imagej.table.BoolTable;
-import net.imagej.table.CharTable;
-import net.imagej.table.DefaultBoolTable;
-import net.imagej.table.DefaultCharTable;
-import net.imagej.table.DefaultColumn;
-import net.imagej.table.DefaultFloatTable;
-import net.imagej.table.DefaultGenericTable;
-import net.imagej.table.DefaultLongTable;
-import net.imagej.table.DefaultShortTable;
-import net.imagej.table.DoubleColumn;
-import net.imagej.table.FloatTable;
-import net.imagej.table.GenericTable;
-import net.imagej.table.LongTable;
-import net.imagej.table.ShortTable;
-
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.scijava.Context;
-import org.scijava.util.BoolArray;
-import org.scijava.util.DoubleArray;
-import org.scijava.util.IntArray;
-
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
-import mockit.VerificationsInOrder;
-import omero.ServerError;
-import omero.gateway.Gateway;
-import omero.gateway.SecurityContext;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
-import omero.grid.SharedResourcesPrx;
-import omero.grid.TablePrx;
-import omero.model.OriginalFile;
 
 /**
  * Tests {@link DefaultOMEROService#uploadTable}.
