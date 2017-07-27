@@ -64,19 +64,20 @@ import org.scijava.util.ConversionUtils;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
-import Glacier2.Session;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.DataManagerFacility;
+import omero.gateway.facility.TablesFacility;
+import omero.gateway.model.TableData;
+import omero.gateway.model.TableDataColumn;
 import omero.grid.TablePrx;
 import omero.model.FileAnnotation;
 import omero.model.FileAnnotationI;
 import omero.model.ImageAnnotationLink;
 import omero.model.ImageAnnotationLinkI;
 import omero.model.OriginalFile;
-import omero.model.OriginalFileI;
 
 /**
  * Default ImageJ service for managing OMERO data conversion.
@@ -269,7 +270,7 @@ public class DefaultOMEROService extends AbstractService implements
 	public Object toImageJ(final omero.client client, final omero.RType value,
 		final Class<?> type) throws omero.ServerError, IOException,
 		PermissionDeniedException, CannotCreateSessionException, SecurityException,
-		DSOutOfServiceException
+		DSOutOfServiceException, ExecutionException, DSAccessException
 	{
 		if (value instanceof omero.RCollection) {
 			// collection of objects
@@ -424,75 +425,44 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public Table<?, ?> downloadTable(final OMEROCredentials credentials,
 		final long tableID) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, DSOutOfServiceException
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException
 	{
-		TablePrx tableService = null;
+		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
+			final TablesFacility tableService = session.getGateway().getFacility(
+				TablesFacility.class);
+			final TableData table = tableService.getTable(session
+				.getSecurityContext(), tableID, 0, Integer.MAX_VALUE - 1);
 
-		// NB: Session cannot be handled by try-with-resource, because the
-		// tableService must be closed before the session. If the session closes
-		// before the tableService, then the SecurityContext the tableService was
-		// linked to doesn't exist and closing it throws an error.
-		@SuppressWarnings("resource")
-		OMEROSession session = null;
-		try {
-			session = new DefaultOMEROSession(credentials);
-			final OriginalFile tableFile = new OriginalFileI(tableID, false);
-			tableService = session.getGateway().getSharedResources(session
-				.getSecurityContext()).openTable(tableFile);
-			if (tableService == null) {
-				throw new omero.ServerError(null, null, "Could not open table");
+			final TableDataColumn[] omeroColumns = table.getColumns();
+			final Object[][] data = table.getData();
+
+			final Table<?, ?> imageJTable = TableUtils.createImageJTable(
+				omeroColumns);
+			imageJTable.setRowCount((int) table.getNumberOfRows());
+
+			boolean colsCreated = false;
+			if (!(imageJTable instanceof GenericTable)) {
+				imageJTable.appendColumns(omeroColumns.length);
+				colsCreated = true;
 			}
-			final long rawRowCount = tableService.getNumberOfRows();
-			if (rawRowCount > Integer.MAX_VALUE) {
-				throw new IllegalArgumentException("Table too large: " + rawRowCount +
-					" rows");
-			}
-			final int rowCount = (int) rawRowCount;
-			final omero.grid.Column[] omeroColumns = tableService.getHeaders();
 
-			final Table<?, ?> imageJTable =
-				TableUtils.createImageJTable(omeroColumns);
-			final int colCount = tableService.getHeaders().length;
-
-			final int batchSize = 24 * 1024;
-			int currentRow = 0;
-
-			final Column<?>[] imageJColumns = new Column<?>[colCount];
-			final long[] colIndices = new long[colCount];
-			for (int c = 0; c < colIndices.length; c++)
-				colIndices[c] = c;
-			boolean colCreated = false;
-
-			while (currentRow < rowCount) {
-				final int rowsLeft = rowCount - currentRow;
-				final int rowsToRead = Math.min(batchSize, rowsLeft);
-				final omero.grid.Data data =
-					tableService.read(colIndices, currentRow, currentRow + rowsToRead);
-				assert (colCount == data.columns.length);
-				// Create columns
-				if (!colCreated) {
-					if (GenericTable.class.isInstance(imageJTable)) addTypedColumns(
-						(GenericTable) imageJTable, data, rowCount);
-					// Append empty columns of table type
-					else imageJTable.appendColumns(colCount);
-					colCreated = true;
+			for (int i = 0; i < omeroColumns.length; i++) {
+				if (!colsCreated) {
+					final Column<?> imageJCol = TableUtils.createImageJColumn(
+						omeroColumns[i]);
+					TableUtils.populateImageJColumn(omeroColumns[i].getType(),
+						data[omeroColumns[i].getIndex()], imageJCol);
+					((GenericTable) imageJTable).add(omeroColumns[i].getIndex(),
+						imageJCol);
 				}
-				for (int c = 0; c < colCount; c++) {
-					if (imageJColumns[c] == null) {
-						imageJColumns[c] = imageJTable.get(c);
-					}
-					TableUtils.populateImageJColumn(data.columns[c], imageJColumns[c],
-						currentRow);
+				else {
+					TableUtils.populateImageJColumn(omeroColumns[i].getType(),
+						data[omeroColumns[i].getIndex()], imageJTable.get(i));
+					imageJTable.get(i).setHeader(omeroColumns[i].getName());
 				}
-				currentRow += rowsToRead;
 			}
-			// Need to specify how many rows the table has for data to display
-			imageJTable.setRowCount(rowCount);
 			return imageJTable;
-		}
-		finally {
-			if (tableService != null) tableService.close();
-			if (session != null) session.close();
 		}
 	}
 
@@ -529,11 +499,13 @@ public class DefaultOMEROService extends AbstractService implements
 	 * @throws CannotCreateSessionException
 	 * @throws PermissionDeniedException
 	 * @throws DSOutOfServiceException
+	 * @throws DSAccessException
+	 * @throws ExecutionException
 	 */
 	private <T> T convert(final omero.client client, final Object value,
 		final Class<T> type) throws omero.ServerError, IOException,
 		PermissionDeniedException, CannotCreateSessionException,
-		DSOutOfServiceException
+		DSOutOfServiceException, ExecutionException, DSAccessException
 	{
 		if (value == null) return null;
 		if (type == null) {
@@ -650,18 +622,5 @@ public class DefaultOMEROService extends AbstractService implements
 		credentials.setUser(client.getProperty("omero.user"));
 		credentials.setPassword(client.getProperty("omero.pass"));
 		return credentials;
-	}
-
-	/**
-	 * Adds columns of different types to a {@link GenericTable}.
-	 */
-	private void addTypedColumns(final GenericTable imageJTable,
-		final omero.grid.Data data, final int rowCount)
-	{
-		for (int c = 0; c < data.columns.length; c++) {
-			final Column<?> col = TableUtils.createImageJColumn(data.columns[c]);
-			col.setSize(rowCount);
-			imageJTable.add(col);
-		}
 	}
 }

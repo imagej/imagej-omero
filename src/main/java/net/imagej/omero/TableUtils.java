@@ -26,8 +26,6 @@
 package net.imagej.omero;
 
 import java.io.File;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 
 import net.imagej.table.BoolColumn;
 import net.imagej.table.ByteColumn;
@@ -45,17 +43,26 @@ import net.imagej.table.IntColumn;
 import net.imagej.table.LongColumn;
 import net.imagej.table.ShortColumn;
 import net.imagej.table.Table;
-import omero.ServerError;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.scijava.util.BoolArray;
 import org.scijava.util.ByteArray;
-import org.scijava.util.ClassUtils;
 import org.scijava.util.DoubleArray;
 import org.scijava.util.FloatArray;
 import org.scijava.util.IntArray;
 import org.scijava.util.LongArray;
 import org.scijava.util.PrimitiveArray;
 import org.scijava.util.ShortArray;
+
+import omero.ServerError;
+import omero.gateway.model.DataObject;
+import omero.gateway.model.FileAnnotationData;
+import omero.gateway.model.ImageData;
+import omero.gateway.model.MaskData;
+import omero.gateway.model.PlateData;
+import omero.gateway.model.ROIData;
+import omero.gateway.model.TableDataColumn;
+import omero.gateway.model.WellSampleData;
 
 /**
  * Utility class for working with converting between ImageJ and OMERO tables.
@@ -309,112 +316,65 @@ public final class TableUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void populateImageJColumn(final omero.grid.Column omeroColumn,
-		final Column<?> imageJColumn, final int offset)
+	public static void populateImageJColumn(final Class<?> type,
+		final Object[] omeroColumnData, final Column<?> imageJColumn)
 	{
-		if (omeroColumn instanceof omero.grid.DoubleColumn) {
-			final double[] data = ((omero.grid.DoubleColumn) omeroColumn).values;
-			((DoubleColumn) imageJColumn).fill(data, offset);
+		if (type.equals(Double.class)) {
+			for (int i = 0; i < omeroColumnData.length; i++)
+				((DoubleColumn) imageJColumn).add(i, (Double) omeroColumnData[i]);
 		}
-		else if (omeroColumn instanceof omero.grid.BoolColumn) {
-			final boolean[] data = ((omero.grid.BoolColumn) omeroColumn).values;
-			((BoolColumn) imageJColumn).fill(data, offset);
+		else if (type.equals(Boolean.class)) {
+			for (int i = 0; i < omeroColumnData.length; i++)
+				((BoolColumn) imageJColumn).add(i, (Boolean) omeroColumnData[i]);
 		}
-		else if (omeroColumn instanceof omero.grid.LongColumn) {
-			final long[] data = ((omero.grid.LongColumn) omeroColumn).values;
-			((LongColumn) imageJColumn).fill(data, offset);
+		else if (type.equals(Long.class)) {
+			for (int i = 0; i < omeroColumnData.length; i++)
+				((LongColumn) imageJColumn).add(i, (Long) omeroColumnData[i]);
 		}
-		else if (omeroColumn instanceof omero.grid.DoubleArrayColumn) {
-			final double[][] data =
-				((omero.grid.DoubleArrayColumn) omeroColumn).values;
-			final DefaultColumn<DoubleArray> imageJDoubleArrayColumn =
-				(DefaultColumn<DoubleArray>) imageJColumn;
-			for (int i = 0; i < data.length; i++) {
-				populateArrayColumn(offset, data, imageJDoubleArrayColumn, i);
-			}
+		else if (type.equals(Double[].class) || type.equals(Float[].class) || type
+			.equals(Long[].class))
+		{
+			populateArrayColumn((DefaultColumn<?>) imageJColumn, omeroColumnData);
 		}
-		else if (omeroColumn instanceof omero.grid.FloatArrayColumn) {
-			final float[][] data = ((omero.grid.FloatArrayColumn) omeroColumn).values;
-			final DefaultColumn<FloatArray> imageJFloatArrayColumn =
-				(DefaultColumn<FloatArray>) imageJColumn;
-			for (int i = 0; i < data.length; i++) {
-				populateArrayColumn(offset, data, imageJFloatArrayColumn, i);
-			}
+		else if (type.equals(String.class)) {
+			for (int i = 0; i < omeroColumnData.length; i++)
+				((DefaultColumn<String>) imageJColumn).add(i,
+					(String) omeroColumnData[i]);
 		}
-		else if (omeroColumn instanceof omero.grid.LongArrayColumn) {
-			final long[][] data = ((omero.grid.LongArrayColumn) omeroColumn).values;
-			final DefaultColumn<LongArray> imageJLongArrayColumn =
-				(DefaultColumn<LongArray>) imageJColumn;
-			for (int i = 0; i < data.length; i++) {
-				populateArrayColumn(offset, data, imageJLongArrayColumn, i);
-			}
-		}
-		else if (omeroColumn instanceof omero.grid.StringColumn) {
-			final String[] data = ((omero.grid.StringColumn) omeroColumn).values;
-			final DefaultColumn<String> imageJStringColumn =
-				(DefaultColumn<String>) imageJColumn;
-			if (imageJStringColumn.getArray() == null) {
-				imageJStringColumn.setArray(data.clone());
-			}
-			else {
-				System.arraycopy(data, 0, imageJStringColumn.getArray(), offset,
-					data.length);
-			}
-		}
-		else if (omeroColumn instanceof omero.grid.FileColumn) {
-			final long[] data = ((omero.grid.FileColumn) omeroColumn).values;
-			((OMERORefColumn) imageJColumn).fill(data, offset);
-		}
-		else if (omeroColumn instanceof omero.grid.ImageColumn) {
-			final long[] data = ((omero.grid.ImageColumn) omeroColumn).values;
-			((OMERORefColumn) imageJColumn).fill(data, offset);
-		}
-		else if (omeroColumn instanceof omero.grid.PlateColumn) {
-			final long[] data = ((omero.grid.PlateColumn) omeroColumn).values;
-			((OMERORefColumn) imageJColumn).fill(data, offset);
-		}
-		else if (omeroColumn instanceof omero.grid.RoiColumn) {
-			final long[] data = ((omero.grid.RoiColumn) omeroColumn).values;
-			((OMERORefColumn) imageJColumn).fill(data, offset);
-		}
-		else if (omeroColumn instanceof omero.grid.WellColumn) {
-			final long[] data = ((omero.grid.WellColumn) omeroColumn).values;
-			((OMERORefColumn) imageJColumn).fill(data, offset);
+		else if (type.equals(FileAnnotationData.class) || type.equals(
+			ImageData.class) || type.equals(PlateData.class) || type.equals(
+				ROIData.class) || type.equals(WellSampleData.class))
+		{
+			populateOMERORefColumn((OMERORefColumn) imageJColumn, omeroColumnData);
 		}
 		else {
-			final GenericColumn imageJGenericColumn = (GenericColumn) imageJColumn;
-			final Field field = ClassUtils.getField(omeroColumn.getClass(), "values");
-			final Object data = ClassUtils.getValue(field, omeroColumn);
-			final int length = Array.getLength(data);
-			for (int r = 0; r < length; r++) {
-				imageJGenericColumn.set(r + offset, Array.get(data, r));
-			}
+			((GenericColumn) imageJColumn).setArray(omeroColumnData);
 		}
-		if (imageJColumn.getHeader() == null) imageJColumn
-			.setHeader(omeroColumn.name);
 	}
 
 	public static Table<?, ?> createImageJTable(
-		final omero.grid.Column[] omeroColumns)
+		final TableDataColumn[] omeroColumns)
 	{
-		omero.grid.Column prev = omeroColumns[0];
+		TableDataColumn prev = omeroColumns[0];
 		for (int c = 1; c < omeroColumns.length; c++) {
 			// if table contains a mixture of column types, return a GenericTable
-			if (!prev.getClass().equals(omeroColumns[c].getClass())) {
+			if (!prev.getType().equals(omeroColumns[c].getType())) {
 				return new DefaultGenericTable();
 			}
 			prev = omeroColumns[c];
 		}
 
-		// Uniform column types
-		prev = omeroColumns[0];
-		if (prev instanceof omero.grid.DoubleColumn) {
+		// NB: Despite TableData being able to contain any type of data, the backing
+		// omero.grid structures are still limited in their types. For example,
+		// if a ShortColumn was created when you went to upload it, it would be
+		// stored as null since no matching column type was found.
+		if (prev.getType().equals(Double.class)) {
 			return new DefaultResultsTable();
 		}
-		else if (prev instanceof omero.grid.LongColumn) {
+		else if (prev.getType().equals(Long.class)) {
 			return new DefaultLongTable();
 		}
-		else if (prev instanceof omero.grid.BoolColumn) {
+		else if (prev.getType().equals(Boolean.class)) {
 			return new DefaultBoolTable();
 		}
 		else {
@@ -422,49 +382,37 @@ public final class TableUtils {
 		}
 	}
 
-	public static Column<?> createImageJColumn(final omero.grid.Column column) {
-		if (column instanceof omero.grid.BoolColumn) {
-			return new BoolColumn(column.name);
-		}
-		if (column instanceof omero.grid.DoubleArrayColumn) {
-			return new DefaultColumn<DoubleArray>(DoubleArray.class, column.name);
-		}
-		if (column instanceof omero.grid.DoubleColumn) {
-			return new DoubleColumn(column.name);
-		}
-		if (column instanceof omero.grid.FileColumn) {
-			return new OMERORefColumn(column.name, OMERORef.FILE);
-		}
-		if (column instanceof omero.grid.FloatArrayColumn) {
-			return new DefaultColumn<FloatArray>(FloatArray.class, column.name);
-		}
-		if (column instanceof omero.grid.ImageColumn) {
-			return new OMERORefColumn(column.name, OMERORef.IMAGE);
-		}
-		if (column instanceof omero.grid.LongArrayColumn) {
-			return new DefaultColumn<LongArray>(LongArray.class, column.name);
-		}
-		if (column instanceof omero.grid.LongColumn) {
-			return new LongColumn(column.name);
-		}
-		if (column instanceof omero.grid.MaskColumn) {
+	public static Column<?> createImageJColumn(final TableDataColumn column) {
+		if (column.getType().equals(Boolean.class)) return new BoolColumn(column
+			.getName());
+		if (column.getType().equals(Double[].class)) return new DefaultColumn<>(
+			DoubleArray.class, column.getName());
+		if (column.getType().equals(Double.class)) return new DoubleColumn(column
+			.getName());
+		if (column.getType().equals(FileAnnotationData.class))
+			return new OMERORefColumn(column.getName(), OMERORef.FILE);
+		if (column.getType().equals(Float[].class)) return new DefaultColumn<>(
+			FloatArray.class, column.getName());
+		if (column.getType().equals(ImageData.class)) return new OMERORefColumn(
+			column.getName(), OMERORef.IMAGE);
+		if (column.getType().equals(Long[].class)) return new DefaultColumn<>(
+			LongArray.class, column.getName());
+		if (column.getType().equals(Long.class)) return new LongColumn(column
+			.getName());
+		if (column.getType().equals(MaskData.class)) {
 			// TODO: Implement MaskColumn for efficiency.
-//		  return new GenericColumn(column.name);
+//		  return new GenericColumn(column.getName());
 		}
-		if (column instanceof omero.grid.PlateColumn) {
-			return new OMERORefColumn(column.name, OMERORef.PLATE);
-		}
-		if (column instanceof omero.grid.RoiColumn) {
-			return new OMERORefColumn(column.name, OMERORef.ROI);
-		}
-		if (column instanceof omero.grid.StringColumn) {
-			return new DefaultColumn<String>(String.class, column.name);
-		}
-		if (column instanceof omero.grid.WellColumn) {
-			return new OMERORefColumn(column.name, OMERORef.WELL);
-		}
-		throw new IllegalArgumentException("Unsupported column type: " +
-			column.getClass().getName());
+		if (column.getType().equals(PlateData.class)) return new OMERORefColumn(
+			column.getName(), OMERORef.PLATE);
+		if (column.getType().equals(ROIData.class)) return new OMERORefColumn(column
+			.getName(), OMERORef.ROI);
+		if (column.getType().equals(String.class)) return new DefaultColumn<>(
+			String.class, column.getName());
+		if (column.getType().equals(WellSampleData.class))
+			return new OMERORefColumn(column.getName(), OMERORef.WELL);
+		throw new IllegalArgumentException("Unsupported column type: " + column
+			.getType());
 	}
 
 	// -- Helper methods --
@@ -509,58 +457,39 @@ public final class TableUtils {
 		return d;
 	}
 
-	private static void populateArrayColumn(final int offset,
-		final long[][] data, final DefaultColumn<LongArray> imageJLongArrayColumn,
-		final int col)
+	@SuppressWarnings("unchecked")
+	private static void populateArrayColumn(final DefaultColumn<?> col,
+		final Object[] data)
 	{
-		if (imageJLongArrayColumn.get(col) == null) {
-			imageJLongArrayColumn.set(col, new LongArray(data[col].clone()));
+		if (col.getType().equals(FloatArray.class)) {
+			for (int i = 0; i < data.length; i++) {
+				final Float[] f = (Float[]) data[i];
+				((DefaultColumn<FloatArray>) col).add(i, new FloatArray(ArrayUtils
+					.toPrimitive(f)));
+			}
 		}
-		else if (imageJLongArrayColumn.get(col) != null &&
-			imageJLongArrayColumn.get(col).getArray() == null)
-		{
-			imageJLongArrayColumn.get(col).setArray(data[col].clone());
+		else if (col.getType().equals(LongArray.class)) {
+			for (int i = 0; i < data.length; i++) {
+				final Long[] f = (Long[]) data[i];
+				((DefaultColumn<LongArray>) col).add(i, new LongArray(ArrayUtils
+					.toPrimitive(f)));
+			}
 		}
-		else {
-			System.arraycopy(data[col], 0, imageJLongArrayColumn.get(col).getArray(),
-				offset, data.length);
+		else if (col.getType().equals(DoubleArray.class)) {
+			for (int i = 0; i < data.length; i++) {
+				final Double[] f = (Double[]) data[i];
+				((DefaultColumn<DoubleArray>) col).add(i, new DoubleArray(ArrayUtils
+					.toPrimitive(f)));
+			}
 		}
 	}
 
-	private static void populateArrayColumn(final int offset,
-		final float[][] data,
-		final DefaultColumn<FloatArray> imageJFloatArrayColumn, final int col)
+	private static void populateOMERORefColumn(final OMERORefColumn col,
+		final Object[] data)
 	{
-		if (imageJFloatArrayColumn.get(col) == null) {
-			imageJFloatArrayColumn.set(col, new FloatArray(data[col].clone()));
-		}
-		else if (imageJFloatArrayColumn.get(col) != null &&
-			imageJFloatArrayColumn.get(col).getArray() == null)
-		{
-			imageJFloatArrayColumn.get(col).setArray(data[col].clone());
-		}
-		else {
-			System.arraycopy(data[col], 0,
-				imageJFloatArrayColumn.get(col).getArray(), offset, data.length);
-		}
-	}
-
-	private static void populateArrayColumn(final int offset,
-		final double[][] data,
-		final DefaultColumn<DoubleArray> imageJDoubleArrayColumn, final int col)
-	{
-		if (imageJDoubleArrayColumn.get(col) == null) {
-			imageJDoubleArrayColumn.set(col, new DoubleArray(data[col].clone()));
-		}
-		else if (imageJDoubleArrayColumn.get(col) != null &&
-			imageJDoubleArrayColumn.get(col).getArray() == null)
-		{
-			imageJDoubleArrayColumn.get(col).setArray(data[col].clone());
-		}
-		else {
-			System.arraycopy(data[col], 0, imageJDoubleArrayColumn.get(col)
-				.getArray(), offset, data.length);
-		}
+		for (int i = 0; i < data.length; i++)
+			col.add(i, ((DataObject) data[i]).getId());
+		col.setOriginalData(data);
 	}
 
 	private static omero.grid.Column createOMERORefColumn(final OMERORef refType)

@@ -27,12 +27,16 @@ package net.imagej.omero.commands;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
+
+import java.util.concurrent.ExecutionException;
+
 import net.imagej.omero.DefaultOMEROService;
 import net.imagej.omero.OMEROCommand;
 import net.imagej.omero.OMEROCredentials;
 import net.imagej.omero.OMEROService;
 import net.imagej.table.Table;
 import omero.ServerError;
+import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 
 import org.scijava.ItemIO;
@@ -89,6 +93,16 @@ public class OpenTableFromOMERO extends OMEROCommand {
 			cancel("Error talking to OMERO: " + exc.getMessage());
 		}
 		catch (DSOutOfServiceException exc) {
+			log.error(exc);
+			exc.printStackTrace();
+			cancel("Error talking to OMERO: " + exc.getMessage());
+		}
+		catch (ExecutionException exc) {
+			log.error(exc);
+			exc.printStackTrace();
+			cancel("Error talking to OMERO: " + exc.getMessage());
+		}
+		catch (DSAccessException exc) {
 			log.error(exc);
 			exc.printStackTrace();
 			cancel("Error talking to OMERO: " + exc.getMessage());
