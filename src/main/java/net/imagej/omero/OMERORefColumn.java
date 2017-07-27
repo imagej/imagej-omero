@@ -27,9 +27,22 @@ package net.imagej.omero;
 
 import net.imagej.table.LongColumn;
 
+import omero.gateway.facility.TablesFacility;
+
+/**
+ * Wrapper for OMERO reference columns (i.e. FileColumn, ImageColumn, RoiColumn,
+ * etc.). These columns contain long IDs which reference OMERO Data objects.
+ * <p>
+ * Note, when the {@link TablesFacility} gets a Table it does create DataObjects
+ * but does not actually load them.
+ * </p>
+ *
+ * @author Alison Walter
+ */
 public class OMERORefColumn extends LongColumn {
 
 	private final OMERORef ref;
+	private Object[] originalData;
 
 	public OMERORefColumn(final OMERORef referenceType) {
 		super();
@@ -43,6 +56,14 @@ public class OMERORefColumn extends LongColumn {
 
 	public OMERORef getOMERORef() {
 		return ref;
+	}
+
+	public Object[] getOriginalData() {
+		return originalData;
+	}
+
+	public void setOriginalData(final Object[] data) {
+		originalData = data;
 	}
 
 }
