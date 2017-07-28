@@ -253,9 +253,7 @@ public class DefaultOMEROService extends AbstractService implements
 			return toOMERO(client, imageDisplayService.getActiveDataset(imageDisplay));
 		}
 		if (value instanceof Table) {
-			final OMEROCredentials cred = createCredentials(client);
-			final long tableID = uploadTable(cred, "table", (Table<?, ?>) value, 0);
-			return toOMERO(client, tableID);
+			return convertOMEROTable((Table<?, ?>) value);
 		}
 		return toOMERO(value);
 	}

@@ -28,10 +28,10 @@ package net.imagej.omero;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -62,15 +62,16 @@ import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.DataManagerFacility;
+import omero.gateway.facility.TablesFacility;
 import omero.gateway.model.DatasetData;
 import omero.gateway.model.ExperimenterData;
+import omero.gateway.model.FileAnnotationData;
 import omero.gateway.model.ImageData;
+import omero.gateway.model.TableData;
 import omero.log.Logger;
 import omero.log.SimpleLogger;
 import omero.model.FileAnnotation;
 import omero.model.FileAnnotationI;
-import omero.model.ImageAnnotationLink;
-import omero.model.ImageAnnotationLinkI;
 import omero.model.OriginalFile;
 import omero.model.OriginalFileI;
 
@@ -184,22 +185,25 @@ public class ModuleAdapter extends AbstractContextual {
 		final Future<Module> future = moduleService.run(info, true, inputMap);
 		final Module module = moduleService.waitFor(future);
 
-		// populate outputs
+		final HashMap<String, TableData> tables = new HashMap<>();
+
+		// populate outputs, except tables
 		log.debug(info.getTitle() + ": populating outputs");
 		for (final ModuleItem<?> item : module.getInfo().outputs()) {
-			final omero.RType value = (omero.RType) omeroService.toOMERO(client, item
-				.getValue(module));
+			final Object value = omeroService.toOMERO(client, item.getValue(
+				module));
 			final String name = getOutputName(item);
 			if (value == null) {
 				log.warn(info.getTitle() + ": output '" + name + "' is null");
 			}
-			else if (net.imagej.table.Table.class.isAssignableFrom(item.getType())) {
-				client.setOutput(name + "table", value);
-			}
-			else client.setOutput(name, value);
+			if (value instanceof omero.RType)
+				client.setOutput(name, (omero.RType) value);
+			if (value instanceof TableData)
+				tables.put(name, (TableData) value);
 		}
 
-		createLinkages();
+		createOutputLinks(inputMap, tables);
+		gateway.disconnect();
 
 		log.debug(info.getTitle() + ": completed execution");
 	}
@@ -347,212 +351,171 @@ public class ModuleAdapter extends AbstractContextual {
 	}
 
 	/**
-	 * Attaches outputs to parent items of inputs or inputs themselves in OMERO.
-	 *
-	 * @throws ServerError
-	 * @throws ExecutionException
-	 * @throws DSAccessException
-	 * @throws DSOutOfServiceException
-	 */
-	private void createLinkages() throws ServerError, ExecutionException,
-		DSOutOfServiceException, DSAccessException
-	{
-		// Create user
-		final ExperimenterData user = createUser();
-
-		if (user != null) {
-			final SecurityContext ctx = new SecurityContext(user.getGroupId());
-			final BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
-
-			// Get all input images from OMERO
-			final ArrayList<ImageData> images = getInputImages(browse, ctx,
-				new ArrayList<ImageData>());
-
-			if (!images.isEmpty()) {
-				final ArrayList<DatasetData> datasets = new ArrayList<>();
-				// Get OMERO datasets associated with inputs only if output contains an
-				// image
-				if (containsImage()) getDatasets(browse, ctx, user, images, datasets);
-
-				// attach specified outputs to inputs
-				attachOutputs(datasets, ctx, browse, images);
-			}
-		}
-	}
-
-	/**
 	 * Creates an ExperimenterData OMERO object which is connected to the gateway.
 	 */
 	private ExperimenterData createUser() {
-		final LoginCredentials cred = new LoginCredentials();
-		cred.getServer().setHostname(client.getProperty("omero.host"));
-		cred.getServer().setPort(Integer.parseInt(client.getProperty(
-			"omero.port")));
-		cred.getUser().setUsername(client.getProperty("omero.user"));
-		cred.getUser().setPassword(client.getProperty("omero.pass"));
+		String host = client.getProperty("omero.host");
+		if (host.equals("")) {
+			String router = client.getProperty("omero.ClientCallback.Router");
+			String[] comp = router.split("\\s+");
+			for (int i = 0; i < comp.length; i++) {
+				if (comp[i].equals("-h")) {
+					host = comp[i + 1];
+					break;
+				}
+			}
+		}
+		final LoginCredentials cred = new LoginCredentials(client.getSessionId(),
+			null, host, Integer.parseInt(client.getProperty("omero.port")));
 
 		try {
 			return gateway.connect(cred);
 		}
 		catch (final DSOutOfServiceException err) {
-			log.error("Invalid user credentials");
+			log.error(err.getMessage());
 		}
 
 		return null;
 	}
 
 	/**
-	 * Loops over input imageIDs and retrieves the OMERO image items associated
-	 * with those IDs.
-	 *
-	 * @throws ServerError
-	 * @throws DSAccessException
-	 * @throws DSOutOfServiceException
+	 * Loops over all the orphaned images, and grabs the ones which have IDs that
+	 * match the omero client outputs.
 	 */
-	private ArrayList<ImageData> getInputImages(final BrowseFacility browse,
-		final SecurityContext ctx, final ArrayList<ImageData> images)
-		throws ServerError, DSOutOfServiceException, DSAccessException
+	private List<ImageData> getOutputImages(final long userId,
+		final BrowseFacility browse, final SecurityContext ctx)
+		throws ServerError
 	{
-		for (final String name : client.getInputKeys()) {
-			final Object value = client.getInput(name);
-			if (!(value instanceof RLong)) continue;
-			final long imageID = ((RLong) value).getValue();
-			try {
-				images.add(browse.getImage(ctx, imageID));
-			}
-			catch (final NoSuchElementException err) {
-				log.error("ImageID: " + imageID + " is not valid");
-				return new ArrayList<>();
+		final Collection<ImageData> orphans = browse.getOrphanedImages(ctx, userId);
+
+		final HashMap<Long, ImageData> mappedOrphans = new HashMap<>();
+		for (ImageData i : orphans)
+			mappedOrphans.put(i.getId(), i);
+
+		final List<ImageData> images = new ArrayList<>();
+
+		for (String key : client.getOutputKeys()) {
+			final omero.RType type = client.getOutput(key);
+			if (type instanceof RLong) {
+				if (mappedOrphans.containsKey(((RLong) type).getValue())) images.add(
+					mappedOrphans.get(((RLong) type).getValue()));
 			}
 		}
 		return images;
 	}
 
 	/**
-	 * Retrieves all the datasets associated with this user, and then loops over
-	 * these datasets and their respective images looking for datasets which
-	 * contain the input images. Then it returns a list of these OMERO datasets.
-	 * 
-	 * @throws DSAccessException
-	 * @throws DSOutOfServiceException
+	 * Loops over the input items, and checks for Datasets, and if so gets the
+	 * corresponding omero ImageData.
 	 */
-	private ArrayList<DatasetData> getDatasets(final BrowseFacility browse,
-		final SecurityContext ctx, final ExperimenterData user,
-		final ArrayList<ImageData> images, final ArrayList<DatasetData> finalIDs)
-		throws DSOutOfServiceException, DSAccessException
+	private List<ImageData> getInputImages(final HashMap<String, Object> inputMap,
+		final BrowseFacility browse, final SecurityContext ctx) throws ServerError,
+		DSOutOfServiceException, DSAccessException
 	{
-		final Collection<DatasetData> dataSetIDs = browse.getDatasets(ctx, user
-			.getId());
+		if (imageInput != null) {
+			final RLong id = (RLong) client.getInput(IMAGE_NAME);
+			return Collections.singletonList(browse.getImage(ctx, id.getValue()));
+		}
+		final List<ImageData> images = new ArrayList<>();
+		for (String key : inputMap.keySet()) {
+			if (inputMap.get(key) instanceof Dataset) {
+				final RLong id = (RLong) client.getInput(key);
+				images.add(browse.getImage(ctx, id.getValue()));
+			}
+		}
 
-		for (final DatasetData dataset : dataSetIDs) {
-			@SuppressWarnings("unchecked")
-			final Set<ImageData> temp = dataset.getImages();
-			for (final ImageData img : temp) {
-				for (final ImageData img2 : images) {
-					if (img.getId() == img2.getId()) finalIDs.add(dataset);
+		return images;
+	}
+
+	/**
+	 * Attaches the given output images to the datasets of the given input images.
+	 */
+	private void attachImagesToDatasets(final List<ImageData> inputImages,
+		final List<ImageData> outputImages, final DataManagerFacility dm, final BrowseFacility browse,
+		SecurityContext ctx) throws DSOutOfServiceException, DSAccessException
+	{
+		final HashMap<Long, DatasetData> datasets = new HashMap<>();
+
+		// Get all datasets related to the input images
+		// FIXME: ImageData has a getDatasets() method, but it is null since the
+		// underlying ImageI is unloaded.
+		final Collection<DatasetData> allDatasets = browse.getDatasets(ctx);
+		for (DatasetData d : allDatasets) {
+			Collection<ImageData> allImages = browse.getImagesForDatasets(ctx,
+				Collections.singleton(d.getId()));
+			for (ImageData image : allImages) {
+				for (ImageData input : inputImages) {
+					if (input.getId() == image.getId()) datasets.put(d.getId(), d);
 				}
 			}
 		}
-		return finalIDs;
-	}
 
-	/**
-	 * Loops over outputs and attaches them to appropriate OMERO objects when
-	 * appropriate.
-	 *
-	 * @throws ServerError
-	 */
-	private void attachOutputs(final ArrayList<DatasetData> datasets,
-		final SecurityContext ctx, final BrowseFacility browse,
-		final ArrayList<ImageData> images) throws ServerError
-	{
-		for (final String key : client.getOutputKeys()) {
-			final omero.RType output = client.getOutput(key);
-			if (!(output instanceof RLong)) continue;
-			final long id = ((RLong) output).getValue();
-			if (key.contains("table")) {
-				attachTableToImages(id, images, ctx);
-			}
-			else {
-				if (!datasets.isEmpty()) attachImageToDataset(id, datasets, ctx,
-					browse);
-			}
+		// attach all output images to these datasets
+		if (!datasets.isEmpty()) {
+			for (Long id : datasets.keySet())
+				dm.addImagesToDataset(ctx, outputImages, datasets.get(id));
 		}
 	}
 
 	/**
-	 * Attaches an image to OMERO dataset(s).
+	 * Attaches the tables to the input images. This also adds the Table ids to
+	 * the omero client.
 	 */
-	private void attachImageToDataset(final long imageID,
-		final Collection<DatasetData> datasets, final SecurityContext ctx,
-		final BrowseFacility browse)
+	private void attachTablesToImages(final List<ImageData> images,
+		final HashMap<String, TableData> tables, final SecurityContext ctx,
+		final DataManagerFacility dm) throws DSOutOfServiceException,
+		DSAccessException, ExecutionException, ServerError
 	{
-		try {
-			final DataManagerFacility dm = gateway.getFacility(
-				DataManagerFacility.class);
-			final ImageData image = browse.getImage(ctx, imageID);
-			for (final DatasetData dset : datasets)
-				dm.addImageToDataset(ctx, image, dset);
+		final TablesFacility tablesFacility = gateway.getFacility(
+			TablesFacility.class);
+
+		for (final String name : tables.keySet()) {
+			final TableData t = tablesFacility.addTable(ctx, images.get(0), "table",
+				tables.get(name));
+			client.setOutput(name, omero.rtypes.rlong(t.getOriginalFileId()));
 		}
-		catch (final ExecutionException err) {
-			log.error("Cannot create DataManagerFacility");
-		}
-		catch (final DSOutOfServiceException err) {
-			log.error("Cannot attach image to dataset. ImageID: " + imageID +
-				" Dataset(s): " + datasets.toString());
-		}
-		catch (final DSAccessException err) {
-			log.error("Cannot attach image to dataset. ImageID: " + imageID +
-				" Dataset(s): " + datasets.toString());
+
+		// Adding tables again would create new tables on the server
+		for (int i = 1; i < images.size(); i++) {
+			for (final String name : tables.keySet()) {
+				final OriginalFile file = new OriginalFileI(tables.get(name)
+					.getOriginalFileId(), false);
+				final FileAnnotation anno = new FileAnnotationI();
+				anno.setFile(file);
+				FileAnnotationData annotation = new FileAnnotationData(anno);
+				annotation.setDescription(name);
+
+				annotation = (FileAnnotationData) dm.saveAndReturnObject(ctx,
+					annotation);
+				dm.attachAnnotation(ctx, annotation, images.get(i));
+			}
 		}
 	}
 
 	/**
-	 * Attaches a table to OMERO images(s).
+	 * Attempts to attach the outputs to the appropriate items.
 	 */
-	private void attachTableToImages(final long tableID,
-		final ArrayList<ImageData> images, final SecurityContext ctx)
+	private void createOutputLinks(final HashMap<String, Object> inputMap,
+		final HashMap<String, TableData> tables) throws ExecutionException,
+		ServerError, DSOutOfServiceException, DSAccessException
 	{
+		final ExperimenterData user = createUser();
+		final BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
+		final DataManagerFacility dm = gateway.getFacility(
+			DataManagerFacility.class);
+		final SecurityContext ctx = new SecurityContext(user.getGroupId());
+		final List<ImageData> outImages = getOutputImages(user.getId(), browse,
+			ctx);
+		final List<ImageData> inputImages = getInputImages(inputMap, browse, ctx);
 
-		final OriginalFile tableFile = new OriginalFileI(tableID, false);
-		DataManagerFacility dm;
-		try {
-			dm = gateway.getFacility(DataManagerFacility.class);
-
-			FileAnnotation annotation = new FileAnnotationI();
-			// TODO assign annotation to a table namespace
-			annotation.setNs(omero.rtypes.rstring(
-				omero.constants.namespaces.NSBULKANNOTATIONS.value));
-			annotation.setFile(tableFile);
-			annotation = (FileAnnotation) dm.saveAndReturnObject(ctx, annotation);
-
-			for (final ImageData i : images) {
-				ImageAnnotationLink link = new ImageAnnotationLinkI();
-				link.setChild(annotation);
-				link.setParent(i.asImage());
-				// Save linkage to database
-				link = (ImageAnnotationLink) dm.saveAndReturnObject(ctx, link);
-			}
+		if (!outImages.isEmpty()) {
+			attachImagesToDatasets(inputImages, outImages, dm, browse, ctx);
 		}
-		catch (final ExecutionException exc) {
-			log.error("Cannot create DataManagerFacility");
-		}
-		catch (final DSOutOfServiceException exc) {
-			log.error("Cannot attach table to image. TableID: " + tableID +
-				" Image(s): " + images.toString());
-		}
-		catch (final DSAccessException exc) {
-			log.error("Cannot attach table to image. TableID: " + tableID +
-				" Image(s): " + images.toString());
+		if (!tables.isEmpty()) {
+			if (inputImages.isEmpty()) throw new IllegalArgumentException(
+				"Input image(s) required to upload table to OMERO");
+			attachTablesToImages(inputImages, tables, ctx, dm);
 		}
 	}
 
-	/** Checks if the output contains an image */
-	private boolean containsImage() throws ServerError {
-		for (final String key : client.getOutputKeys()) {
-			final omero.RType output = client.getOutput(key);
-			if (output instanceof RLong && !key.contains("table")) return true;
-		}
-		return false;
-	}
 }
