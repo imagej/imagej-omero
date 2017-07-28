@@ -232,7 +232,7 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public omero.RType toOMERO(final omero.client client, final Object value)
+	public Object toOMERO(final omero.client client, final Object value)
 		throws omero.ServerError, IOException, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
@@ -374,27 +374,16 @@ public class DefaultOMEROService extends AbstractService implements
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
 	{
+		final TableData omeroTable = convertOMEROTable(imageJTable);
 		long id = -1;
 		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
-			final TableDataColumn[] omeroColumns = new TableDataColumn[imageJTable
-				.getColumnCount()];
-			final Object[][] data = new Object[imageJTable.getColumnCount()][];
-
-			for (int c = 0; c < imageJTable.getColumnCount(); c++) {
-				omeroColumns[c] = TableUtils.createOMEROColumn(imageJTable.get(c), c);
-				data[c] = TableUtils.populateOMEROColumn(imageJTable.get(c),
-					convertService);
-			}
-
 			// Get image
 			final BrowseFacility browseFacility = session.getGateway().getFacility(
 				BrowseFacility.class);
 			final ImageData image = browseFacility.getImage(session
 				.getSecurityContext(), imageID);
 
-			// Create table and attach to image
-			final TableData omeroTable = new TableData(omeroColumns, data);
-			omeroTable.setNumberOfRows(imageJTable.getRowCount());
+			// attach table to image
 			final TablesFacility tablesFacility = session.getGateway().getFacility(
 				TablesFacility.class);
 			final TableData stored = tablesFacility.addTable(session
@@ -402,6 +391,25 @@ public class DefaultOMEROService extends AbstractService implements
 			id = stored.getOriginalFileId();
 		}
 		return id;
+	}
+
+	@Override
+	public TableData convertOMEROTable(final Table<?, ?> imageJTable) {
+		final TableDataColumn[] omeroColumns = new TableDataColumn[imageJTable
+			.getColumnCount()];
+		final Object[][] data = new Object[imageJTable.getColumnCount()][];
+
+		for (int c = 0; c < imageJTable.getColumnCount(); c++) {
+			omeroColumns[c] = TableUtils.createOMEROColumn(imageJTable.get(c), c);
+			data[c] = TableUtils.populateOMEROColumn(imageJTable.get(c),
+				convertService);
+		}
+
+		// Create table and attach to image
+		final TableData omeroTable = new TableData(omeroColumns, data);
+		omeroTable.setNumberOfRows(imageJTable.getRowCount());
+
+		return omeroTable;
 	}
 
 	@Override
