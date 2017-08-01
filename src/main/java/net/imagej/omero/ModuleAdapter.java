@@ -470,7 +470,7 @@ public class ModuleAdapter extends AbstractContextual {
 			TablesFacility.class);
 
 		for (final String name : tables.keySet()) {
-			final TableData t = tablesFacility.addTable(ctx, images.get(0), "table",
+			final TableData t = tablesFacility.addTable(ctx, images.get(0), name,
 				tables.get(name));
 			client.setOutput(name, omero.rtypes.rlong(t.getOriginalFileId()));
 		}
