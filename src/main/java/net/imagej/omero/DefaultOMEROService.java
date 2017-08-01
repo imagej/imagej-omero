@@ -133,6 +133,12 @@ public class DefaultOMEROService extends AbstractService implements
 			return omero.rtypes.rlong(0);
 		}
 
+		// table
+		if (Table.class.isAssignableFrom(type)) {
+			// table file ID
+			return omero.rtypes.rlong(0);
+		}
+
 		// primitive types
 		final Class<?> saneType = ConversionUtils.getNonprimitiveType(type);
 		if (Boolean.class.isAssignableFrom(saneType)) {
