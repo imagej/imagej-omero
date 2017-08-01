@@ -48,6 +48,7 @@ import net.imagej.display.ImageDisplayService;
 import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
+import net.imagej.table.TableDisplay;
 
 import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
@@ -134,7 +135,9 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 
 		// table
-		if (Table.class.isAssignableFrom(type)) {
+		if (Table.class.isAssignableFrom(type) || TableDisplay.class
+			.isAssignableFrom(type))
+		{
 			// table file ID
 			return omero.rtypes.rlong(0);
 		}
@@ -260,6 +263,9 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 		if (value instanceof Table) {
 			return convertOMEROTable((Table<?, ?>) value);
+		}
+		if (value instanceof TableDisplay) {
+			return toOMERO(client, ((TableDisplay) value).get(0));
 		}
 		return toOMERO(value);
 	}
