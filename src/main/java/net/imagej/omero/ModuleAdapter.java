@@ -48,8 +48,11 @@ import org.scijava.log.LogService;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleInfo;
 import org.scijava.module.ModuleItem;
+import org.scijava.module.ModuleRunner;
 import org.scijava.module.ModuleService;
+import org.scijava.module.process.PreprocessorPlugin;
 import org.scijava.plugin.Parameter;
+import org.scijava.plugin.PluginService;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
@@ -101,6 +104,9 @@ public class ModuleAdapter extends AbstractContextual {
 
 	@Parameter
 	private ModuleService moduleService;
+
+	@Parameter
+	private PluginService pluginService;
 
 	// -- Fields --
 
@@ -218,11 +224,16 @@ public class ModuleAdapter extends AbstractContextual {
 		params.stdoutFormat = "text/plain";
 		params.stderrFormat = "text/plain";
 
-		// TODO: Instantiate and preprocess the module, excluding resolved inputs.
+		// Instantiate and preprocess the module
+		final Module m = moduleService.createModule(info);
+		final List<PreprocessorPlugin> pre = pluginService.createInstancesOfType(
+			PreprocessorPlugin.class);
+		final ModuleRunner mr = new ModuleRunner(getContext(), m, pre, null);
+		mr.preProcess();
 
 		// count module inputs and outputs
-		final int inputCount = count(info.inputs());
-		final int outputCount = count(info.outputs());
+		final int inputCount = m.getInputs().size();
+		final int outputCount = m.getOutputs().size();
 		final int inputDigits = String.valueOf(inputCount).length();
 		final int outputDigits = String.valueOf(outputCount).length();
 
@@ -231,6 +242,7 @@ public class ModuleAdapter extends AbstractContextual {
 		int inputIndex = 0;
 		for (final ModuleItem<?> item : info.inputs()) {
 			if (item.getVisibility() == ItemVisibility.MESSAGE) continue;
+			if (m.isInputResolved(item.getName())) continue;
 			final omero.grid.Param param = omeroService.getJobParam(item);
 			if (param != null) {
 				param.grouping = pad(inputIndex++, inputDigits);
@@ -308,18 +320,6 @@ public class ModuleAdapter extends AbstractContextual {
 			return IMAGE_NAME;
 		}
 		return item.getName();
-	}
-
-	/** Counts the number of elements iterated by the given {@link Iterable}. */
-	private int count(final Iterable<?> iterable) {
-		if (iterable == null) return -1;
-		int count = 0;
-		final Iterator<?> iterator = iterable.iterator();
-		while (iterator.hasNext()) {
-			iterator.next();
-			count++;
-		}
-		return count;
 	}
 
 	/**
