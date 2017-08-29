@@ -26,13 +26,22 @@
 package net.imagej.omero;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+import net.imagej.table.Table;
 
 import org.scijava.module.ModuleItem;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
+import omero.ServerError;
+import omero.gateway.exception.DSAccessException;
+import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.model.TableData;
 
 /**
  * Interface for ImageJ services that manage OMERO data conversion.
@@ -64,9 +73,19 @@ public interface OMEROService extends ImageJService {
 	 * method will be used transparently to convert the object into an OMERO image
 	 * ID.
 	 * </p>
+	 * <p>
+	 * In the case of {@link Table}s, it will be converted to a {@link TableData}.
+	 * </p>
+	 * @throws DSAccessException
+	 * @throws DSOutOfServiceException
+	 * @throws ExecutionException
+	 * @throws CannotCreateSessionException
+	 * @throws PermissionDeniedException
 	 */
-	omero.RType toOMERO(omero.client client, Object value)
-		throws omero.ServerError, IOException;
+	Object toOMERO(omero.client client, Object value)
+		throws omero.ServerError, IOException, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException;
 
 	/**
 	 * Converts an OMERO parameter value to an ImageJ value of the given type.
@@ -77,7 +96,9 @@ public interface OMEROService extends ImageJService {
 	 * OMERO image ID into such an object.
 	 */
 	Object toImageJ(omero.client client, omero.RType value, Class<?> type)
-		throws omero.ServerError, IOException;
+		throws omero.ServerError, IOException, PermissionDeniedException,
+		CannotCreateSessionException, SecurityException, DSOutOfServiceException,
+		ExecutionException, DSAccessException;
 
 	/**
 	 * Downloads the image with the given image ID from OMERO, storing the result
@@ -92,5 +113,28 @@ public interface OMEROService extends ImageJService {
 	 */
 	long uploadImage(omero.client client, Dataset dataset)
 		throws omero.ServerError, IOException;
+
+	/**
+	 * Uploads an ImageJ table to OMERO, returning the new table ID on the OMERO
+	 * server. Tables must be attached to a DataObject, thus the given image ID
+	 * must be valid or this method will throw an exception.
+	 */
+	long uploadTable(OMEROCredentials credentials, String name,
+		Table<?, ?> imageJTable, final long imageID) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException,
+		ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/** Converts the given ImageJ table to an OMERO table, but does not save the
+	 * table to the server.
+	 */
+	TableData convertOMEROTable(Table<?, ?> imageJTable);
+
+	/**
+	 * Downloads the table with the given ID from OMERO, storing the result into a
+	 * new ImageJ {@link Table}.
+	 */
+	Table<?, ?> downloadTable(OMEROCredentials credentials, long tableID)
+		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
+		ExecutionException, DSOutOfServiceException, DSAccessException;
 
 }

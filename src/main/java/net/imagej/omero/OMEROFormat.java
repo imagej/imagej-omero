@@ -25,8 +25,6 @@
 
 package net.imagej.omero;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import io.scif.AbstractChecker;
 import io.scif.AbstractFormat;
 import io.scif.AbstractMetadata;
@@ -45,27 +43,41 @@ import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imagej.axis.LinearAxis;
+
+import org.scijava.Priority;
+import org.scijava.log.LogService;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 import omero.RInt;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
+import omero.gateway.Gateway;
+import omero.gateway.SecurityContext;
+import omero.gateway.exception.DSAccessException;
+import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.facility.BrowseFacility;
+import omero.gateway.facility.DataManagerFacility;
+import omero.gateway.model.DatasetData;
+import omero.gateway.model.ImageData;
 import omero.model.Image;
 import omero.model.Length;
 import omero.model.Pixels;
 import omero.model.Time;
 import omero.model.enums.UnitsLength;
 import omero.model.enums.UnitsTime;
-
-import org.scijava.Priority;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
 
 /**
  * A SCIFIO {@link Format} which provides read/write access to pixels on an
@@ -109,6 +121,9 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Field
 		private String name;
+
+		@Field
+		private long datasetID;
 
 		@Field(label = "Image ID")
 		private long imageID;
@@ -166,6 +181,10 @@ public class OMEROFormat extends AbstractFormat {
 
 		public String getName() {
 			return name;
+		}
+
+		public long getDatasetID() {
+			return datasetID;
 		}
 
 		public long getImageID() {
@@ -458,7 +477,7 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public void close() {
-			if (session != null) session.close();
+			if (session != null) ((DefaultOMEROSession) session).close();
 			session = null;
 			store = null;
 		}
@@ -529,6 +548,13 @@ public class OMEROFormat extends AbstractFormat {
 					// store resultant image ID into the metadata
 					final Image image = store.save().getImage();
 					getMetadata().setImageID(image.getId().getValue());
+
+					// try to attach image to dataset
+					if (session.getExperimenter() != null && session.getGateway() 
+							!= null && getMetadata().getDatasetID() != 0) {
+						attachImageToDataset(image, getMetadata().getDatasetID());
+					}
+
 					store.close();
 				}
 				catch (final ServerError err) {
@@ -536,7 +562,7 @@ public class OMEROFormat extends AbstractFormat {
 				}
 			}
 			store = null;
-			if (session != null) session.close();
+			if (session != null) ((DefaultOMEROSession) session).close();
 			session = null;
 		}
 
@@ -559,6 +585,40 @@ public class OMEROFormat extends AbstractFormat {
 			}
 			catch (final ServerError err) {
 				throw communicationException(err);
+			}
+		}
+
+		/**
+		 * Attaches an image to an OMERO dataset.
+		 */
+		private void attachImageToDataset(Image image, long datasetID)
+		{
+			try {
+				final Gateway gateway = session.getGateway();
+				final SecurityContext ctx = session.getSecurityContext();
+				final BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
+				final DataManagerFacility dmf =
+						gateway.getFacility(DataManagerFacility.class);
+
+				final ArrayList<Long> collect = new ArrayList<Long>();
+				collect.add(datasetID);
+				final Collection<DatasetData> temp = browse.getDatasets(ctx, collect);
+
+				if (!temp.isEmpty()) {
+					final DatasetData ds = temp.iterator().next();
+					final ImageData imgdata =
+							browse.getImage(ctx, image.getId().getValue());
+					dmf.addImageToDataset(ctx, imgdata, ds);
+				}
+			}
+			catch (final ExecutionException err) {
+				log().error("Error creating Facility", err);
+			}
+			catch (final DSAccessException err) {
+				log().error("Error attaching image to OMERO dataset", err);
+			}
+			catch (final DSOutOfServiceException err) {
+				log().error("Error attaching image to OMERO dataset", err);
 			}
 		}
 
@@ -631,7 +691,7 @@ public class OMEROFormat extends AbstractFormat {
 		throws FormatException
 	{
 		try {
-			return new OMEROSession(meta.getCredentials());
+			return new DefaultOMEROSession(meta.getCredentials());
 		}
 		catch (final ServerError err) {
 			throw communicationException(err);

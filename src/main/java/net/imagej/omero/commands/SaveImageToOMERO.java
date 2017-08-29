@@ -56,6 +56,9 @@ public class SaveImageToOMERO extends OMEROCommand {
 	@Parameter
 	private Dataset dataset;
 
+	@Parameter
+	private long datasetID;
+
 	@Override
 	public void run() {
 		final String omeroDestination =
@@ -64,6 +67,7 @@ public class SaveImageToOMERO extends OMEROCommand {
 			"&port=" + getPort() + //
 			"&user=" + getUser() + //
 			"&password=" + getPassword() + //
+			"&datasetID=" + datasetID + //
 			".omero";
 
 		try {

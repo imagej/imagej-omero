@@ -25,7 +25,6 @@
 
 package net.imagej.omero;
 
-import ij.ImagePlus;
 import io.scif.Metadata;
 import io.scif.services.DatasetIOService;
 
@@ -40,13 +39,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
-import net.imagej.legacy.LegacyService;
-import net.imagej.patcher.LegacyInjector;
+import net.imagej.table.Column;
+import net.imagej.table.GenericTable;
+import net.imagej.table.Table;
+import net.imagej.table.TableDisplay;
 
 import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
@@ -61,6 +63,17 @@ import org.scijava.service.Service;
 import org.scijava.util.ClassUtils;
 import org.scijava.util.ConversionUtils;
 
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
+import omero.ServerError;
+import omero.gateway.exception.DSAccessException;
+import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.facility.BrowseFacility;
+import omero.gateway.facility.TablesFacility;
+import omero.gateway.model.ImageData;
+import omero.gateway.model.TableData;
+import omero.gateway.model.TableDataColumn;
+
 /**
  * Default ImageJ service for managing OMERO data conversion.
  * 
@@ -70,11 +83,6 @@ import org.scijava.util.ConversionUtils;
 public class DefaultOMEROService extends AbstractService implements
 	OMEROService, Optional
 {
-
-	static {
-		// NB: Necessary to avoid class-loading issues with the patched ImageJ1.
-		LegacyInjector.preinit();
-	}
 
 	// -- Parameters --
 
@@ -92,9 +100,6 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Parameter
 	private ObjectService objectService;
-
-	@Parameter
-	private LegacyService legacyService;
 
 	@Parameter
 	private ConvertService convertService;
@@ -123,10 +128,17 @@ public class DefaultOMEROService extends AbstractService implements
 		// image types
 		if (Dataset.class.isAssignableFrom(type) ||
 			DatasetView.class.isAssignableFrom(type) ||
-			ImageDisplay.class.isAssignableFrom(type) ||
-			ImagePlus.class.isAssignableFrom(type))
+			ImageDisplay.class.isAssignableFrom(type))
 		{
 			// use an image ID
+			return omero.rtypes.rlong(0);
+		}
+
+		// table
+		if (Table.class.isAssignableFrom(type) || TableDisplay.class
+			.isAssignableFrom(type))
+		{
+			// table file ID
 			return omero.rtypes.rlong(0);
 		}
 
@@ -229,8 +241,10 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public omero.RType toOMERO(final omero.client client, final Object value)
-		throws omero.ServerError, IOException
+	public Object toOMERO(final omero.client client, final Object value)
+		throws omero.ServerError, IOException, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException
 	{
 		if (value instanceof Dataset) {
 			// upload image to OMERO, returning the resultant image ID
@@ -247,18 +261,20 @@ public class DefaultOMEROService extends AbstractService implements
 			// TODO: Support more aspects of image displays; e.g., multiple datasets.
 			return toOMERO(client, imageDisplayService.getActiveDataset(imageDisplay));
 		}
-		if (value instanceof ImagePlus) {
-			final ImagePlus imp = (ImagePlus) value;
-			final ImageDisplay imageDisplay =
-				legacyService.getImageMap().registerLegacyImage(imp);
-			return toOMERO(client, imageDisplay);
+		if (value instanceof Table) {
+			return convertOMEROTable((Table<?, ?>) value);
+		}
+		if (value instanceof TableDisplay) {
+			return toOMERO(client, ((TableDisplay) value).get(0));
 		}
 		return toOMERO(value);
 	}
 
 	@Override
 	public Object toImageJ(final omero.client client, final omero.RType value,
-		final Class<?> type) throws omero.ServerError, IOException
+		final Class<?> type) throws omero.ServerError, IOException,
+		PermissionDeniedException, CannotCreateSessionException, SecurityException,
+		DSOutOfServiceException, ExecutionException, DSAccessException
 	{
 		if (value instanceof omero.RCollection) {
 			// collection of objects
@@ -362,6 +378,94 @@ public class DefaultOMEROService extends AbstractService implements
 		return -1;
 	}
 
+	@Override
+	public long uploadTable(final OMEROCredentials credentials, final String name,
+		final Table<?, ?> imageJTable, final long imageID) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
+		final TableData omeroTable = convertOMEROTable(imageJTable);
+		long id = -1;
+		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
+			// Get image
+			final BrowseFacility browseFacility = session.getGateway().getFacility(
+				BrowseFacility.class);
+			final ImageData image = browseFacility.getImage(session
+				.getSecurityContext(), imageID);
+
+			// attach table to image
+			final TablesFacility tablesFacility = session.getGateway().getFacility(
+				TablesFacility.class);
+			final TableData stored = tablesFacility.addTable(session
+				.getSecurityContext(), image, name, omeroTable);
+			id = stored.getOriginalFileId();
+		}
+		return id;
+	}
+
+	@Override
+	public TableData convertOMEROTable(final Table<?, ?> imageJTable) {
+		final TableDataColumn[] omeroColumns = new TableDataColumn[imageJTable
+			.getColumnCount()];
+		final Object[][] data = new Object[imageJTable.getColumnCount()][];
+
+		for (int c = 0; c < imageJTable.getColumnCount(); c++) {
+			omeroColumns[c] = TableUtils.createOMEROColumn(imageJTable.get(c), c);
+			data[c] = TableUtils.populateOMEROColumn(imageJTable.get(c),
+				convertService);
+		}
+
+		// Create table and attach to image
+		final TableData omeroTable = new TableData(omeroColumns, data);
+		omeroTable.setNumberOfRows(imageJTable.getRowCount());
+
+		return omeroTable;
+	}
+
+	@Override
+	public Table<?, ?> downloadTable(final OMEROCredentials credentials,
+		final long tableID) throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException
+	{
+		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
+			final TablesFacility tableService = session.getGateway().getFacility(
+				TablesFacility.class);
+			final TableData table = tableService.getTable(session
+				.getSecurityContext(), tableID, 0, Integer.MAX_VALUE - 1);
+
+			final TableDataColumn[] omeroColumns = table.getColumns();
+			final Object[][] data = table.getData();
+
+			final Table<?, ?> imageJTable = TableUtils.createImageJTable(
+				omeroColumns);
+			imageJTable.setRowCount((int) table.getNumberOfRows());
+
+			boolean colsCreated = false;
+			if (!(imageJTable instanceof GenericTable)) {
+				imageJTable.appendColumns(omeroColumns.length);
+				colsCreated = true;
+			}
+
+			for (int i = 0; i < omeroColumns.length; i++) {
+				if (!colsCreated) {
+					final Column<?> imageJCol = TableUtils.createImageJColumn(
+						omeroColumns[i]);
+					TableUtils.populateImageJColumn(omeroColumns[i].getType(),
+						data[omeroColumns[i].getIndex()], imageJCol);
+					((GenericTable) imageJTable).add(omeroColumns[i].getIndex(),
+						imageJCol);
+				}
+				else {
+					TableUtils.populateImageJColumn(omeroColumns[i].getType(),
+						data[omeroColumns[i].getIndex()], imageJTable.get(i));
+					imageJTable.get(i).setHeader(omeroColumns[i].getName());
+				}
+			}
+			return imageJTable;
+		}
+	}
+
 	// -- Helper methods --
 
 	/**
@@ -391,9 +495,17 @@ public class DefaultOMEROService extends AbstractService implements
 	 * a specified ID and convert the result to the appropriate type of ImageJ
 	 * object such as {@link Dataset}.</li>
 	 * </ol>
+	 *
+	 * @throws CannotCreateSessionException
+	 * @throws PermissionDeniedException
+	 * @throws DSOutOfServiceException
+	 * @throws DSAccessException
+	 * @throws ExecutionException
 	 */
 	private <T> T convert(final omero.client client, final Object value,
-		final Class<T> type) throws omero.ServerError, IOException
+		final Class<T> type) throws omero.ServerError, IOException,
+		PermissionDeniedException, CannotCreateSessionException,
+		DSOutOfServiceException, ExecutionException, DSAccessException
 	{
 		if (value == null) return null;
 		if (type == null) {
@@ -436,11 +548,12 @@ public class DefaultOMEROService extends AbstractService implements
 				final T display = (T) displayService.createDisplay(dataset);
 				return display;
 			}
-			if (ImagePlus.class.isAssignableFrom(type)) {
-				final ImageDisplay display = convert(client, value, ImageDisplay.class);
+			if (Table.class.isAssignableFrom(type)) {
+				final long tableID = ((Number) value).longValue();
+				final OMEROCredentials credentials = createCredentials(client);
 				@SuppressWarnings("unchecked")
-				final T imp = (T) legacyService.getImageMap().registerDisplay(display);
-				return imp;
+				final T table = (T) downloadTable(credentials, tableID);
+				return table;
 			}
 		}
 
@@ -462,4 +575,12 @@ public class DefaultOMEROService extends AbstractService implements
 		return collection.toArray(array);
 	}
 
+	private OMEROCredentials createCredentials(final omero.client client) {
+		final OMEROCredentials credentials = new OMEROCredentials();
+		credentials.setServer(client.getProperty("omero.host"));
+		credentials.setPort(Integer.parseInt(client.getProperty("omero.port")));
+		credentials.setUser(client.getProperty("omero.user"));
+		credentials.setPassword(client.getProperty("omero.pass"));
+		return credentials;
+	}
 }

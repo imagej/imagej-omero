@@ -33,10 +33,8 @@ import io.scif.FormatException;
 import io.scif.MetadataService;
 import io.scif.SCIFIO;
 
-import net.imagej.patcher.LegacyInjector;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -46,20 +44,15 @@ import org.junit.Test;
  */
 public class OMEROFormatTest {
 
-	static {
-		// NB: Necessary to avoid class-loading issues with the patched ImageJ1.
-		LegacyInjector.preinit();
-	}
+	private SCIFIO scifio;
 
-	private static SCIFIO scifio;
-
-	@BeforeClass
-	public static void beforeClass() {
+	@Before
+	public void setUp() {
 		scifio = new SCIFIO();
 	}
 
-	@AfterClass
-	public static void afterClass() {
+	@After
+	public void tearDown() {
 		if (scifio != null) scifio.context().dispose();
 	}
 
