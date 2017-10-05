@@ -119,6 +119,9 @@
 	- University of Dundee</license.copyrightOwners>
 	<license.projectName>ImageJ software for multidimensional image processing and analysis.</license.projectName>
 		<omero.version>5.3.0-ice36</omero.version>
+
+		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
+		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 	</properties>
 
 	<repositories>
