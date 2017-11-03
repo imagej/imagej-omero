@@ -142,6 +142,11 @@
 		<!-- ImgLib2 dependencies -->
 		<dependency>
 			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2</artifactId>
+			<version>4.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-roi</artifactId>
 			<version>0.4.8-SNAPSHOT</version>
 		</dependency>
