@@ -70,19 +70,20 @@ public class DefaultOMEROSession implements OMEROSession {
 	private ExperimenterData experimenter;
 	private Gateway gateway;
 	private SecurityContext ctx;
+	private final OMEROService omeroService;
 
 	// -- Constructors --
 
-	public DefaultOMEROSession(final OMEROLocation credentials)
-		throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException
+	public DefaultOMEROSession(final OMEROLocation credentials,
+		final OMEROService omeroService) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException
 	{
-		this(credentials, null);
+		this(credentials, null, omeroService);
 	}
 
 	public DefaultOMEROSession(final OMEROLocation credentials,
-		final omero.client c) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException
+		final omero.client c, final OMEROService omeroService) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException
 	{
 		// initialize the client
 		boolean close = false;
@@ -118,6 +119,7 @@ public class DefaultOMEROSession implements OMEROSession {
 //		}
 
 		session.detachOnDestroy();
+		this.omeroService = omeroService;
 	}
 
 	// -- OMEROSession methods --
@@ -261,6 +263,7 @@ public class DefaultOMEROSession implements OMEROSession {
 		client = null;
 		session = null;
 		if (gateway != null) gateway.disconnect();
+		omeroService.removeSession(this);
 	}
 
 	// -- Helper methods --
