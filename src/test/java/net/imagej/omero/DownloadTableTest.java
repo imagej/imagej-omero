@@ -29,6 +29,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.table.BoolColumn;
@@ -63,13 +64,13 @@ import omero.gateway.model.TableDataColumn;
 import omero.model.ImageI;
 
 /**
- * Tests {@link DefaultOMEROService#downloadTable(OMEROCredentials, long)}.
+ * Tests {@link DefaultOMEROService#downloadTable(OMEROLocation, long)}.
  *
  * @author Alison Walter
  */
 public class DownloadTableTest {
 
-	private OMEROCredentials credentials;
+	private OMEROLocation credentials;
 	private OMEROService service;
 
 	@Mocked
@@ -83,7 +84,12 @@ public class DownloadTableTest {
 
 	@Before
 	public void setUp() {
-		credentials = new OMEROCredentials();
+		try {
+			credentials = new OMEROLocation("localhost", 4064, "omero", "omero");
+		}
+		catch (final URISyntaxException exc) {
+			exc.printStackTrace();
+		}
 		service = new Context(OMEROService.class).getService(OMEROService.class);
 	}
 

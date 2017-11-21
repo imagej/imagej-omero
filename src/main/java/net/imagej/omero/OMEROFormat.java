@@ -43,6 +43,7 @@ import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -117,7 +118,7 @@ public class OMEROFormat extends AbstractFormat {
 	public static class Metadata extends AbstractMetadata {
 
 		@Field
-		private OMEROCredentials credentials;
+		private OMEROLocation credentials;
 
 		@Field
 		private String name;
@@ -175,7 +176,7 @@ public class OMEROFormat extends AbstractFormat {
 
 		// -- io.scif.omero.OMEROFormat.Metadata methods --
 
-		public OMEROCredentials getCredentials() {
+		public OMEROLocation getCredentials() {
 			return credentials;
 		}
 
@@ -255,7 +256,7 @@ public class OMEROFormat extends AbstractFormat {
 			this.name = name;
 		}
 
-		public void setCredentials(final OMEROCredentials credentials) {
+		public void setCredentials(final OMEROLocation credentials) {
 			this.credentials = credentials;
 		}
 
@@ -673,17 +674,22 @@ public class OMEROFormat extends AbstractFormat {
 	}
 
 	public static void parseArguments(final MetadataService metadataService,
-		final String string, final Metadata meta)
+		final String string, final Metadata meta) throws FormatException
 	{
 		// strip omero prefix and/or suffix
 		final String clean = string.replaceFirst("^omero:", "").replaceFirst(
 			"\\.omero$", "");
 
 		final Map<String, Object> map = metadataService.parse(clean, "&");
-		final OMEROCredentials credentials = new OMEROCredentials();
-		// populate OMERO credentials
-		metadataService.populate(credentials, map);
-		meta.setCredentials(credentials);
+
+		try {
+			OMEROLocation credentials = new OMEROLocation(map);
+			meta.setCredentials(credentials);
+		}
+		catch (URISyntaxException exc) {
+			throw connectionException(exc);
+		}
+
 		// populate other metadata: image ID, etc.
 		metadataService.populate(meta, map);
 	}
