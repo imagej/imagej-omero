@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -212,8 +213,7 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 		if (value instanceof Map) {
 			final Map<?, ?> map = (Map<?, ?>) value;
-			final HashMap<String, omero.RType> val =
-				new HashMap<>();
+			final HashMap<String, omero.RType> val = new HashMap<>();
 			for (final Object key : map.keySet()) {
 				val.put(key.toString(), toOMERO(map.get(key)));
 			}
@@ -341,6 +341,9 @@ public class DefaultOMEROService extends AbstractService implements
 		catch (final InvocationTargetException exc) {
 			log.error(exc);
 		}
+		catch (final URISyntaxException exc) {
+			log.error(exc);
+		}
 		log.error("Unsupported type: " + value.getClass().getName());
 		return null;
 	}
@@ -379,7 +382,7 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public long uploadTable(final OMEROCredentials credentials, final String name,
+	public long uploadTable(final OMEROLocation credentials, final String name,
 		final Table<?, ?> imageJTable, final long imageID) throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
@@ -423,7 +426,7 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public Table<?, ?> downloadTable(final OMEROCredentials credentials,
+	public Table<?, ?> downloadTable(final OMEROLocation credentials,
 		final long tableID) throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
@@ -501,11 +504,14 @@ public class DefaultOMEROService extends AbstractService implements
 	 * @throws DSOutOfServiceException
 	 * @throws DSAccessException
 	 * @throws ExecutionException
+	 * @throws URISyntaxException
+	 * @throws NumberFormatException
 	 */
 	private <T> T convert(final omero.client client, final Object value,
 		final Class<T> type) throws omero.ServerError, IOException,
 		PermissionDeniedException, CannotCreateSessionException,
-		DSOutOfServiceException, ExecutionException, DSAccessException
+		DSOutOfServiceException, ExecutionException, DSAccessException,
+		NumberFormatException, URISyntaxException
 	{
 		if (value == null) return null;
 		if (type == null) {
@@ -550,7 +556,7 @@ public class DefaultOMEROService extends AbstractService implements
 			}
 			if (Table.class.isAssignableFrom(type)) {
 				final long tableID = ((Number) value).longValue();
-				final OMEROCredentials credentials = createCredentials(client);
+				final OMEROLocation credentials = createCredentials(client);
 				@SuppressWarnings("unchecked")
 				final T table = (T) downloadTable(credentials, tableID);
 				return table;
@@ -575,12 +581,11 @@ public class DefaultOMEROService extends AbstractService implements
 		return collection.toArray(array);
 	}
 
-	private OMEROCredentials createCredentials(final omero.client client) {
-		final OMEROCredentials credentials = new OMEROCredentials();
-		credentials.setServer(client.getProperty("omero.host"));
-		credentials.setPort(Integer.parseInt(client.getProperty("omero.port")));
-		credentials.setUser(client.getProperty("omero.user"));
-		credentials.setPassword(client.getProperty("omero.pass"));
-		return credentials;
+	private OMEROLocation createCredentials(final omero.client client)
+		throws NumberFormatException, URISyntaxException
+	{
+		return new OMEROLocation(client.getProperty("omero.host"), Integer.parseInt(
+			client.getProperty("omero.port")), client.getProperty("omero.user"),
+			client.getProperty("omero.pass"));
 	}
 }

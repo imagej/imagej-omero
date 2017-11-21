@@ -144,7 +144,7 @@ public interface OMEROService extends ImageJService {
 	 * server. Tables must be attached to a DataObject, thus the given image ID
 	 * must be valid or this method will throw an exception.
 	 */
-	long uploadTable(OMEROCredentials credentials, String name,
+	long uploadTable(OMEROLocation credentials, String name,
 		Table<?, ?> imageJTable, final long imageID) throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException;
@@ -159,7 +159,7 @@ public interface OMEROService extends ImageJService {
 	 * Downloads the table with the given ID from OMERO, storing the result into a
 	 * new ImageJ {@link Table}.
 	 */
-	Table<?, ?> downloadTable(OMEROCredentials credentials, long tableID)
+	Table<?, ?> downloadTable(OMEROLocation credentials, long tableID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
 		ExecutionException, DSOutOfServiceException, DSAccessException;
 

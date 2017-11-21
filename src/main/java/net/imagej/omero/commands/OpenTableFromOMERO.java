@@ -25,11 +25,11 @@
 
 package net.imagej.omero.commands;
 
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.omero.DefaultOMEROService;
 import net.imagej.omero.OMEROCommand;
-import net.imagej.omero.OMEROCredentials;
+import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.table.Table;
 
@@ -68,14 +68,10 @@ public class OpenTableFromOMERO extends OMEROCommand {
 
 	@Override
 	public void run() {
-		final OMEROCredentials credentials = new OMEROCredentials();
-		credentials.setServer(getServer());
-		credentials.setPort(getPort());
-		credentials.setUser(getUser());
-		credentials.setPassword(getPassword());
 		try {
-			table = ((DefaultOMEROService) omeroService).downloadTable(credentials,
-				tableID);
+			final OMEROLocation credentials = new OMEROLocation(getServer(),
+				getPort(), getUser(), getPassword());
+			table = omeroService.downloadTable(credentials, tableID);
 		}
 		catch (final ServerError exc) {
 			log.error(exc);
@@ -106,6 +102,11 @@ public class OpenTableFromOMERO extends OMEROCommand {
 			log.error(exc);
 			exc.printStackTrace();
 			cancel("Error talking to OMERO: " + exc.getMessage());
+		}
+		catch (final URISyntaxException exc) {
+			log.error(exc);
+			exc.printStackTrace();
+			cancel("Error creating URI for Session: " + exc.getMessage());
 		}
 	}
 

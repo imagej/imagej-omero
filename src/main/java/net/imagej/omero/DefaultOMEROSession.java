@@ -73,14 +73,14 @@ public class DefaultOMEROSession implements OMEROSession {
 
 	// -- Constructors --
 
-	public DefaultOMEROSession(final OMEROCredentials credentials)
+	public DefaultOMEROSession(final OMEROLocation credentials)
 		throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException
 	{
 		this(credentials, null);
 	}
 
-	public DefaultOMEROSession(final OMEROCredentials credentials,
+	public DefaultOMEROSession(final OMEROLocation credentials,
 		final omero.client c) throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException
 	{
@@ -98,22 +98,13 @@ public class DefaultOMEROSession implements OMEROSession {
 			close = true;
 		}
 
-		// initialize the session (i.e., log in)
-		final String sessionID = credentials.getSessionID();
-		if (sessionID != null) {
-			if (close) client.closeSession();
-			session = client.joinSession(sessionID);
-		}
-		else if (credentials.getUser() != null && credentials
-			.getPassword() != null)
-		{
+		if (credentials.getUser() != null && credentials.getPassword() != null) {
 			final String user = credentials.getUser();
 			final String password = credentials.getPassword();
 			setGateway();
 			setExperimenter(credentials);
 			setSecurityContext(credentials);
 			session = client.createSession(user, password);
-			credentials.setSessionID(client.getSessionId());
 		}
 		else {
 			session = client.createSession();
@@ -337,7 +328,7 @@ public class DefaultOMEROSession implements OMEROSession {
 	/**
 	 * Creates a SecurityConext which is linked to the group the user belongs to.
 	 */
-	private void setSecurityContext(final OMEROCredentials credentials)
+	private void setSecurityContext(final OMEROLocation credentials)
 		throws ServerError
 	{
 		if (experimenter == null) setExperimenter(credentials);
@@ -348,7 +339,7 @@ public class DefaultOMEROSession implements OMEROSession {
 	 * Attempts to connect to the gateway using the given credentials. If it can
 	 * successfully connect, then it sets experimenter.
 	 */
-	private void setExperimenter(final OMEROCredentials credentials)
+	private void setExperimenter(final OMEROLocation credentials)
 		throws ServerError
 	{
 		final LoginCredentials cred = new LoginCredentials();
