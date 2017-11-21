@@ -40,7 +40,6 @@ import net.imagej.table.LongTable;
 import net.imagej.table.ResultsTable;
 import net.imagej.table.Table;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -248,8 +247,8 @@ public class DownloadTableTest {
 				assertTrue(DefaultColumn.class.isInstance(imageJTable.get(c)));
 				assertTrue(imageJTable.get(c).getType() == LongArray.class);
 				final Long[] l = (Long[]) data[c][r];
-				final Object[] ijl = ((DefaultColumn<LongArray>) imageJTable.get(c)).get(
-					r).toArray();
+				final Object[] ijl = ((DefaultColumn<LongArray>) imageJTable.get(c))
+					.get(r).toArray();
 				assertArrayEquals(l, ijl);
 			}
 		}
@@ -312,8 +311,8 @@ public class DownloadTableTest {
 		final Object[][] data = new Object[4][];
 		data[0] = new String[] { "abc", "123", "hi!" };
 		data[1] = new Boolean[] { false, true, false };
-		data[2] = new Double[][] { { 0.125, 3879123.5, -93.25 }, { 0d, -123353.03125,
-			-5.5 }, { 100.25, 0.125, -9000.5 } };
+		data[2] = new Double[][] { { 0.125, 3879123.5, -93.25 }, { 0d,
+			-123353.03125, -5.5 }, { 100.25, 0.125, -9000.5 } };
 		data[3] = new Long[] { -9028131908l, 0l, 12l };
 
 		final TableData table = new TableData(tdc, data);

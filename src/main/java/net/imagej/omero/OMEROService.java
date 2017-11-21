@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -45,7 +45,7 @@ import omero.gateway.model.TableData;
 
 /**
  * Interface for ImageJ services that manage OMERO data conversion.
- * 
+ *
  * @author Curtis Rueden
  */
 public interface OMEROService extends ImageJService {
@@ -76,16 +76,16 @@ public interface OMEROService extends ImageJService {
 	 * <p>
 	 * In the case of {@link Table}s, it will be converted to a {@link TableData}.
 	 * </p>
+	 * 
 	 * @throws DSAccessException
 	 * @throws DSOutOfServiceException
 	 * @throws ExecutionException
 	 * @throws CannotCreateSessionException
 	 * @throws PermissionDeniedException
 	 */
-	Object toOMERO(omero.client client, Object value)
-		throws omero.ServerError, IOException, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException;
+	Object toOMERO(omero.client client, Object value) throws omero.ServerError,
+		IOException, PermissionDeniedException, CannotCreateSessionException,
+		ExecutionException, DSOutOfServiceException, DSAccessException;
 
 	/**
 	 * Converts an OMERO parameter value to an ImageJ value of the given type.
@@ -102,14 +102,14 @@ public interface OMEROService extends ImageJService {
 
 	// CTR - What needs to happen to make ROIs work seamlessly:
 	// - ImageJ Common data model needs updating:
-	//  -- ImgPlus -> RichImage
-	//  -- RichImage support for default visualization settings
-	//  -- RichImage support for tree structure of RichImages
-	//  -- SCIFIO updated to use RichImage instead
+	// -- ImgPlus -> RichImage
+	// -- RichImage support for default visualization settings
+	// -- RichImage support for tree structure of RichImages
+	// -- SCIFIO updated to use RichImage instead
 	// We want to maintain model / view separation. However:
 	// - Every setting of the view should be settable in the model?
-	//  -- E.g., some file formats specify LUTs.
-	//  -- E.g., OMERO specifies default rendering settings.
+	// -- E.g., some file formats specify LUTs.
+	// -- E.g., OMERO specifies default rendering settings.
 	// Too many layers has confused people and makes operations more complex.
 	//
 	// Let's get rid of View completely, wrapping it into the
@@ -146,10 +146,11 @@ public interface OMEROService extends ImageJService {
 	 */
 	long uploadTable(OMEROCredentials credentials, String name,
 		Table<?, ?> imageJTable, final long imageID) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException,
-		ExecutionException, DSOutOfServiceException, DSAccessException;
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException;
 
-	/** Converts the given ImageJ table to an OMERO table, but does not save the
+	/**
+	 * Converts the given ImageJ table to an OMERO table, but does not save the
 	 * table to the server.
 	 */
 	TableData convertOMEROTable(Table<?, ?> imageJTable);
