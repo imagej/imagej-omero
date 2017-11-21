@@ -488,7 +488,7 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public OMEROSession createSession(final OMEROLocation location) {
 		try {
-			return new DefaultOMEROSession(location);
+			return new DefaultOMEROSession(location, this);
 		}
 		catch (ServerError | PermissionDeniedException
 				| CannotCreateSessionException exc)

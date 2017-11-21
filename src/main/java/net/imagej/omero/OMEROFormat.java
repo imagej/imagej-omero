@@ -60,8 +60,6 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import omero.RInt;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
@@ -395,6 +393,9 @@ public class OMEROFormat extends AbstractFormat {
 		@Parameter
 		private MetadataService metadataService;
 
+		@Parameter
+		private OMEROService omeroService;
+
 		@Override
 		public void typedParse(final RandomAccessInputStream stream,
 			final Metadata meta, final SCIFIOConfig config) throws IOException,
@@ -407,7 +408,7 @@ public class OMEROFormat extends AbstractFormat {
 			final OMEROSession session;
 			final Pixels pix;
 			try {
-				session = createSession(meta);
+				session = omeroService.session(meta.getCredentials());
 				pix = session.loadPixels(meta);
 				session.loadImageName(meta);
 			}
@@ -435,14 +436,14 @@ public class OMEROFormat extends AbstractFormat {
 
 			// parse pixel type
 			meta.setPixelType(pix.getPixelsType().getValue().getValue());
-
-			// terminate OMERO session
-			session.close();
 		}
 
 	}
 
 	public static class Reader extends ByteArrayReader<Metadata> {
+
+		@Parameter
+		private OMEROService omeroService;
 
 		private OMEROSession session;
 		private RawPixelsStorePrx store;
@@ -490,7 +491,7 @@ public class OMEROFormat extends AbstractFormat {
 
 		private void initSession() throws FormatException {
 			try {
-				session = createSession(getMetadata());
+				session = omeroService.session(getMetadata().getCredentials());
 				store = session.openPixels(getMetadata());
 			}
 			catch (final ServerError err) {
@@ -511,6 +512,9 @@ public class OMEROFormat extends AbstractFormat {
 		@Parameter
 		private LogService log;
 
+		@Parameter
+		private OMEROService omeroService;
+
 		private OMEROSession session;
 		private RawPixelsStorePrx store;
 
@@ -519,7 +523,6 @@ public class OMEROFormat extends AbstractFormat {
 			final Plane plane, final long[] planeMin, final long[] planeMax)
 			throws FormatException, IOException
 		{
-			// TODO: Consider whether to reuse OMERO session from somewhere else.
 			if (session == null) initSession();
 
 			final byte[] bytes = plane.getBytes();
@@ -585,7 +588,7 @@ public class OMEROFormat extends AbstractFormat {
 				// This is set in the method: AbstractWriter#setDest(String, int).
 				parseArguments(metadataService, meta.getDatasetName(), meta);
 
-				session = createSession(meta);
+				session = omeroService.session(meta.getCredentials());
 				store = session.createPixels(meta);
 			}
 			catch (final ServerError err) {
@@ -683,10 +686,10 @@ public class OMEROFormat extends AbstractFormat {
 		final Map<String, Object> map = metadataService.parse(clean, "&");
 
 		try {
-			OMEROLocation credentials = new OMEROLocation(map);
+			final OMEROLocation credentials = new OMEROLocation(map);
 			meta.setCredentials(credentials);
 		}
-		catch (URISyntaxException exc) {
+		catch (final URISyntaxException exc) {
 			throw connectionException(exc);
 		}
 
@@ -695,23 +698,6 @@ public class OMEROFormat extends AbstractFormat {
 	}
 
 	// -- Helper methods --
-
-	private static OMEROSession createSession(final Metadata meta)
-		throws FormatException
-	{
-		try {
-			return new DefaultOMEROSession(meta.getCredentials());
-		}
-		catch (final ServerError err) {
-			throw communicationException(err);
-		}
-		catch (final PermissionDeniedException exc) {
-			throw connectionException(exc);
-		}
-		catch (final CannotCreateSessionException exc) {
-			throw connectionException(exc);
-		}
-	}
 
 	private static FormatException communicationException(final Throwable cause) {
 		return new FormatException("Error communicating with OMERO", cause);

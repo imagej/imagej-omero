@@ -181,7 +181,7 @@ public class OmeroIT {
 		final OMEROLocation tc = new OMEROLocation(OMERO_SERVER, OMERO_PORT,
 			OMERO_USER, OMERO_PASSWORD);
 
-		try (final OMEROSession session = new DefaultOMEROSession(tc)) {
+		try (final OMEROSession session = new DefaultOMEROSession(tc, omero)) {
 			final TablesFacility tablesFacility = session.getGateway().getFacility(
 				TablesFacility.class);
 			final TableData td = tablesFacility.getTableInfo(session

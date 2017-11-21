@@ -440,7 +440,7 @@ public class UploadTableTest {
 		new Expectations() {
 
 			{
-				new DefaultOMEROSession(credentials);
+				new DefaultOMEROSession(credentials, service);
 
 				gateway.getFacility(BrowseFacility.class);
 				result = browseFacility;

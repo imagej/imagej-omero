@@ -417,7 +417,7 @@ public class DownloadTableTest {
 		new Expectations() {
 
 			{
-				new DefaultOMEROSession(credentials);
+				new DefaultOMEROSession(credentials, service);
 
 				gateway.getFacility(TablesFacility.class);
 				result = tablesFacility;
