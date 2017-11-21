@@ -396,20 +396,19 @@ public class DefaultOMEROService extends AbstractService implements
 	{
 		final TableData omeroTable = convertOMEROTable(imageJTable);
 		long id = -1;
-		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
-			// Get image
-			final BrowseFacility browseFacility = session.getGateway().getFacility(
-				BrowseFacility.class);
-			final ImageData image = browseFacility.getImage(session
-				.getSecurityContext(), imageID);
+		final OMEROSession session = session(credentials);
+		// Get image
+		final BrowseFacility browseFacility = session.getGateway().getFacility(
+			BrowseFacility.class);
+		final ImageData image = browseFacility.getImage(session
+			.getSecurityContext(), imageID);
 
-			// attach table to image
-			final TablesFacility tablesFacility = session.getGateway().getFacility(
-				TablesFacility.class);
-			final TableData stored = tablesFacility.addTable(session
-				.getSecurityContext(), image, name, omeroTable);
-			id = stored.getOriginalFileId();
-		}
+		// attach table to image
+		final TablesFacility tablesFacility = session.getGateway().getFacility(
+			TablesFacility.class);
+		final TableData stored = tablesFacility.addTable(session
+			.getSecurityContext(), image, name, omeroTable);
+		id = stored.getOriginalFileId();
 		return id;
 	}
 
@@ -438,42 +437,39 @@ public class DefaultOMEROService extends AbstractService implements
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
-		try (final OMEROSession session = new DefaultOMEROSession(credentials)) {
-			final TablesFacility tableService = session.getGateway().getFacility(
-				TablesFacility.class);
-			final TableData table = tableService.getTable(session
-				.getSecurityContext(), tableID, 0, Integer.MAX_VALUE - 1);
+		final OMEROSession session = session(credentials);
+		final TablesFacility tableService = session.getGateway().getFacility(
+			TablesFacility.class);
+		final TableData table = tableService.getTable(session.getSecurityContext(),
+			tableID, 0, Integer.MAX_VALUE - 1);
 
-			final TableDataColumn[] omeroColumns = table.getColumns();
-			final Object[][] data = table.getData();
+		final TableDataColumn[] omeroColumns = table.getColumns();
+		final Object[][] data = table.getData();
 
-			final Table<?, ?> imageJTable = TableUtils.createImageJTable(
-				omeroColumns);
-			imageJTable.setRowCount((int) table.getNumberOfRows());
+		final Table<?, ?> imageJTable = TableUtils.createImageJTable(omeroColumns);
+		imageJTable.setRowCount((int) table.getNumberOfRows());
 
-			boolean colsCreated = false;
-			if (!(imageJTable instanceof GenericTable)) {
-				imageJTable.appendColumns(omeroColumns.length);
-				colsCreated = true;
-			}
-
-			for (int i = 0; i < omeroColumns.length; i++) {
-				if (!colsCreated) {
-					final Column<?> imageJCol = TableUtils.createImageJColumn(
-						omeroColumns[i]);
-					TableUtils.populateImageJColumn(omeroColumns[i].getType(),
-						data[omeroColumns[i].getIndex()], imageJCol);
-					((GenericTable) imageJTable).add(omeroColumns[i].getIndex(),
-						imageJCol);
-				}
-				else {
-					TableUtils.populateImageJColumn(omeroColumns[i].getType(),
-						data[omeroColumns[i].getIndex()], imageJTable.get(i));
-					imageJTable.get(i).setHeader(omeroColumns[i].getName());
-				}
-			}
-			return imageJTable;
+		boolean colsCreated = false;
+		if (!(imageJTable instanceof GenericTable)) {
+			imageJTable.appendColumns(omeroColumns.length);
+			colsCreated = true;
 		}
+
+		for (int i = 0; i < omeroColumns.length; i++) {
+			if (!colsCreated) {
+				final Column<?> imageJCol = TableUtils.createImageJColumn(
+					omeroColumns[i]);
+				TableUtils.populateImageJColumn(omeroColumns[i].getType(),
+					data[omeroColumns[i].getIndex()], imageJCol);
+				((GenericTable) imageJTable).add(omeroColumns[i].getIndex(), imageJCol);
+			}
+			else {
+				TableUtils.populateImageJColumn(omeroColumns[i].getType(),
+					data[omeroColumns[i].getIndex()], imageJTable.get(i));
+				imageJTable.get(i).setHeader(omeroColumns[i].getName());
+			}
+		}
+		return imageJTable;
 	}
 
 	@Override
