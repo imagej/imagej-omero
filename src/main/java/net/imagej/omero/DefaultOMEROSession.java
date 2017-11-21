@@ -148,6 +148,11 @@ public class DefaultOMEROSession implements OMEROSession {
 	}
 
 	@Override
+	public String getSessionID() {
+		return client.getSessionId();
+	}
+
+	@Override
 	public Pixels loadPixels(final OMEROFormat.Metadata meta) throws ServerError {
 		// return cached Pixels if available
 		Pixels pixels = meta.getPixels();
