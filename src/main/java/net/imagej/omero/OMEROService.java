@@ -76,7 +76,7 @@ public interface OMEROService extends ImageJService {
 	 * <p>
 	 * In the case of {@link Table}s, it will be converted to a {@link TableData}.
 	 * </p>
-	 * 
+	 *
 	 * @throws DSAccessException
 	 * @throws DSOutOfServiceException
 	 * @throws ExecutionException
@@ -162,5 +162,38 @@ public interface OMEROService extends ImageJService {
 	Table<?, ?> downloadTable(OMEROLocation credentials, long tableID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
 		ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Returns an {@link OMEROSession} using the given {@link OMEROLocation}. If a
+	 * session with this location already exists it is returned, if not a new one
+	 * is created.
+	 *
+	 * @param location OMEROLocation
+	 * @return OMEROSession
+	 */
+	OMEROSession session(OMEROLocation location);
+
+	/**
+	 * Returns the {@link OMEROSession} related to the running thread.
+	 *
+	 * @return the OMEROSession with the current thread
+	 */
+	OMEROSession session();
+
+	/**
+	 * Creates an OMEROSession. This <strong>does not</strong> cache the session
+	 * nor does it associate this session with the thread.
+	 *
+	 * @param location OMEROLocation to be used to create the session
+	 * @return a new OMEROSession
+	 */
+	OMEROSession createSession(OMEROLocation location);
+
+	/**
+	 * Remove the specified {@link OMEROSession} for the cache of stored sessions.
+	 *
+	 * @param session The session to be removed
+	 */
+	void removeSession(OMEROSession session);
 
 }

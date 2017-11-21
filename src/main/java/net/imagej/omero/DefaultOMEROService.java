@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -104,6 +105,12 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Parameter
 	private ConvertService convertService;
+
+//-- Fields --
+
+	private final HashMap<OMEROLocation, OMEROSession> sessions = new HashMap<>();
+
+	private final ThreadLocal<OMEROSession> activeSessions = new ThreadLocal<>();
 
 	// -- OMEROService methods --
 
@@ -466,6 +473,44 @@ public class DefaultOMEROService extends AbstractService implements
 				}
 			}
 			return imageJTable;
+		}
+	}
+
+	@Override
+	public OMEROSession session(final OMEROLocation location) {
+		final OMEROSession session = sessions.computeIfAbsent(location,
+			c2 -> createSession(c2));
+		activeSessions.set(session);
+		return session;
+	}
+
+	@Override
+	public OMEROSession session() {
+		return activeSessions.get();
+	}
+
+	@Override
+	public OMEROSession createSession(final OMEROLocation location) {
+		try {
+			return new DefaultOMEROSession(location);
+		}
+		catch (ServerError | PermissionDeniedException
+				| CannotCreateSessionException exc)
+		{
+			log.error("Cannot connect to OMERO server", exc);
+		}
+		return null;
+	}
+
+	@Override
+	public void removeSession(final OMEROSession session) {
+		if (session == null || !sessions.containsValue(session)) return;
+		if (Objects.equals(activeSessions.get(), session)) activeSessions.set(null);
+		for (final OMEROLocation l : sessions.keySet()) {
+			if (Objects.equals(sessions.get(l), session)) {
+				sessions.remove(l);
+				return;
+			}
 		}
 	}
 
