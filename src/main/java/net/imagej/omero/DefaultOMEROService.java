@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,6 +52,7 @@ import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
 import net.imagej.table.TableDisplay;
+import net.imglib2.roi.MaskPredicate;
 
 import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
@@ -68,11 +70,15 @@ import org.scijava.util.ConversionUtils;
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
 import omero.ServerError;
+import omero.api.IMetadataPrx;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
+import omero.gateway.facility.ROIFacility;
 import omero.gateway.facility.TablesFacility;
 import omero.gateway.model.ImageData;
+import omero.gateway.model.ROIData;
+import omero.gateway.model.ROIResult;
 import omero.gateway.model.TableData;
 import omero.gateway.model.TableDataColumn;
 
@@ -470,6 +476,63 @@ public class DefaultOMEROService extends AbstractService implements
 			}
 		}
 		return imageJTable;
+	}
+
+	@Override
+	public List<MaskPredicate<?>> downloadROIs(final OMEROLocation credentials,
+		final long imageID) throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException
+	{
+		final List<MaskPredicate<?>> mp = new ArrayList<>();
+		final OMEROSession session = session(credentials);
+		final ROIFacility roifac = session.getGateway().getFacility(
+			ROIFacility.class);
+		final List<ROIResult> roiresults = roifac.loadROIs(session
+			.getSecurityContext(), imageID);
+		final Iterator<ROIResult> r = roiresults.iterator();
+		while (r.hasNext()) {
+			final ROIResult res = r.next();
+			final Collection<ROIData> rois = res.getROIs();
+			for (final ROIData roi : rois) {
+				final MaskPredicate<?> ijRoi = convertService.convert(roi,
+					MaskPredicate.class);
+				if (ijRoi == null) throw new IllegalArgumentException(
+					"Cannot download rois");
+				mp.add(ijRoi);
+			}
+		}
+		return mp;
+	}
+
+	@Override
+	public long[] uploadROIs(final OMEROLocation credentials,
+		final List<MaskPredicate<?>> ijROIs, final long imageID) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
+		final OMEROSession session = session(credentials);
+		final ROIFacility roifac = session.getGateway().getFacility(
+			ROIFacility.class);
+
+		final List<ROIData> omeroROIs = new ArrayList<>();
+		for (final MaskPredicate<?> mp : ijROIs) {
+			final ROIData oR = convertService.convert(mp, ROIData.class);
+			if (oR == null) throw new IllegalArgumentException("Cannot upload ROIs");
+			omeroROIs.add(oR);
+		}
+
+		final Collection<ROIData> updatedOmeroROIs = roifac.saveROIs(session
+			.getSecurityContext(), imageID, omeroROIs);
+
+		final long[] ids = new long[updatedOmeroROIs.size()];
+		int count = 0;
+		for (final ROIData roi : updatedOmeroROIs) {
+			ids[count] = roi.asIObject().getId().getValue();
+			count++;
+		}
+
+		return ids;
 	}
 
 	@Override

@@ -49,6 +49,7 @@ import net.imagej.omero.rois.OMEROMask;
 import net.imagej.table.Table;
 import net.imglib2.RealPoint;
 import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.RealMask;
 import net.imglib2.roi.geom.real.Box;
 import net.imglib2.roi.geom.real.Ellipsoid;
@@ -660,6 +661,25 @@ public class OMEROToImageJConverterTest {
 
 		public void setShape(final ShapeData s) {
 			this.s = s;
+		}
+
+		@Override
+		public List<MaskPredicate<?>> downloadROIs(final OMEROLocation credentials,
+			final long imageID) throws ServerError, PermissionDeniedException,
+			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+			DSAccessException
+		{
+			return null;
+		}
+
+		@Override
+		public long[] uploadROIs(final OMEROLocation credentials,
+			final List<MaskPredicate<?>> ijROIs, final long imageID)
+			throws ServerError, PermissionDeniedException,
+			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+			DSAccessException
+		{
+			return null;
 		}
 
 	}
