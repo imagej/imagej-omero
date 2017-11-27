@@ -25,6 +25,7 @@
 
 package net.imagej.omero.rois.converter;
 
+import net.imagej.omero.OMEROService;
 import net.imagej.omero.rois.ClosedOMEROEllipse;
 import net.imagej.omero.rois.OpenOMEROEllipse;
 import net.imglib2.RealPoint;
@@ -32,6 +33,8 @@ import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.geom.real.Ellipsoid;
 
 import org.scijava.convert.Converter;
+import org.scijava.log.LogService;
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import omero.gateway.model.EllipseData;
@@ -46,6 +49,12 @@ public class OMEROToImageJEllipse extends
 	AbstractOMEROShapeToImageJMask<EllipseData, Ellipsoid<RealPoint>>
 {
 
+	@Parameter
+	private OMEROService omeroService;
+
+	@Parameter
+	private LogService log;
+
 	@Override
 	public Class<EllipseData> getInputType() {
 		return EllipseData.class;
@@ -59,7 +68,8 @@ public class OMEROToImageJEllipse extends
 
 	@Override
 	public Ellipsoid<RealPoint> convert(final EllipseData shape) {
-		final BoundaryType bt = RoiConverters.boundaryType(shape);
+		final BoundaryType bt = RoiConverters.boundaryType(shape, omeroService
+			.session(), log);
 		if (bt == BoundaryType.OPEN) return new OpenOMEROEllipse(shape);
 		// Ellipsoids can only be OPEN or CLOSED
 		return new ClosedOMEROEllipse(shape);

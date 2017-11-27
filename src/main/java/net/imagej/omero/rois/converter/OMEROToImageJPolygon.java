@@ -25,6 +25,7 @@
 
 package net.imagej.omero.rois.converter;
 
+import net.imagej.omero.OMEROService;
 import net.imagej.omero.rois.ClosedOMEROPolygon;
 import net.imagej.omero.rois.DefaultOMEROPolygon;
 import net.imagej.omero.rois.OpenOMEROPolygon;
@@ -33,6 +34,8 @@ import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.geom.real.Polygon2D;
 
 import org.scijava.convert.Converter;
+import org.scijava.log.LogService;
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import omero.gateway.model.PolygonData;
@@ -47,6 +50,12 @@ public class OMEROToImageJPolygon extends
 	AbstractOMEROShapeToImageJMask<PolygonData, Polygon2D<RealPoint>>
 {
 
+	@Parameter
+	private OMEROService omeroService;
+
+	@Parameter
+	private LogService log;
+
 	@Override
 	public Class<PolygonData> getInputType() {
 		return PolygonData.class;
@@ -60,7 +69,8 @@ public class OMEROToImageJPolygon extends
 
 	@Override
 	public Polygon2D<RealPoint> convert(final PolygonData shape) {
-		final BoundaryType bt = RoiConverters.boundaryType(shape);
+		final BoundaryType bt = RoiConverters.boundaryType(shape, omeroService
+			.session(), log);
 		if (bt == BoundaryType.OPEN) return new OpenOMEROPolygon(shape);
 		else if (bt == BoundaryType.CLOSED) return new ClosedOMEROPolygon(shape);
 		return new DefaultOMEROPolygon(shape);

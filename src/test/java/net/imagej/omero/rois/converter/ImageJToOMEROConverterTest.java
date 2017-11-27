@@ -108,7 +108,8 @@ public class ImageJToOMEROConverterTest {
 
 	@Before
 	public void setUp() {
-		final Context context = new Context(ConvertService.class);
+		final Context context = new Context(ConvertService.class,
+			OMEROToImageJConverterTest.TestOMEROService.class);
 		convertService = context.service(ConvertService.class);
 	}
 
@@ -666,7 +667,8 @@ public class ImageJToOMEROConverterTest {
 		translate.translate(new double[] { -10, -5 });
 		final AffineTransform2D rotate = new AffineTransform2D();
 		rotate.rotate(-Math.PI / 4);
-		final RealMask m = bThree.or(bTwo.or(bOne.transform(translate.inverse())).transform(rotate.inverse()));
+		final RealMask m = bThree.or(bTwo.or(bOne.transform(translate.inverse()))
+			.transform(rotate.inverse()));
 
 		final ROIData rd = convertService.convert(m, ROIData.class);
 		final List<ShapeData> shapes = rd.getShapes(0, 0);

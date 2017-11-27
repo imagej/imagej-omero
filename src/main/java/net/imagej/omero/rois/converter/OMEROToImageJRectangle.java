@@ -25,6 +25,7 @@
 
 package net.imagej.omero.rois.converter;
 
+import net.imagej.omero.OMEROService;
 import net.imagej.omero.rois.ClosedOMERORectangle;
 import net.imagej.omero.rois.OpenOMERORectangle;
 import net.imglib2.RealPoint;
@@ -32,6 +33,8 @@ import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.geom.real.Box;
 
 import org.scijava.convert.Converter;
+import org.scijava.log.LogService;
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import omero.gateway.model.RectangleData;
@@ -46,6 +49,12 @@ public class OMEROToImageJRectangle extends
 	AbstractOMEROShapeToImageJMask<RectangleData, Box<RealPoint>>
 {
 
+	@Parameter
+	private OMEROService omeroService;
+
+	@Parameter
+	private LogService log;
+
 	@Override
 	public Class<RectangleData> getInputType() {
 		return RectangleData.class;
@@ -59,7 +68,8 @@ public class OMEROToImageJRectangle extends
 
 	@Override
 	public Box<RealPoint> convert(final RectangleData shape) {
-		final BoundaryType bt = RoiConverters.boundaryType(shape);
+		final BoundaryType bt = RoiConverters.boundaryType(shape, omeroService
+			.session(), log);
 		if (bt == BoundaryType.OPEN) return new OpenOMERORectangle(shape);
 		// There is no Unspecified boundary behavior for Box
 		return new ClosedOMERORectangle(shape);
