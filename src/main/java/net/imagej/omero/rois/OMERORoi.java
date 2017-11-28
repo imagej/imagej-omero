@@ -161,6 +161,16 @@ public class OMERORoi implements CompositeMaskPredicate<RealLocalizable>,
 		return Collections.unmodifiableList(new ArrayList<>(shapes.values()));
 	}
 
+	@Override
+	public String toString() {
+		String s = "";
+		for (final IntArray i : shapes.keySet()) {
+			s += "\nZ: " + i.getValue(0) + "T: " + i.getValue(1) + "C: " + i.getValue(
+				2) + "\n" + shapes.get(i).toString();
+		}
+		return s;
+	}
+
 	// -- Helper methods --
 
 	private boolean testNeighbors(final RealLocalizable l) {

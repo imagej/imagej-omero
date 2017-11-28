@@ -42,4 +42,10 @@ public class DefaultOMEROPoint extends AbstractOMEROShape<PointData> implements
 		super(shape, BoundaryType.CLOSED);
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "\nCoordinates: " + getDoublePosition(
+			0) + ", " + getDoublePosition(1);
+	}
+
 }

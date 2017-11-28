@@ -51,6 +51,16 @@ public class DefaultOMEROPolyline extends AbstractOMEROShape<PolylineData>
 		return new PolylineVertex(shape.getPoints().get(pos));
 	}
 
+	@Override
+	public String toString() {
+		String s = getClass().getSimpleName();
+		for (int i = 0; i < numVertices(); i++) {
+			s += "\nVertex " + i + ": " + vertex(i).getDoublePosition(0) + ", " +
+				vertex(i).getDoublePosition(1);
+		}
+		return s;
+	}
+
 	// -- Helper classes --
 
 	private class PolylineVertex extends AbstractRealMaskPoint {

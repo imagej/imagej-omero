@@ -60,6 +60,13 @@ public class ClosedOMEROEllipse extends AbstractOMEROShape<EllipseData>
 		return new EllipseCenter(new double[] { shape.getX(), shape.getY() });
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "\nCenter: " + center()
+			.getDoublePosition(0) + ", " + center().getDoublePosition(1) + "Radii: " +
+			semiAxisLength(0) + ", " + semiAxisLength(1);
+	}
+
 	// -- Helper classes
 
 	private class EllipseCenter extends AbstractRealMaskPoint {

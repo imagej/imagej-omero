@@ -74,6 +74,14 @@ public class DefaultOMEROLine extends AbstractOMEROShape<LineData> implements
 			false);
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "\nEndpoint One: " + endpointOne()
+			.getDoublePosition(0) + ", " + endpointOne().getDoublePosition(1) +
+			"\nEndpoint Two: " + endpointTwo().getDoublePosition(0) + ", " +
+			endpointTwo().getDoublePosition(1);
+	}
+
 	// -- Helper classes --
 
 	private class LineEndPoint extends AbstractRealMaskPoint {

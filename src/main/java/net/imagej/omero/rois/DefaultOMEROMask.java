@@ -71,16 +71,20 @@ public class DefaultOMEROMask extends AbstractOMEROShape<MaskData> implements
 
 	@Override
 	public double realMin(final int d) {
-		if (d == 0)
-			return shape.getX();
+		if (d == 0) return shape.getX();
 		return shape.getY();
 	}
 
 	@Override
 	public double realMax(final int d) {
-		if (d == 0)
-			return shape.getX() + shape.getWidth();
+		if (d == 0) return shape.getX() + shape.getWidth();
 		return shape.getY() + shape.getY();
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "\nMin: " + realMin(0) + ", " + realMin(
+			1) + "\nMax: " + realMax(0) + ", " + realMax(1);
 	}
 
 }

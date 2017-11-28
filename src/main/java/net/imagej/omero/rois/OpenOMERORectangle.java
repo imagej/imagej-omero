@@ -64,6 +64,13 @@ public class OpenOMERORectangle extends AbstractOMEROShape<RectangleData>
 			.getWidth() / 2, getShape().getY() + getShape().getHeight() / 2 });
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "\nCenter: " + center()
+			.getDoublePosition(0) + ", " + center().getDoublePosition(1) +
+			"\nWidth: " + sideLength(0) + "\nHeight: " + sideLength(1);
+	}
+
 	// -- Helper classes --
 
 	private class RectangleCenter extends AbstractRealMaskPoint {

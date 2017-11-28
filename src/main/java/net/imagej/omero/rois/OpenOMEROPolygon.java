@@ -57,6 +57,16 @@ public class OpenOMEROPolygon extends AbstractOMEROShape<PolygonData> implements
 		return new PolygonVertex(shape.getPoints().get(pos));
 	}
 
+	@Override
+	public String toString() {
+		String s = getClass().getSimpleName();
+		for (int i = 0; i < numVertices(); i++) {
+			s += "\nVertex " + i + ": " + vertex(i).getDoublePosition(0) + ", " +
+				vertex(i).getDoublePosition(1);
+		}
+		return s;
+	}
+
 	// -- Helper classes --
 
 	private class PolygonVertex extends AbstractRealMaskPoint {
