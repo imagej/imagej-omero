@@ -26,7 +26,7 @@
 package net.imagej.omero.rois.converter;
 
 import net.imagej.omero.rois.DefaultOMEROMask;
-import net.imglib2.roi.RealMask;
+import net.imglib2.roi.RealMaskRealInterval;
 
 import org.scijava.convert.Converter;
 import org.scijava.plugin.Plugin;
@@ -34,13 +34,13 @@ import org.scijava.plugin.Plugin;
 import omero.gateway.model.MaskData;
 
 /**
- * Converts an OMERO {@link MaskData} to {@link RealMask}.
+ * Converts an OMERO {@link MaskData} to {@link RealMaskRealInterval}.
  *
  * @author Alison Walter
  */
 @Plugin(type = Converter.class)
 public class OMEROToImageJMask extends
-	AbstractOMEROShapeToImageJMask<MaskData, RealMask>
+	AbstractOMEROShapeToImageJMask<MaskData, RealMaskRealInterval>
 {
 
 	@Override
@@ -49,12 +49,12 @@ public class OMEROToImageJMask extends
 	}
 
 	@Override
-	public Class<RealMask> getOutputType() {
-		return RealMask.class;
+	public Class<RealMaskRealInterval> getOutputType() {
+		return RealMaskRealInterval.class;
 	}
 
 	@Override
-	public RealMask convert(final MaskData shape) {
+	public RealMaskRealInterval convert(final MaskData shape) {
 		// Masks have no defined boundary behavior
 		return new DefaultOMEROMask(shape);
 	}

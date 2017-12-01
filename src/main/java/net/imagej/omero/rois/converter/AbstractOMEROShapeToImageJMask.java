@@ -26,6 +26,7 @@
 package net.imagej.omero.rois.converter;
 
 import net.imglib2.roi.RealMask;
+import net.imglib2.roi.RealMaskRealInterval;
 
 import org.scijava.convert.AbstractConverter;
 
@@ -37,9 +38,9 @@ import omero.gateway.model.ShapeData;
  *
  * @author Alison Walter
  * @param <S> OMERO Shape input type
- * @param <M> {@link RealMask} output type
+ * @param <M> {@link RealMaskRealInterval} output type
  */
-public abstract class AbstractOMEROShapeToImageJMask<S extends ShapeData, M extends RealMask>
+public abstract class AbstractOMEROShapeToImageJMask<S extends ShapeData, M extends RealMaskRealInterval>
 	extends AbstractConverter<S, M>
 {
 
