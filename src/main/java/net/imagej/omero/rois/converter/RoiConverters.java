@@ -25,9 +25,8 @@
 
 package net.imagej.omero.rois.converter;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROSession;
 import net.imglib2.realtransform.AffineGet;
@@ -37,12 +36,13 @@ import net.imglib2.roi.MaskPredicate;
 
 import org.scijava.log.LogService;
 
-import omero.ServerError;
-import omero.api.IMetadataPrx;
+import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.facility.MetadataFacility;
+import omero.gateway.model.AnnotationData;
 import omero.gateway.model.ShapeData;
+import omero.gateway.model.TagAnnotationData;
 import omero.model.AffineTransformI;
-import omero.model.Annotation;
 import omero.model.TagAnnotation;
 import omero.model.TagAnnotationI;
 
@@ -67,13 +67,15 @@ public class RoiConverters {
 	public static <S extends ShapeData> BoundaryType boundaryType(final S shape,
 		final OMEROSession session, final LogService log)
 	{
-		List<Annotation> annotations;
+		List<AnnotationData> annotations;
 		try {
-			final IMetadataPrx proxy = session.getGateway().getMetadataService(session
-				.getSecurityContext());
-			annotations = getAnnotations(proxy, shape);
+			final MetadataFacility proxy = session.getGateway().getFacility(
+				MetadataFacility.class);
+			annotations = proxy.getAnnotations(session.getSecurityContext(), shape);
 		}
-		catch (final DSOutOfServiceException | ServerError exc) {
+		catch (final DSOutOfServiceException | ExecutionException
+				| DSAccessException exc)
+		{
 			log.warn("Error encountered when attempting to retrieve annotations for" +
 				" boundary behavior, defaulting to closed boundary behavior.", exc);
 			return BoundaryType.CLOSED;
@@ -81,12 +83,12 @@ public class RoiConverters {
 
 		if (annotations == null || annotations.isEmpty())
 			return BoundaryType.CLOSED;
-		for (final Annotation a : annotations) {
-			if (TagAnnotation.class.isInstance(a) && a.getName().getValue().equals(
-				"boundaryType"))
+		for (final AnnotationData ad : annotations) {
+			if (ad instanceof TagAnnotationData && ((TagAnnotationData) ad)
+				.getDescription().equals("boundaryType"))
 			{
-				final TagAnnotation t = (TagAnnotation) a;
-				final String type = t.getTextValue().getValue();
+				final TagAnnotationData t = (TagAnnotationData) ad;
+				final String type = t.getTagValue();
 				if (type.toLowerCase().equals("open")) return BoundaryType.OPEN;
 				else if (type.toLowerCase().equals("unspecified"))
 					return BoundaryType.UNSPECIFIED;
@@ -151,23 +153,9 @@ public class RoiConverters {
 		final MaskPredicate<L> mask)
 	{
 		final TagAnnotation tag = new TagAnnotationI();
-		tag.setName(omero.rtypes.rstring("boundaryType"));
+		tag.setDescription(omero.rtypes.rstring("boundaryType"));
 		tag.setTextValue(omero.rtypes.rstring(mask.boundaryType().toString()
 			.toLowerCase()));
 		return tag;
-	}
-
-	// -- Helper methods --
-
-	private static <S extends ShapeData> List<Annotation> getAnnotations(
-		final IMetadataPrx proxy, final S shape) throws ServerError
-	{
-		final List<String> include = Collections.emptyList();
-		final List<String> exclude = Collections.emptyList();
-		final Long shapeId = shape.asIObject().getId().getValue();
-		final Map<Long, List<Annotation>> annotations = proxy
-			.loadSpecifiedAnnotationsLinkedTo(TagAnnotationI.class.getCanonicalName(),
-				include, exclude, "Shape", Collections.singletonList(shapeId), null);
-		return annotations.get(shapeId);
 	}
 }

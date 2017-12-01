@@ -29,27 +29,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import io.scif.FormatException;
-
 import java.awt.geom.Point2D;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.Dataset;
-import net.imagej.omero.OMEROFormat.Metadata;
-import net.imagej.omero.OMEROLocation;
+import net.imagej.omero.DefaultOMEROService;
+import net.imagej.omero.DefaultOMEROSession;
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.OMEROSession;
 import net.imagej.omero.rois.OMEROMask;
-import net.imagej.table.Table;
 import net.imglib2.RealPoint;
 import net.imglib2.roi.BoundaryType;
-import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.RealMask;
 import net.imglib2.roi.geom.real.Box;
 import net.imglib2.roi.geom.real.Ellipsoid;
@@ -62,67 +52,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.scijava.Context;
-import org.scijava.Optional;
-import org.scijava.Priority;
 import org.scijava.convert.ConvertService;
-import org.scijava.module.ModuleItem;
-import org.scijava.plugin.Plugin;
-import org.scijava.service.AbstractService;
-import org.scijava.service.Service;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-import Ice.AsyncResult;
-import Ice.ByteSeqHolder;
-import Ice.Callback;
-import Ice.Callback_Object_ice_flushBatchRequests;
-import Ice.Callback_Object_ice_getConnection;
-import Ice.Callback_Object_ice_id;
-import Ice.Callback_Object_ice_ids;
-import Ice.Callback_Object_ice_invoke;
-import Ice.Callback_Object_ice_isA;
-import Ice.Callback_Object_ice_ping;
-import Ice.Communicator;
-import Ice.Connection;
-import Ice.EncodingVersion;
-import Ice.Endpoint;
-import Ice.EndpointSelectionType;
-import Ice.Exception;
-import Ice.Identity;
-import Ice.LocatorPrx;
-import Ice.ObjectPrx;
-import Ice.OperationMode;
-import Ice.RouterPrx;
-import Ice.UserException;
-import IceInternal.Functional_BoolCallback;
-import IceInternal.Functional_GenericCallback1;
-import IceInternal.Functional_VoidCallback;
-import omero.RLong;
-import omero.RType;
-import omero.ServerError;
-import omero.client;
-import omero.api.Callback_IMetadata_countAnnotationsUsedNotOwned;
-import omero.api.Callback_IMetadata_countSpecifiedAnnotations;
-import omero.api.Callback_IMetadata_getTaggedObjectsCount;
-import omero.api.Callback_IMetadata_loadAnnotation;
-import omero.api.Callback_IMetadata_loadAnnotations;
-import omero.api.Callback_IMetadata_loadAnnotationsUsedNotOwned;
-import omero.api.Callback_IMetadata_loadChannelAcquisitionData;
-import omero.api.Callback_IMetadata_loadInstrument;
-import omero.api.Callback_IMetadata_loadLogFiles;
-import omero.api.Callback_IMetadata_loadSpecifiedAnnotations;
-import omero.api.Callback_IMetadata_loadSpecifiedAnnotationsLinkedTo;
-import omero.api.Callback_IMetadata_loadTagContent;
-import omero.api.Callback_IMetadata_loadTagSets;
-import omero.api.IMetadataPrx;
-import omero.api.RawPixelsStorePrx;
-import omero.api.ServiceFactoryPrx;
+import mockit.Expectations;
+import mockit.Mocked;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.facility.MetadataFacility;
+import omero.gateway.model.AnnotationData;
 import omero.gateway.model.EllipseData;
-import omero.gateway.model.ExperimenterData;
 import omero.gateway.model.LineData;
 import omero.gateway.model.MaskData;
 import omero.gateway.model.PointData;
@@ -131,20 +71,13 @@ import omero.gateway.model.PolylineData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.RectangleData;
 import omero.gateway.model.ShapeData;
-import omero.gateway.model.TableData;
-import omero.grid.Param;
+import omero.gateway.model.TagAnnotationData;
 import omero.model.AffineTransformI;
-import omero.model.Annotation;
-import omero.model.IObject;
-import omero.model.Image;
-import omero.model.Instrument;
-import omero.model.LogicalChannel;
-import omero.model.Pixels;
 import omero.model.PolygonI;
 import omero.model.Shape;
 import omero.model.ShapeAnnotationLink;
+import omero.model.TagAnnotation;
 import omero.model.TagAnnotationI;
-import omero.sys.Parameters;
 
 /**
  * Tests OMERO to ImageJ Roi converters.
@@ -155,14 +88,26 @@ public class OMEROToImageJConverterTest {
 
 	private ConvertService convertService;
 
-	private TestOMEROService omeroService;
+	@Mocked
+	private Gateway gateway;
+
+	@Mocked
+	private DefaultOMEROSession session;
+
+	@Mocked
+	private DefaultOMEROService omeroService;
+
+	@Mocked
+	private MetadataFacility metadataFacility;
+
+	@Mocked
+	private SecurityContext securityContext;
 
 	@Before
 	public void setUp() {
 		final Context context = new Context(ConvertService.class,
-			TestOMEROService.class);
+			OMEROService.class);
 		convertService = context.service(ConvertService.class);
-		omeroService = context.service(TestOMEROService.class);
 	}
 
 	@After
@@ -173,9 +118,12 @@ public class OMEROToImageJConverterTest {
 	// -- Test Shape Converters --
 
 	@Test
-	public void testEllipse() {
+	public void testEllipse() throws ExecutionException, DSOutOfServiceException,
+		DSAccessException
+	{
 		final EllipseData e = new EllipseData(0, 0, 2, 4);
 		e.asIObject().setId(omero.rtypes.rlong(10));
+		setUpMethodCalls(e);
 		final Ellipsoid<?> c = convertService.convert(e, Ellipsoid.class);
 
 		assertTrue(c.boundaryType() == BoundaryType.CLOSED);
@@ -282,9 +230,12 @@ public class OMEROToImageJConverterTest {
 	}
 
 	@Test
-	public void testRectangle() {
+	public void testRectangle() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final RectangleData r = new RectangleData(10, 10, 15, 20);
 		r.asIObject().setId(omero.rtypes.rlong(10));
+		setUpMethodCalls(r);
 		final Box<?> c = convertService.convert(r, Box.class);
 
 		assertTrue(c.boundaryType() == BoundaryType.CLOSED);
@@ -299,7 +250,9 @@ public class OMEROToImageJConverterTest {
 	}
 
 	@Test
-	public void testSimpleTransformedShape() {
+	public void testSimpleTransformedShape() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final ROIData roi = new ROIData();
 		final RectangleData r = new RectangleData(0, 0, 50, 10);
 		r.asIObject().setId(omero.rtypes.rlong(10));
@@ -313,6 +266,7 @@ public class OMEROToImageJConverterTest {
 		r.setTransform(transform);
 
 		roi.addShapeData(r);
+		setUpMethodCalls(r);
 		final RealMask c = convertService.convert(roi, RealMask.class);
 
 		assertEquals(c.boundaryType(), BoundaryType.CLOSED);
@@ -322,7 +276,9 @@ public class OMEROToImageJConverterTest {
 	}
 
 	@Test
-	public void testTransformedShape() {
+	public void testTransformedShape() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final ROIData roi = new ROIData();
 		final RectangleData r = new RectangleData(95, 85, 10, 30);
 		r.asIObject().setId(omero.rtypes.rlong(10));
@@ -337,6 +293,7 @@ public class OMEROToImageJConverterTest {
 			Math.cos(Math.PI / 4)));
 		r.setTransform(transform);
 
+		setUpMethodCalls(r);
 		roi.addShapeData(r);
 		final RealMask c = convertService.convert(roi, RealMask.class);
 
@@ -348,7 +305,9 @@ public class OMEROToImageJConverterTest {
 	}
 
 	@Test
-	public void testShapeWithAnnotation() {
+	public void testShapeWithAnnotation() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final List<Point2D.Double> points = new ArrayList<>();
 		points.add(new Point2D.Double(0, 0));
 		points.add(new Point2D.Double(0, 10));
@@ -357,14 +316,14 @@ public class OMEROToImageJConverterTest {
 		points.add(new Point2D.Double(10, 0));
 		final PolygonData p = new PolygonData(points);
 		p.asIObject().setId(omero.rtypes.rlong(10));
-		omeroService.setShape(p); // needed for mock classes only!
 
 		final TagAnnotationI tag = new TagAnnotationI();
-		tag.setName(omero.rtypes.rstring("boundaryType"));
+		tag.setDescription(omero.rtypes.rstring("boundaryType"));
 		tag.setTextValue(omero.rtypes.rstring("unspecified"));
 
 		((PolygonI) p.asIObject()).linkAnnotation(tag);
 
+		setUpMethodCalls(p);
 		final RealMask c = convertService.convert(p, RealMask.class);
 
 		assertEquals(c.boundaryType(), BoundaryType.UNSPECIFIED);
@@ -379,13 +338,16 @@ public class OMEROToImageJConverterTest {
 	// -- Test OMERORoi Converter --
 
 	@Test
-	public void testROISingleShape() {
+	public void testROISingleShape() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final ROIData roi = new ROIData();
 		final RectangleData r = new RectangleData(10, 10, 15, 20);
 		r.asIObject().setId(omero.rtypes.rlong(10));
 		r.setT(12);
 		r.setC(2);
 		roi.addShapeData(r);
+		setUpMethodCalls(r);
 
 		final RealMask c = convertService.convert(roi, RealMask.class);
 
@@ -397,7 +359,9 @@ public class OMEROToImageJConverterTest {
 	}
 
 	@Test
-	public void testROITwoShapes() {
+	public void testROITwoShapes() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final ROIData roi = new ROIData();
 
 		final RectangleData r = new RectangleData(10, 10, 15, 20);
@@ -412,6 +376,7 @@ public class OMEROToImageJConverterTest {
 		e.setT(0);
 		roi.addShapeData(e);
 
+		setUpMethodCalls(r, e);
 		final RealMask c = convertService.convert(roi, RealMask.class);
 
 		assertEquals(c.numDimensions(), 4);
@@ -423,7 +388,9 @@ public class OMEROToImageJConverterTest {
 	}
 
 	@Test
-	public void testROITwoShapesTwoPlanes() {
+	public void testROITwoShapesTwoPlanes() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final ROIData roi = new ROIData();
 
 		final RectangleData r = new RectangleData(10, 10, 15, 20);
@@ -438,6 +405,7 @@ public class OMEROToImageJConverterTest {
 		e.setT(0);
 		roi.addShapeData(e);
 
+		setUpMethodCalls(r, e);
 		final RealMask c = convertService.convert(roi, RealMask.class);
 
 		assertEquals(c.numDimensions(), 4);
@@ -450,7 +418,9 @@ public class OMEROToImageJConverterTest {
 	}
 
 	@Test
-	public void test3DRectangle() {
+	public void test3DRectangle() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final ROIData roi = new ROIData();
 		final RectangleData r = new RectangleData(10, 10, 15, 20);
 		r.asIObject().setId(omero.rtypes.rlong(10));
@@ -474,6 +444,7 @@ public class OMEROToImageJConverterTest {
 		roi.addShapeData(rThree);
 		roi.addShapeData(rFour);
 
+		setUpMethodCalls(r, rOne, rTwo, rThree, rFour);
 		final RealMask c = convertService.convert(roi, RealMask.class);
 
 		assertEquals(c.numDimensions(), 3);
@@ -487,7 +458,9 @@ public class OMEROToImageJConverterTest {
 	}
 
 	@Test
-	public void test5DRectangles() {
+	public void test5DRectangles() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final ROIData roi = new ROIData();
 		final RectangleData rZero = new RectangleData(0, 0, 4, 4);
 		rZero.asIObject().setId(omero.rtypes.rlong(10));
@@ -514,6 +487,7 @@ public class OMEROToImageJConverterTest {
 		roi.addShapeData(rOne);
 		roi.addShapeData(rTwo);
 		roi.addShapeData(rThree);
+		setUpMethodCalls(rZero, rOne, rTwo, rThree);
 		final RealMask c = convertService.convert(roi, RealMask.class);
 
 		assertEquals(c.numDimensions(), 5);
@@ -529,7 +503,9 @@ public class OMEROToImageJConverterTest {
 	}
 
 	@Test
-	public void testMultiDRectangles() {
+	public void testMultiDRectangles() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final ROIData roi = new ROIData();
 		final RectangleData rZero = new RectangleData(0, 0, 4, 4);
 		rZero.asIObject().setId(omero.rtypes.rlong(10));
@@ -547,6 +523,7 @@ public class OMEROToImageJConverterTest {
 		roi.addShapeData(rZero);
 		roi.addShapeData(rOne);
 		roi.addShapeData(rTwo);
+		setUpMethodCalls(rZero, rOne, rTwo);
 		final RealMask c = convertService.convert(roi, RealMask.class);
 
 		assertEquals(c.numDimensions(), 5);
@@ -561,2460 +538,39 @@ public class OMEROToImageJConverterTest {
 		assertFalse(c.test(new RealPoint(new double[] { 3, 3, 1, 1, 2 })));
 	}
 
-	// -- Mock Classes --
+	// -- Helper methods --
 
-	@Plugin(type = Service.class, priority = Priority.LAST)
-	public static class TestOMEROService extends AbstractService implements
-		OMEROService, Optional
+	private void setUpMethodCalls(final ShapeData... shapes)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException
 	{
+		new Expectations() {
 
-		private ShapeData s;
-
-		@Override
-		public Param getJobParam(final ModuleItem<?> item) {
-			return null;
-		}
-
-		@Override
-		public RType prototype(final Class<?> type) {
-			return null;
-		}
-
-		@Override
-		public RType toOMERO(final Object value) {
-			return null;
-		}
-
-		@Override
-		public Object toOMERO(final client client, final Object value)
-			throws ServerError, IOException, PermissionDeniedException,
-			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-			DSAccessException
-		{
-			return null;
-		}
-
-		@Override
-		public Object toImageJ(final client client, final RType value,
-			final Class<?> type) throws ServerError, IOException,
-			PermissionDeniedException, CannotCreateSessionException,
-			SecurityException, DSOutOfServiceException, ExecutionException,
-			DSAccessException
-		{
-			return null;
-		}
-
-		@Override
-		public Dataset downloadImage(final client client, final long imageID)
-			throws ServerError, IOException
-		{
-			return null;
-		}
-
-		@Override
-		public long uploadImage(final client client, final Dataset dataset)
-			throws ServerError, IOException
-		{
-			return 0;
-		}
-
-		@Override
-		public long uploadTable(final OMEROLocation credentials, final String name,
-			final Table<?, ?> imageJTable, final long imageID) throws ServerError,
-			PermissionDeniedException, CannotCreateSessionException,
-			ExecutionException, DSOutOfServiceException, DSAccessException
-		{
-			return 0;
-		}
-
-		@Override
-		public TableData convertOMEROTable(final Table<?, ?> imageJTable) {
-			return null;
-		}
-
-		@Override
-		public Table<?, ?> downloadTable(final OMEROLocation credentials,
-			final long tableID) throws ServerError, PermissionDeniedException,
-			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-			DSAccessException
-		{
-			return null;
-		}
-
-		@Override
-		public OMEROSession session(final OMEROLocation location) {
-			return null;
-		}
-
-		@Override
-		public OMEROSession session() {
-			return new TestOMEROSession(s);
-		}
-
-		@Override
-		public OMEROSession createSession(final OMEROLocation location) {
-			return null;
-		}
-
-		@Override
-		public void removeSession(final OMEROSession session) {}
-
-		public void setShape(final ShapeData s) {
-			this.s = s;
-		}
-
-		@Override
-		public List<MaskPredicate<?>> downloadROIs(final OMEROLocation credentials,
-			final long imageID) throws ServerError, PermissionDeniedException,
-			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-			DSAccessException
-		{
-			return null;
-		}
-
-		@Override
-		public long[] uploadROIs(final OMEROLocation credentials,
-			final List<MaskPredicate<?>> ijROIs, final long imageID)
-			throws ServerError, PermissionDeniedException,
-			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-			DSAccessException
-		{
-			return null;
-		}
-
+			{
+				for (int i = 0; i < shapes.length; i++) {
+					omeroService.session();
+					result = session;
+					session.getGateway();
+					result = gateway;
+					gateway.getFacility(MetadataFacility.class);
+					result = metadataFacility;
+					session.getSecurityContext();
+					result = securityContext;
+					metadataFacility.getAnnotations(securityContext, shapes[i]);
+					result = getAnnotations(shapes[i]);
+				}
+			}
+		};
 	}
 
-	public static class TestOMEROSession implements OMEROSession {
-
-		private final ShapeData s;
-
-		public TestOMEROSession(final ShapeData s) {
-			this.s = s;
+	private List<AnnotationData> getAnnotations(final ShapeData s) {
+		final List<ShapeAnnotationLink> sals = ((Shape) s.asIObject())
+			.copyAnnotationLinks();
+		final List<AnnotationData> ad = new ArrayList<>();
+		for (final ShapeAnnotationLink sal : sals) {
+			if (sal.getChild() instanceof TagAnnotation) {
+				ad.add(new TagAnnotationData((TagAnnotation) sal.getChild()));
+			}
 		}
-
-		@Override
-		public client getClient() {
-			return null;
-		}
-
-		@Override
-		public ServiceFactoryPrx getSession() {
-			return null;
-		}
-
-		@Override
-		public SecurityContext getSecurityContext() {
-			return new TestSecurityContext(0);
-		}
-
-		@Override
-		public ExperimenterData getExperimenter() {
-			return null;
-		}
-
-		@Override
-		public Gateway getGateway() {
-			return new TestGateway(s);
-		}
-
-		@Override
-		public String getSessionID() {
-			return null;
-		}
-
-		@Override
-		public Pixels loadPixels(final Metadata meta) throws ServerError {
-			return null;
-		}
-
-		@Override
-		public Image loadImage(final Metadata meta) throws ServerError {
-			return null;
-		}
-
-		@Override
-		public long loadPixelsID(final Metadata meta) throws ServerError {
-			return 0;
-		}
-
-		@Override
-		public String loadImageName(final Metadata meta) throws ServerError {
-			return null;
-		}
-
-		@Override
-		public RawPixelsStorePrx openPixels(final Metadata meta)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public RawPixelsStorePrx createPixels(final Metadata meta)
-			throws ServerError, FormatException
-		{
-			return null;
-		}
-
-		@Override
-		public void close() {}
-
+		return ad;
 	}
-
-	public static class TestGateway extends Gateway {
-
-		private final ShapeData s;
-
-		public TestGateway(final ShapeData s) {
-			super(null, null, null, false);
-			this.s = s;
-		}
-
-		@Override
-		public IMetadataPrx getMetadataService(final SecurityContext ctx)
-			throws DSOutOfServiceException
-		{
-			return new TestIMetadataPrx(s);
-		}
-
-	}
-
-	public static class TestSecurityContext extends SecurityContext {
-
-		public TestSecurityContext(final long groupID) {
-			super(groupID);
-		}
-
-	}
-
-	public static class TestIMetadataPrx implements IMetadataPrx {
-
-		private final ShapeData s;
-
-		public TestIMetadataPrx(final ShapeData s) {
-			super();
-			this.s = s;
-		}
-
-		@Override
-		public AsyncResult begin_ice_flushBatchRequests() {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_flushBatchRequests(final Callback arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_flushBatchRequests(
-			final Callback_Object_ice_flushBatchRequests arg0)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_flushBatchRequests(
-			final Functional_VoidCallback arg0,
-			final Functional_GenericCallback1<Exception> arg1,
-			final Functional_BoolCallback arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_getConnection() {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_getConnection(final Callback arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_getConnection(
-			final Callback_Object_ice_getConnection arg0)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_getConnection(
-			final Functional_GenericCallback1<Connection> arg0,
-			final Functional_GenericCallback1<Exception> arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_id() {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_id(final Map<String, String> arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_id(final Callback arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_id(final Callback_Object_ice_id arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_id(final Map<String, String> arg0,
-			final Callback arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_id(final Map<String, String> arg0,
-			final Callback_Object_ice_id arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_id(
-			final Functional_GenericCallback1<String> arg0,
-			final Functional_GenericCallback1<Exception> arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_id(
-			final Functional_GenericCallback1<String> arg0,
-			final Functional_GenericCallback1<Exception> arg1,
-			final Functional_BoolCallback arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_id(final Map<String, String> arg0,
-			final Functional_GenericCallback1<String> arg1,
-			final Functional_GenericCallback1<Exception> arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_id(final Map<String, String> arg0,
-			final Functional_GenericCallback1<String> arg1,
-			final Functional_GenericCallback1<Exception> arg2,
-			final Functional_BoolCallback arg3)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ids() {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ids(final Map<String, String> arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ids(final Callback arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ids(final Callback_Object_ice_ids arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ids(final Map<String, String> arg0,
-			final Callback arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ids(final Map<String, String> arg0,
-			final Callback_Object_ice_ids arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ids(
-			final Functional_GenericCallback1<String[]> arg0,
-			final Functional_GenericCallback1<Exception> arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ids(
-			final Functional_GenericCallback1<String[]> arg0,
-			final Functional_GenericCallback1<Exception> arg1,
-			final Functional_BoolCallback arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ids(final Map<String, String> arg0,
-			final Functional_GenericCallback1<String[]> arg1,
-			final Functional_GenericCallback1<Exception> arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ids(final Map<String, String> arg0,
-			final Functional_GenericCallback1<String[]> arg1,
-			final Functional_GenericCallback1<Exception> arg2,
-			final Functional_BoolCallback arg3)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_invoke(final String arg0,
-			final OperationMode arg1, final byte[] arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_invoke(final String arg0,
-			final OperationMode arg1, final byte[] arg2,
-			final Map<String, String> arg3)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_invoke(final String arg0,
-			final OperationMode arg1, final byte[] arg2, final Callback arg3)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_invoke(final String arg0,
-			final OperationMode arg1, final byte[] arg2,
-			final Callback_Object_ice_invoke arg3)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_invoke(final String arg0,
-			final OperationMode arg1, final byte[] arg2,
-			final Map<String, String> arg3, final Callback arg4)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_invoke(final String arg0,
-			final OperationMode arg1, final byte[] arg2,
-			final Map<String, String> arg3, final Callback_Object_ice_invoke arg4)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_invoke(final String arg0,
-			final OperationMode arg1, final byte[] arg2,
-			final FunctionalCallback_Object_ice_invoke_Response arg3,
-			final Functional_GenericCallback1<Exception> arg4)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_invoke(final String arg0,
-			final OperationMode arg1, final byte[] arg2,
-			final FunctionalCallback_Object_ice_invoke_Response arg3,
-			final Functional_GenericCallback1<Exception> arg4,
-			final Functional_BoolCallback arg5)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_invoke(final String arg0,
-			final OperationMode arg1, final byte[] arg2,
-			final Map<String, String> arg3,
-			final FunctionalCallback_Object_ice_invoke_Response arg4,
-			final Functional_GenericCallback1<Exception> arg5)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_invoke(final String arg0,
-			final OperationMode arg1, final byte[] arg2,
-			final Map<String, String> arg3,
-			final FunctionalCallback_Object_ice_invoke_Response arg4,
-			final Functional_GenericCallback1<Exception> arg5,
-			final Functional_BoolCallback arg6)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_isA(final String arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_isA(final String arg0,
-			final Map<String, String> arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_isA(final String arg0, final Callback arg1) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_isA(final String arg0,
-			final Callback_Object_ice_isA arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_isA(final String arg0,
-			final Map<String, String> arg1, final Callback arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_isA(final String arg0,
-			final Map<String, String> arg1, final Callback_Object_ice_isA arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_isA(final String arg0,
-			final Functional_BoolCallback arg1,
-			final Functional_GenericCallback1<Exception> arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_isA(final String arg0,
-			final Functional_BoolCallback arg1,
-			final Functional_GenericCallback1<Exception> arg2,
-			final Functional_BoolCallback arg3)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_isA(final String arg0,
-			final Map<String, String> arg1, final Functional_BoolCallback arg2,
-			final Functional_GenericCallback1<Exception> arg3)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_isA(final String arg0,
-			final Map<String, String> arg1, final Functional_BoolCallback arg2,
-			final Functional_GenericCallback1<Exception> arg3,
-			final Functional_BoolCallback arg4)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ping() {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ping(final Map<String, String> arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ping(final Callback arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ping(final Callback_Object_ice_ping arg0) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ping(final Map<String, String> arg0,
-			final Callback arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ping(final Map<String, String> arg0,
-			final Callback_Object_ice_ping arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ping(final Functional_VoidCallback arg0,
-			final Functional_GenericCallback1<Exception> arg1)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ping(final Functional_VoidCallback arg0,
-			final Functional_GenericCallback1<Exception> arg1,
-			final Functional_BoolCallback arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ping(final Map<String, String> arg0,
-			final Functional_VoidCallback arg1,
-			final Functional_GenericCallback1<Exception> arg2)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_ice_ping(final Map<String, String> arg0,
-			final Functional_VoidCallback arg1,
-			final Functional_GenericCallback1<Exception> arg2,
-			final Functional_BoolCallback arg3)
-		{
-			return null;
-		}
-
-		@Override
-		public void end_ice_flushBatchRequests(final AsyncResult arg0) {}
-
-		@Override
-		public Connection end_ice_getConnection(final AsyncResult arg0) {
-			return null;
-		}
-
-		@Override
-		public String end_ice_id(final AsyncResult arg0) {
-			return null;
-		}
-
-		@Override
-		public String[] end_ice_ids(final AsyncResult arg0) {
-			return null;
-		}
-
-		@Override
-		public boolean end_ice_invoke(final ByteSeqHolder arg0,
-			final AsyncResult arg1)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean end_ice_isA(final AsyncResult arg0) {
-			return false;
-		}
-
-		@Override
-		public void end_ice_ping(final AsyncResult arg0) {}
-
-		@Override
-		public ObjectPrx ice_adapterId(final String arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_batchDatagram() {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_batchOneway() {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_collocationOptimized(final boolean arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_compress(final boolean arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_connectionCached(final boolean arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_connectionId(final String arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_context(final Map<String, String> arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_datagram() {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_encodingVersion(final EncodingVersion arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_endpointSelection(final EndpointSelectionType arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_endpoints(final Endpoint[] arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_facet(final String arg0) {
-			return null;
-		}
-
-		@Override
-		public void ice_flushBatchRequests() {}
-
-		@Override
-		public String ice_getAdapterId() {
-			return null;
-		}
-
-		@Override
-		public Connection ice_getCachedConnection() {
-			return null;
-		}
-
-		@Override
-		public Communicator ice_getCommunicator() {
-			return null;
-		}
-
-		@Override
-		public Connection ice_getConnection() {
-			return null;
-		}
-
-		@Override
-		public String ice_getConnectionId() {
-			return null;
-		}
-
-		@Override
-		public Map<String, String> ice_getContext() {
-			return null;
-		}
-
-		@Override
-		public EncodingVersion ice_getEncodingVersion() {
-			return null;
-		}
-
-		@Override
-		public EndpointSelectionType ice_getEndpointSelection() {
-			return null;
-		}
-
-		@Override
-		public Endpoint[] ice_getEndpoints() {
-			return null;
-		}
-
-		@Override
-		public String ice_getFacet() {
-			return null;
-		}
-
-		@Override
-		public Identity ice_getIdentity() {
-			return null;
-		}
-
-		@Override
-		public int ice_getInvocationTimeout() {
-			return 0;
-		}
-
-		@Override
-		public LocatorPrx ice_getLocator() {
-			return null;
-		}
-
-		@Override
-		public int ice_getLocatorCacheTimeout() {
-			return 0;
-		}
-
-		@Override
-		public RouterPrx ice_getRouter() {
-			return null;
-		}
-
-		@Override
-		public String ice_id() {
-			return null;
-		}
-
-		@Override
-		public String ice_id(final Map<String, String> arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_identity(final Identity arg0) {
-			return null;
-		}
-
-		@Override
-		public String[] ice_ids() {
-			return null;
-		}
-
-		@Override
-		public String[] ice_ids(final Map<String, String> arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_invocationTimeout(final int arg0) {
-			return null;
-		}
-
-		@Override
-		public boolean ice_invoke(final String arg0, final OperationMode arg1,
-			final byte[] arg2, final ByteSeqHolder arg3)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean ice_invoke(final String arg0, final OperationMode arg1,
-			final byte[] arg2, final ByteSeqHolder arg3,
-			final Map<String, String> arg4)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean ice_isA(final String arg0) {
-			return false;
-		}
-
-		@Override
-		public boolean ice_isA(final String arg0, final Map<String, String> arg1) {
-			return false;
-		}
-
-		@Override
-		public boolean ice_isBatchDatagram() {
-			return false;
-		}
-
-		@Override
-		public boolean ice_isBatchOneway() {
-			return false;
-		}
-
-		@Override
-		public boolean ice_isCollocationOptimized() {
-			return false;
-		}
-
-		@Override
-		public boolean ice_isConnectionCached() {
-			return false;
-		}
-
-		@Override
-		public boolean ice_isDatagram() {
-			return false;
-		}
-
-		@Override
-		public boolean ice_isOneway() {
-			return false;
-		}
-
-		@Override
-		public boolean ice_isPreferSecure() {
-			return false;
-		}
-
-		@Override
-		public boolean ice_isSecure() {
-			return false;
-		}
-
-		@Override
-		public boolean ice_isTwoway() {
-			return false;
-		}
-
-		@Override
-		public ObjectPrx ice_locator(final LocatorPrx arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_locatorCacheTimeout(final int arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_oneway() {
-			return null;
-		}
-
-		@Override
-		public void ice_ping() {}
-
-		@Override
-		public void ice_ping(final Map<String, String> arg0) {}
-
-		@Override
-		public ObjectPrx ice_preferSecure(final boolean arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_router(final RouterPrx arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_secure(final boolean arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_timeout(final int arg0) {
-			return null;
-		}
-
-		@Override
-		public ObjectPrx ice_twoway() {
-			return null;
-		}
-
-		@Override
-		public List<LogicalChannel> loadChannelAcquisitionData(final List<Long> ids)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public List<LogicalChannel> loadChannelAcquisitionData(final List<Long> ids,
-			final Map<String, String> __ctx) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadChannelAcquisitionData(final List<Long> ids) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadChannelAcquisitionData(final List<Long> ids,
-			final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadChannelAcquisitionData(final List<Long> ids,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadChannelAcquisitionData(final List<Long> ids,
-			final Map<String, String> __ctx, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadChannelAcquisitionData(final List<Long> ids,
-			final Callback_IMetadata_loadChannelAcquisitionData __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadChannelAcquisitionData(final List<Long> ids,
-			final Map<String, String> __ctx,
-			final Callback_IMetadata_loadChannelAcquisitionData __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadChannelAcquisitionData(final List<Long> ids,
-			final Functional_GenericCallback1<List<LogicalChannel>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadChannelAcquisitionData(final List<Long> ids,
-			final Functional_GenericCallback1<List<LogicalChannel>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadChannelAcquisitionData(final List<Long> ids,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<List<LogicalChannel>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadChannelAcquisitionData(final List<Long> ids,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<List<LogicalChannel>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public List<LogicalChannel> end_loadChannelAcquisitionData(
-			final AsyncResult __result) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<IObject>> loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<IObject>> loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options,
-			final Map<String, String> __ctx) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options,
-			final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options,
-			final Map<String, String> __ctx, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options,
-			final Callback_IMetadata_loadAnnotations __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options,
-			final Map<String, String> __ctx,
-			final Callback_IMetadata_loadAnnotations __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotations(final String rootType,
-			final List<Long> rootIds, final List<String> annotationTypes,
-			final List<Long> annotatorIds, final Parameters options,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<IObject>> end_loadAnnotations(
-			final AsyncResult __result) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public List<Annotation> loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public List<Annotation> loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Callback_IMetadata_loadSpecifiedAnnotations __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx,
-			final Callback_IMetadata_loadSpecifiedAnnotations __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Functional_GenericCallback1<List<Annotation>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Functional_GenericCallback1<List<Annotation>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<List<Annotation>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<List<Annotation>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public List<Annotation> end_loadSpecifiedAnnotations(
-			final AsyncResult __result) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<IObject>> loadTagContent(final List<Long> ids,
-			final Parameters options) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<IObject>> loadTagContent(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagContent(final List<Long> ids,
-			final Parameters options)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagContent(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagContent(final List<Long> ids,
-			final Parameters options, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagContent(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagContent(final List<Long> ids,
-			final Parameters options, final Callback_IMetadata_loadTagContent __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagContent(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx,
-			final Callback_IMetadata_loadTagContent __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagContent(final List<Long> ids,
-			final Parameters options,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagContent(final List<Long> ids,
-			final Parameters options,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagContent(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagContent(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<IObject>> end_loadTagContent(
-			final AsyncResult __result) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public List<IObject> loadTagSets(final Parameters options)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public List<IObject> loadTagSets(final Parameters options,
-			final Map<String, String> __ctx) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagSets(final Parameters options) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagSets(final Parameters options,
-			final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagSets(final Parameters options,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagSets(final Parameters options,
-			final Map<String, String> __ctx, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagSets(final Parameters options,
-			final Callback_IMetadata_loadTagSets __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagSets(final Parameters options,
-			final Map<String, String> __ctx,
-			final Callback_IMetadata_loadTagSets __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagSets(final Parameters options,
-			final Functional_GenericCallback1<List<IObject>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagSets(final Parameters options,
-			final Functional_GenericCallback1<List<IObject>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagSets(final Parameters options,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<List<IObject>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadTagSets(final Parameters options,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<List<IObject>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public List<IObject> end_loadTagSets(final AsyncResult __result)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, Long> getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, Long> getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options,
-			final Callback_IMetadata_getTaggedObjectsCount __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx,
-			final Callback_IMetadata_getTaggedObjectsCount __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options,
-			final Functional_GenericCallback1<Map<Long, Long>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options,
-			final Functional_GenericCallback1<Map<Long, Long>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Map<Long, Long>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_getTaggedObjectsCount(final List<Long> ids,
-			final Parameters options, final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Map<Long, Long>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, Long> end_getTaggedObjectsCount(final AsyncResult __result)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public RLong countSpecifiedAnnotations(final String annotationType,
-			final List<String> include, final List<String> exclude,
-			final Parameters options) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public RLong countSpecifiedAnnotations(final String annotationType,
-			final List<String> include, final List<String> exclude,
-			final Parameters options, final Map<String, String> __ctx)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Callback_IMetadata_countSpecifiedAnnotations __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx,
-			final Callback_IMetadata_countSpecifiedAnnotations __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Functional_GenericCallback1<RLong> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Functional_GenericCallback1<RLong> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<RLong> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countSpecifiedAnnotations(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final Parameters options,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<RLong> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public RLong end_countSpecifiedAnnotations(final AsyncResult __result)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public List<Annotation> loadAnnotation(final List<Long> annotationIds)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public List<Annotation> loadAnnotation(final List<Long> annotationIds,
-			final Map<String, String> __ctx) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotation(final List<Long> annotationIds) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotation(final List<Long> annotationIds,
-			final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotation(final List<Long> annotationIds,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotation(final List<Long> annotationIds,
-			final Map<String, String> __ctx, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotation(final List<Long> annotationIds,
-			final Callback_IMetadata_loadAnnotation __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotation(final List<Long> annotationIds,
-			final Map<String, String> __ctx,
-			final Callback_IMetadata_loadAnnotation __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotation(final List<Long> annotationIds,
-			final Functional_GenericCallback1<List<Annotation>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotation(final List<Long> annotationIds,
-			final Functional_GenericCallback1<List<Annotation>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotation(final List<Long> annotationIds,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<List<Annotation>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotation(final List<Long> annotationIds,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<List<Annotation>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public List<Annotation> end_loadAnnotation(final AsyncResult __result)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public Instrument loadInstrument(final long id) throws ServerError {
-			return null;
-		}
-
-		@Override
-		public Instrument loadInstrument(final long id,
-			final Map<String, String> __ctx) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadInstrument(final long id) {
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadInstrument(final long id,
-			final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadInstrument(final long id,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadInstrument(final long id,
-			final Map<String, String> __ctx, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadInstrument(final long id,
-			final Callback_IMetadata_loadInstrument __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadInstrument(final long id,
-			final Map<String, String> __ctx,
-			final Callback_IMetadata_loadInstrument __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadInstrument(final long id,
-			final Functional_GenericCallback1<Instrument> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadInstrument(final long id,
-			final Functional_GenericCallback1<Instrument> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadInstrument(final long id,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Instrument> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadInstrument(final long id,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Instrument> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public Instrument end_loadInstrument(final AsyncResult __result)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public List<IObject> loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public List<IObject> loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Callback_IMetadata_loadAnnotationsUsedNotOwned __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx,
-			final Callback_IMetadata_loadAnnotationsUsedNotOwned __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Functional_GenericCallback1<List<IObject>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Functional_GenericCallback1<List<IObject>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<List<IObject>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<List<IObject>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public List<IObject> end_loadAnnotationsUsedNotOwned(
-			final AsyncResult __result) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public RLong countAnnotationsUsedNotOwned(final String annotationType,
-			final long userID) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public RLong countAnnotationsUsedNotOwned(final String annotationType,
-			final long userID, final Map<String, String> __ctx) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countAnnotationsUsedNotOwned(
-			final String annotationType, final long userID)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countAnnotationsUsedNotOwned(
-			final String annotationType, final long userID, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Callback_IMetadata_countAnnotationsUsedNotOwned __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx,
-			final Callback_IMetadata_countAnnotationsUsedNotOwned __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Functional_GenericCallback1<RLong> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Functional_GenericCallback1<RLong> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<RLong> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_countAnnotationsUsedNotOwned(
-			final String annotationType, final long userID,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<RLong> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public RLong end_countAnnotationsUsedNotOwned(final AsyncResult __result)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<Annotation>> loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options)
-			throws ServerError
-		{
-			if (s == null) return Collections.emptyMap();
-
-			final List<ShapeAnnotationLink> l = ((Shape) s.asIObject())
-				.copyAnnotationLinks();
-			if (l.isEmpty()) return Collections.emptyMap();
-
-			final List<Annotation> a = new ArrayList<>();
-			for (final ShapeAnnotationLink sal : l)
-				a.add(sal.getChild());
-
-			final HashMap<Long, List<Annotation>> m = new HashMap<>();
-			m.put(rootNodeIds.get(0), a);
-			return m;
-		}
-
-		@Override
-		public Map<Long, List<Annotation>> loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options,
-			final Map<String, String> __ctx) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options,
-			final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options,
-			final Map<String, String> __ctx, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options,
-			final Callback_IMetadata_loadSpecifiedAnnotationsLinkedTo __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options,
-			final Map<String, String> __ctx,
-			final Callback_IMetadata_loadSpecifiedAnnotationsLinkedTo __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options,
-			final Functional_GenericCallback1<Map<Long, List<Annotation>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options,
-			final Functional_GenericCallback1<Map<Long, List<Annotation>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Map<Long, List<Annotation>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadSpecifiedAnnotationsLinkedTo(
-			final String annotationType, final List<String> include,
-			final List<String> exclude, final String rootNodeType,
-			final List<Long> rootNodeIds, final Parameters options,
-			final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Map<Long, List<Annotation>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<Annotation>> end_loadSpecifiedAnnotationsLinkedTo(
-			final AsyncResult __result) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<IObject>> loadLogFiles(final String rootType,
-			final List<Long> ids) throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<IObject>> loadLogFiles(final String rootType,
-			final List<Long> ids, final Map<String, String> __ctx)
-			throws ServerError
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadLogFiles(final String rootType,
-			final List<Long> ids)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadLogFiles(final String rootType,
-			final List<Long> ids, final Map<String, String> __ctx)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadLogFiles(final String rootType,
-			final List<Long> ids, final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadLogFiles(final String rootType,
-			final List<Long> ids, final Map<String, String> __ctx,
-			final Callback __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadLogFiles(final String rootType,
-			final List<Long> ids, final Callback_IMetadata_loadLogFiles __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadLogFiles(final String rootType,
-			final List<Long> ids, final Map<String, String> __ctx,
-			final Callback_IMetadata_loadLogFiles __cb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadLogFiles(final String rootType,
-			final List<Long> ids,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadLogFiles(final String rootType,
-			final List<Long> ids,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadLogFiles(final String rootType,
-			final List<Long> ids, final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb)
-		{
-			return null;
-		}
-
-		@Override
-		public AsyncResult begin_loadLogFiles(final String rootType,
-			final List<Long> ids, final Map<String, String> __ctx,
-			final Functional_GenericCallback1<Map<Long, List<IObject>>> __responseCb,
-			final Functional_GenericCallback1<UserException> __userExceptionCb,
-			final Functional_GenericCallback1<Exception> __exceptionCb,
-			final Functional_BoolCallback __sentCb)
-		{
-			return null;
-		}
-
-		@Override
-		public Map<Long, List<IObject>> end_loadLogFiles(final AsyncResult __result)
-			throws ServerError
-		{
-			return null;
-		}
-
-	}
-
 }

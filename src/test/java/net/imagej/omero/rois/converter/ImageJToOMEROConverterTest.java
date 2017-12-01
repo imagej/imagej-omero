@@ -30,7 +30,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
+import net.imagej.omero.DefaultOMEROService;
+import net.imagej.omero.DefaultOMEROSession;
+import net.imagej.omero.OMEROService;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.RealPoint;
@@ -74,6 +78,14 @@ import org.junit.rules.ExpectedException;
 import org.scijava.Context;
 import org.scijava.convert.ConvertService;
 
+import mockit.Expectations;
+import mockit.Mocked;
+import omero.gateway.Gateway;
+import omero.gateway.SecurityContext;
+import omero.gateway.exception.DSAccessException;
+import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.facility.MetadataFacility;
+import omero.gateway.model.AnnotationData;
 import omero.gateway.model.EllipseData;
 import omero.gateway.model.LineData;
 import omero.gateway.model.MaskData;
@@ -83,6 +95,7 @@ import omero.gateway.model.PolylineData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.RectangleData;
 import omero.gateway.model.ShapeData;
+import omero.gateway.model.TagAnnotationData;
 import omero.model.EllipseI;
 import omero.model.LineI;
 import omero.model.MaskI;
@@ -91,6 +104,7 @@ import omero.model.PolygonI;
 import omero.model.PolylineI;
 import omero.model.RectangleI;
 import omero.model.RoiI;
+import omero.model.Shape;
 import omero.model.ShapeAnnotationLink;
 import omero.model.TagAnnotation;
 
@@ -106,10 +120,25 @@ public class ImageJToOMEROConverterTest {
 
 	private ConvertService convertService;
 
+	@Mocked
+	private Gateway gateway;
+
+	@Mocked
+	private DefaultOMEROSession session;
+
+	@Mocked
+	private DefaultOMEROService omeroService;
+
+	@Mocked
+	private MetadataFacility metadataFacility;
+
+	@Mocked
+	private SecurityContext securityContext;
+
 	@Before
 	public void setUp() {
 		final Context context = new Context(ConvertService.class,
-			OMEROToImageJConverterTest.TestOMEROService.class);
+			OMEROService.class);
 		convertService = context.service(ConvertService.class);
 	}
 
@@ -144,7 +173,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "closed");
 	}
 
@@ -174,7 +203,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "open");
 	}
 
@@ -204,7 +233,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "open");
 	}
 
@@ -234,7 +263,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "closed");
 	}
 
@@ -291,7 +320,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "unspecified");
 	}
 
@@ -334,7 +363,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "unspecified");
 	}
 
@@ -410,7 +439,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "closed");
 	}
 
@@ -442,7 +471,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "unspecified");
 	}
 
@@ -480,7 +509,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "closed");
 	}
 
@@ -509,7 +538,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "open");
 	}
 
@@ -522,7 +551,9 @@ public class ImageJToOMEROConverterTest {
 	}
 
 	@Test
-	public void testOMEROWrappedShape() {
+	public void testOMEROWrappedShape() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
 		final EllipseData ed = new EllipseData(0, 0, 5, 8);
 		final ROIData rd = new ROIData();
 		((RoiI) rd.asIObject()).setName(omero.rtypes.rstring("Roi"));
@@ -533,6 +564,7 @@ public class ImageJToOMEROConverterTest {
 		ed.setId(112);
 		rd.addShapeData(ed);
 
+		setUpMethodCalls(ed);
 		final RealMask w = convertService.convert(rd, RealMask.class);
 		final ROIData n = convertService.convert(w, ROIData.class);
 
@@ -561,7 +593,7 @@ public class ImageJToOMEROConverterTest {
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
 
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "closed");
 	}
 
@@ -601,7 +633,7 @@ public class ImageJToOMEROConverterTest {
 		final ShapeAnnotationLink link = annotations.get(0);
 		assertTrue(link.getChild() instanceof TagAnnotation);
 		final TagAnnotation t = (TagAnnotation) link.getChild();
-		assertEquals(t.getName().getValue(), "boundaryType");
+		assertEquals(t.getDescription().getValue(), "boundaryType");
 		assertEquals(t.getTextValue().getValue(), "closed");
 
 		final List<ShapeAnnotationLink> annotationsTwo = ((EllipseI) ell
@@ -610,7 +642,7 @@ public class ImageJToOMEROConverterTest {
 		final ShapeAnnotationLink linkTwo = annotationsTwo.get(0);
 		assertTrue(linkTwo.getChild() instanceof TagAnnotation);
 		final TagAnnotation tTwo = (TagAnnotation) linkTwo.getChild();
-		assertEquals(tTwo.getName().getValue(), "boundaryType");
+		assertEquals(tTwo.getDescription().getValue(), "boundaryType");
 		assertEquals(tTwo.getTextValue().getValue(), "open");
 
 		final List<ShapeAnnotationLink> annotationsThree = ((PointI) point
@@ -619,7 +651,7 @@ public class ImageJToOMEROConverterTest {
 		final ShapeAnnotationLink linkThree = annotationsThree.get(0);
 		assertTrue(linkTwo.getChild() instanceof TagAnnotation);
 		final TagAnnotation tThree = (TagAnnotation) linkThree.getChild();
-		assertEquals(tThree.getName().getValue(), "boundaryType");
+		assertEquals(tThree.getDescription().getValue(), "boundaryType");
 		assertEquals(tThree.getTextValue().getValue(), "closed");
 	}
 
@@ -751,5 +783,41 @@ public class ImageJToOMEROConverterTest {
 
 		exception.expect(IllegalArgumentException.class);
 		convertService.convert(multiOr, ROIData.class);
+	}
+
+	// -- Helper methods --
+
+	private void setUpMethodCalls(final ShapeData... shapes)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException
+	{
+		new Expectations() {
+
+			{
+				for (int i = 0; i < shapes.length; i++) {
+					omeroService.session();
+					result = session;
+					session.getGateway();
+					result = gateway;
+					gateway.getFacility(MetadataFacility.class);
+					result = metadataFacility;
+					session.getSecurityContext();
+					result = securityContext;
+					metadataFacility.getAnnotations(securityContext, shapes[i]);
+					result = getAnnotations(shapes[i]);
+				}
+			}
+		};
+	}
+
+	private List<AnnotationData> getAnnotations(final ShapeData s) {
+		final List<ShapeAnnotationLink> sals = ((Shape) s.asIObject())
+			.copyAnnotationLinks();
+		final List<AnnotationData> ad = new ArrayList<>();
+		for (final ShapeAnnotationLink sal : sals) {
+			if (sal.getChild() instanceof TagAnnotation) {
+				ad.add(new TagAnnotationData((TagAnnotation) sal.getChild()));
+			}
+		}
+		return ad;
 	}
 }
