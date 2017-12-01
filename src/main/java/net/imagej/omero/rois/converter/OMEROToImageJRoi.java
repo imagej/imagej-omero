@@ -33,7 +33,7 @@ import java.util.List;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imagej.omero.rois.OMERORoi;
-import net.imglib2.roi.RealMask;
+import net.imglib2.roi.RealMaskRealInterval;
 
 import org.scijava.convert.AbstractConverter;
 import org.scijava.convert.ConvertService;
@@ -52,7 +52,9 @@ import omero.gateway.model.ShapeData;
  * @author Alison Walter
  */
 @Plugin(type = Converter.class)
-public class OMEROToImageJRoi extends AbstractConverter<ROIData, RealMask> {
+public class OMEROToImageJRoi extends
+	AbstractConverter<ROIData, RealMaskRealInterval>
+{
 
 	@Parameter
 	ConvertService convertService;
@@ -60,6 +62,9 @@ public class OMEROToImageJRoi extends AbstractConverter<ROIData, RealMask> {
 	private boolean hasZ;
 	private boolean hasT;
 	private boolean hasC;
+
+	private double[] currentMin;
+	private double[] currentMax;
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -74,18 +79,30 @@ public class OMEROToImageJRoi extends AbstractConverter<ROIData, RealMask> {
 				.getSimpleName() + " Received: " + dest.getSimpleName());
 		}
 
-		final HashMap<IntArray, RealMask> map = createHashMap((ROIData) src);
+		final ROIData rd = (ROIData) src;
+		currentMin = new double[] { Double.POSITIVE_INFINITY,
+			Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY,
+			Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
+		currentMax = new double[] { Double.NEGATIVE_INFINITY,
+			Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY,
+			Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY };
+		final HashMap<IntArray, RealMaskRealInterval> map = createHashMap(rd);
 		final List<AxisType> axes = new ArrayList<>();
+
 		if (hasZ) axes.add(Axes.Z);
 		if (hasT) axes.add(Axes.TIME);
 		if (hasC) axes.add(Axes.CHANNEL);
 
-		return (T) new OMERORoi(map, (ROIData) src, axes.isEmpty() ? null : axes);
+		final double[] min = new double[2 + axes.size()];
+		final double[] max = new double[2 + axes.size()];
+		populateMinMax(min, max);
+
+		return (T) new OMERORoi(map, rd, axes.isEmpty() ? null : axes, min, max);
 	}
 
 	@Override
-	public Class<RealMask> getOutputType() {
-		return RealMask.class;
+	public Class<RealMaskRealInterval> getOutputType() {
+		return RealMaskRealInterval.class;
 	}
 
 	@Override
@@ -95,24 +112,33 @@ public class OMEROToImageJRoi extends AbstractConverter<ROIData, RealMask> {
 
 	// -- Helper methods --
 
-	private HashMap<IntArray, RealMask> createHashMap(final ROIData roi) {
-		final HashMap<IntArray, RealMask> shapes = new HashMap<>();
+	private HashMap<IntArray, RealMaskRealInterval> createHashMap(
+		final ROIData roi)
+	{
+		final HashMap<IntArray, RealMaskRealInterval> shapes = new HashMap<>();
 		final Iterator<List<ShapeData>> itr = roi.getIterator();
 		while (itr.hasNext()) {
 			final List<ShapeData> s = itr.next();
 			for (int i = 0; i < s.size(); i++) {
 				final ShapeData c = s.get(i);
-				RealMask m = convertService.convert(c, RealMask.class);
+				RealMaskRealInterval m = convertService.convert(c,
+					RealMaskRealInterval.class);
 				if (m == null) throw new IllegalArgumentException("Cannot convert");
 				if (c.getTransform() != null) m = m.transform(RoiConverters
 					.createAffine(c.getTransform()));
+				updateMinMax(new double[] { m.realMin(0), m.realMin(1), c.getZ(), c
+					.getT(), c.getC() }, new double[] { m.realMax(0), m.realMax(1), c
+						.getZ(), c.getT(), c.getC() });
+
+				// Check and update axes
 				hasZ |= c.getZ() != -1;
 				hasT |= c.getT() != -1;
 				hasC |= c.getC() != -1;
+
 				final IntArray ztc = new IntArray(new int[] { c.getZ(), c.getT(), c
 					.getC() });
 				if (shapes.containsKey(ztc)) {
-					final RealMask in = shapes.get(ztc);
+					final RealMaskRealInterval in = shapes.get(ztc);
 					shapes.put(ztc, in.or(m));
 				}
 				else {
@@ -123,4 +149,35 @@ public class OMEROToImageJRoi extends AbstractConverter<ROIData, RealMask> {
 		return shapes;
 	}
 
+	private void updateMinMax(final double[] min, final double[] max) {
+		for (int i = 0; i < min.length; i++) {
+			// NB: It is possible that not all the Shapes have the same number of
+			// dimensions. This prevents shapes without a Z, T, or C from setting
+			// the min or max in that dimension.
+			if (i > 1 && (min[i] == -1 || max[i] == -1)) continue;
+			if (min[i] < currentMin[i]) currentMin[i] = min[i];
+			if (max[i] > currentMax[i]) currentMax[i] = max[i];
+		}
+	}
+
+	private void populateMinMax(final double[] min, final double[] max) {
+		System.arraycopy(currentMin, 0, min, 0, 2);
+		System.arraycopy(currentMax, 0, max, 0, 2);
+
+		int pos = 2;
+		if (hasZ) {
+			min[pos] = currentMin[2];
+			max[pos] = currentMax[2];
+			pos++;
+		}
+		if (hasT) {
+			min[pos] = currentMin[3];
+			max[pos] = currentMax[3];
+			pos++;
+		}
+		if (hasC) {
+			min[pos] = currentMin[4];
+			max[pos] = currentMax[4];
+		}
+	}
 }

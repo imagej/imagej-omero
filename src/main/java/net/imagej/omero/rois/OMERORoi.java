@@ -39,6 +39,7 @@ import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.Operators;
 import net.imglib2.roi.Operators.MaskOperator;
 import net.imglib2.roi.RealMask;
+import net.imglib2.roi.RealMaskRealInterval;
 import net.imglib2.roi.composite.CompositeMaskPredicate;
 
 import org.scijava.util.IntArray;
@@ -52,19 +53,24 @@ import omero.model.Roi;
  * @author Alison Walter
  */
 public class OMERORoi implements CompositeMaskPredicate<RealLocalizable>,
-	RealMask
+	RealMaskRealInterval
 {
 
-	private final HashMap<IntArray, RealMask> shapes;
+	private final HashMap<IntArray, RealMaskRealInterval> shapes;
 	private final ROIData roi;
 	private final List<AxisType> axes;
+	private final double[] min;
+	private final double[] max;
 
-	public OMERORoi(final HashMap<IntArray, RealMask> shapes, final ROIData roi,
-		final List<AxisType> axes)
+	public OMERORoi(final HashMap<IntArray, RealMaskRealInterval> shapes,
+		final ROIData roi, final List<AxisType> axes, final double[] min,
+		final double[] max)
 	{
 		this.shapes = shapes;
 		this.roi = roi;
 		this.axes = axes;
+		this.min = min;
+		this.max = max;
 	}
 
 	/**
@@ -159,6 +165,16 @@ public class OMERORoi implements CompositeMaskPredicate<RealLocalizable>,
 	@Override
 	public List<Predicate<?>> operands() {
 		return Collections.unmodifiableList(new ArrayList<>(shapes.values()));
+	}
+
+	@Override
+	public double realMin(final int d) {
+		return min[d];
+	}
+
+	@Override
+	public double realMax(final int d) {
+		return max[d];
 	}
 
 	@Override

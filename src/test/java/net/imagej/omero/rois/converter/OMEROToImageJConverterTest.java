@@ -41,6 +41,7 @@ import net.imagej.omero.rois.OMEROMask;
 import net.imglib2.RealPoint;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.RealMask;
+import net.imglib2.roi.RealMaskRealInterval;
 import net.imglib2.roi.geom.real.Box;
 import net.imglib2.roi.geom.real.Ellipsoid;
 import net.imglib2.roi.geom.real.Line;
@@ -349,9 +350,18 @@ public class OMEROToImageJConverterTest {
 		roi.addShapeData(r);
 		setUpMethodCalls(r);
 
-		final RealMask c = convertService.convert(roi, RealMask.class);
+		final RealMaskRealInterval c = convertService.convert(roi,
+			RealMaskRealInterval.class);
 
 		assertEquals(c.numDimensions(), 4);
+		assertEquals(c.realMin(0), 10, 0);
+		assertEquals(c.realMin(1), 10, 0);
+		assertEquals(c.realMin(2), 12, 0);
+		assertEquals(c.realMin(3), 2, 0);
+		assertEquals(c.realMax(0), 25, 0);
+		assertEquals(c.realMax(1), 30, 0);
+		assertEquals(c.realMax(2), 12, 0);
+		assertEquals(c.realMax(3), 2, 0);
 
 		assertTrue(c.test(new RealPoint(new double[] { 20, 30, 12, 2 })));
 		assertFalse(c.test(new RealPoint(new double[] { 20, 30, 11, 2 })));
@@ -377,9 +387,18 @@ public class OMEROToImageJConverterTest {
 		roi.addShapeData(e);
 
 		setUpMethodCalls(r, e);
-		final RealMask c = convertService.convert(roi, RealMask.class);
+		final RealMaskRealInterval c = convertService.convert(roi,
+			RealMaskRealInterval.class);
 
 		assertEquals(c.numDimensions(), 4);
+		assertEquals(c.realMin(0), -2, 0);
+		assertEquals(c.realMin(1), -4, 0);
+		assertEquals(c.realMin(2), 0, 0);
+		assertEquals(c.realMin(3), 0, 0);
+		assertEquals(c.realMax(0), 25, 0);
+		assertEquals(c.realMax(1), 30, 0);
+		assertEquals(c.realMax(2), 0, 0);
+		assertEquals(c.realMax(3), 0, 0);
 
 		assertTrue(c.test(new RealPoint(new double[] { 20, 30, 0, 0 })));
 		assertTrue(c.test(new RealPoint(new double[] { 1, 1, 0, 0 })));
@@ -406,9 +425,18 @@ public class OMEROToImageJConverterTest {
 		roi.addShapeData(e);
 
 		setUpMethodCalls(r, e);
-		final RealMask c = convertService.convert(roi, RealMask.class);
+		final RealMaskRealInterval c = convertService.convert(roi,
+			RealMaskRealInterval.class);
 
 		assertEquals(c.numDimensions(), 4);
+		assertEquals(c.realMin(0), -2, 0);
+		assertEquals(c.realMin(1), -4, 0);
+		assertEquals(c.realMin(2), 0, 0);
+		assertEquals(c.realMin(3), 0, 0);
+		assertEquals(c.realMax(0), 25, 0);
+		assertEquals(c.realMax(1), 30, 0);
+		assertEquals(c.realMax(2), 3, 0);
+		assertEquals(c.realMax(3), 0, 0);
 
 		assertTrue(c.test(new RealPoint(new double[] { 20, 30, 0, 0 })));
 		assertTrue(c.test(new RealPoint(new double[] { 1, 1, 3, 0 })));
@@ -445,9 +473,16 @@ public class OMEROToImageJConverterTest {
 		roi.addShapeData(rFour);
 
 		setUpMethodCalls(r, rOne, rTwo, rThree, rFour);
-		final RealMask c = convertService.convert(roi, RealMask.class);
+		final RealMaskRealInterval c = convertService.convert(roi,
+			RealMaskRealInterval.class);
 
 		assertEquals(c.numDimensions(), 3);
+		assertEquals(c.realMin(0), 10, 0);
+		assertEquals(c.realMin(1), 10, 0);
+		assertEquals(c.realMin(2), 0, 0);
+		assertEquals(c.realMax(0), 25, 0);
+		assertEquals(c.realMax(1), 30, 0);
+		assertEquals(c.realMax(2), 4, 0);
 
 		assertTrue(c.test(new RealPoint(new double[] { 20, 30, 1 })));
 		assertTrue(c.test(new RealPoint(new double[] { 20, 30, 1.5 })));
@@ -488,9 +523,20 @@ public class OMEROToImageJConverterTest {
 		roi.addShapeData(rTwo);
 		roi.addShapeData(rThree);
 		setUpMethodCalls(rZero, rOne, rTwo, rThree);
-		final RealMask c = convertService.convert(roi, RealMask.class);
+		final RealMaskRealInterval c = convertService.convert(roi,
+			RealMaskRealInterval.class);
 
 		assertEquals(c.numDimensions(), 5);
+		assertEquals(c.realMin(0), 0, 0);
+		assertEquals(c.realMin(1), 0, 0);
+		assertEquals(c.realMin(2), 0, 0);
+		assertEquals(c.realMin(3), 0, 0);
+		assertEquals(c.realMin(4), 1, 0);
+		assertEquals(c.realMax(0), 4, 0);
+		assertEquals(c.realMax(1), 4, 0);
+		assertEquals(c.realMax(2), 1, 0);
+		assertEquals(c.realMax(3), 1, 0);
+		assertEquals(c.realMax(4), 1, 0);
 
 		assertTrue(c.test(new RealPoint(new double[] { 0, 0, 0.75, 0.2, 1 })));
 		assertTrue(c.test(new RealPoint(new double[] { 0, 0, 0.1, 0.6, 1 })));
@@ -524,9 +570,20 @@ public class OMEROToImageJConverterTest {
 		roi.addShapeData(rOne);
 		roi.addShapeData(rTwo);
 		setUpMethodCalls(rZero, rOne, rTwo);
-		final RealMask c = convertService.convert(roi, RealMask.class);
+		final RealMaskRealInterval c = convertService.convert(roi,
+			RealMaskRealInterval.class);
 
 		assertEquals(c.numDimensions(), 5);
+		assertEquals(c.realMin(0), 0, 0);
+		assertEquals(c.realMin(1), 0, 0);
+		assertEquals(c.realMin(2), 0, 0);
+		assertEquals(c.realMin(3), 1, 0);
+		assertEquals(c.realMin(4), 1, 0);
+		assertEquals(c.realMax(0), 14, 0);
+		assertEquals(c.realMax(1), 14, 0);
+		assertEquals(c.realMax(2), 2, 0);
+		assertEquals(c.realMax(3), 3, 0);
+		assertEquals(c.realMax(4), 1, 0);
 
 		assertTrue(c.test(new RealPoint(new double[] { 2, 2, 2, 3, 20 })));
 		assertTrue(c.test(new RealPoint(new double[] { 2, 2, 10, 4, 1 })));
