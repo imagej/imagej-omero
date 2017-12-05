@@ -65,10 +65,10 @@ public interface OMEROPolygon extends OMEROShape<PolygonData>,
 		double min = d == 0 ? pts.get(0).getX() : pts.get(0).getY();
 		for (int i = 1; i < pts.size(); i++) {
 			if (d == 0) {
-				if (pts.get(0).getX() < min) min = pts.get(0).getX();
+				if (pts.get(i).getX() < min) min = pts.get(i).getX();
 			}
 			else {
-				if (pts.get(0).getY() < min) min = pts.get(0).getY();
+				if (pts.get(i).getY() < min) min = pts.get(i).getY();
 			}
 		}
 		return min;
@@ -82,10 +82,10 @@ public interface OMEROPolygon extends OMEROShape<PolygonData>,
 		double max = d == 0 ? pts.get(0).getX() : pts.get(0).getY();
 		for (int i = 1; i < pts.size(); i++) {
 			if (d == 0) {
-				if (pts.get(0).getX() > max) max = pts.get(0).getX();
+				if (pts.get(i).getX() > max) max = pts.get(i).getX();
 			}
 			else {
-				if (pts.get(0).getY() > max) max = pts.get(0).getY();
+				if (pts.get(i).getY() > max) max = pts.get(i).getY();
 			}
 		}
 		return max;
