@@ -6,5 +6,4 @@ RUN chown -R mvn /src
 
 USER mvn
 WORKDIR /src
-RUN mvn dependency:resolve
-RUN mvn install
+CMD mvn install
