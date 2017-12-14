@@ -119,6 +119,7 @@
 	- University of Dundee</license.copyrightOwners>
 	<license.projectName>ImageJ software for multidimensional image processing and analysis.</license.projectName>
 		<omero.version>5.3.0-ice36</omero.version>
+		<skipITs>true</skipITs>
 
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
@@ -214,6 +215,33 @@
 						</banDuplicateClasses>
 					</rules>
 				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludedGroups>net.imagej.omero.IntegrationTest</excludedGroups>
+					<excludes>
+						<exclude>**/*IT*.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.18.1</version>
+				<configuration>
+					<skipITs>${skipITs}</skipITs>
+					<includes>
+						<include>**/*.java</include>
+					</includes>
+					<groups>net.imagej.omero.IntegrationTest</groups>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
