@@ -242,10 +242,7 @@
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<excludedGroups>net.imagej.omero.IntegrationTest</excludedGroups>
-					<excludes>
-						<exclude>**/*IT*.java</exclude>
-					</excludes>
+					<excludedGroups>net.imagej.omero.it.IntegrationTest</excludedGroups>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -253,10 +250,7 @@
 				<version>2.18.1</version>
 				<configuration>
 					<skipITs>${skipITs}</skipITs>
-					<includes>
-						<include>**/*.java</include>
-					</includes>
-					<groups>net.imagej.omero.IntegrationTest</groups>
+					<groups>net.imagej.omero.it.IntegrationTest</groups>
 				</configuration>
 				<executions>
 					<execution>
