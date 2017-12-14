@@ -70,7 +70,6 @@ import org.scijava.util.ConversionUtils;
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
 import omero.ServerError;
-import omero.api.IMetadataPrx;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;

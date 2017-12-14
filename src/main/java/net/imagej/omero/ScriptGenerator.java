@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -44,7 +44,7 @@ import org.scijava.util.FileUtils;
 
 /**
  * Generates Python stubs for running ImageJ {@link Module}s as OMERO scripts.
- * 
+ *
  * @author Curtis Rueden
  * @see "https://www.openmicroscopy.org/site/support/omero4/developers/Modules/Scripts.html"
  */
@@ -100,7 +100,8 @@ public class ScriptGenerator extends AbstractContextual {
 		if (dir.exists()) {
 			if (!forceOverwrite) {
 				System.err.println("Path already exists: " + dir);
-				System.err.println("Please run with --force if you wish to generate scripts.");
+				System.err.println(
+					"Please run with --force if you wish to generate scripts.");
 				return 2;
 			}
 			FileUtils.deleteRecursively(dir);
@@ -148,7 +149,7 @@ public class ScriptGenerator extends AbstractContextual {
 		}
 
 		// generate script stubs
-		int result = scriptGenerator.generateAll(dir);
+		final int result = scriptGenerator.generateAll(dir);
 
 		// clean up resources
 		scriptGenerator.getContext().dispose();
@@ -194,8 +195,8 @@ public class ScriptGenerator extends AbstractContextual {
 	}
 
 	/** Generates an OMERO script stub for the given ImageJ module. */
-	private void generate(final ModuleInfo info, final File dir,
-		final String exe, final int pos) throws IOException
+	private void generate(final ModuleInfo info, final File dir, final String exe,
+		final int pos) throws IOException
 	{
 		// validate module
 		if (!(info instanceof Identifiable)) return;

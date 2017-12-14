@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -48,7 +48,7 @@ import org.scijava.util.FileUtils;
 
 /**
  * Tests {@link ScriptGenerator}.
- * 
+ *
  * @author Curtis Rueden
  */
 public class ScriptGeneratorTest {
@@ -57,6 +57,7 @@ public class ScriptGeneratorTest {
 	public void testGenerateAll() throws IOException {
 		// create a context with a minimal command set
 		final PluginIndex pluginIndex = new PluginIndex() {
+
 			@Override
 			public void discover() {
 				super.discover();
@@ -71,14 +72,14 @@ public class ScriptGeneratorTest {
 			}
 		};
 		final ArrayList<Class<? extends Service>> classes =
-			new ArrayList<Class<? extends Service>>();
+			new ArrayList<>();
 		classes.add(AppService.class);
 		classes.add(CommandService.class);
 		classes.add(MenuService.class);
 		final Context context = new Context(classes, pluginIndex);
 		final ScriptGenerator scriptGen = new ScriptGenerator(context);
-		final File tempDir =
-			TestUtils.createTemporaryDirectory("script-generator-");
+		final File tempDir = TestUtils.createTemporaryDirectory(
+			"script-generator-");
 		final File libDir = new File(tempDir, "lib");
 		final File scriptsDir = new File(libDir, "scripts");
 		assertTrue(scriptsDir.mkdirs());
@@ -108,7 +109,7 @@ public class ScriptGeneratorTest {
 		final Class<? extends Command> pluginClass)
 	{
 		final Plugin ann = pluginClass.getAnnotation(Plugin.class);
-		return new PluginInfo<Command>(pluginClass, Command.class, ann);
+		return new PluginInfo<>(pluginClass, Command.class, ann);
 	}
 
 	// -- Helper classes --
@@ -156,6 +157,7 @@ public class ScriptGeneratorTest {
 	}
 
 	public static class DummyCommand implements Command {
+
 		@Override
 		public void run() {
 			//

@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -162,7 +161,7 @@ public class ModuleAdapter extends AbstractContextual {
 
 	/**
 	 * Executes the associated ImageJ module as an OMERO script.
-	 * 
+	 *
 	 * @throws IOException
 	 * @throws ServerError
 	 * @throws ExecutionException
@@ -196,16 +195,14 @@ public class ModuleAdapter extends AbstractContextual {
 		// populate outputs, except tables
 		log.debug(info.getTitle() + ": populating outputs");
 		for (final ModuleItem<?> item : module.getInfo().outputs()) {
-			final Object value = omeroService.toOMERO(client, item.getValue(
-				module));
+			final Object value = omeroService.toOMERO(client, item.getValue(module));
 			final String name = getOutputName(item);
 			if (value == null) {
 				log.warn(info.getTitle() + ": output '" + name + "' is null");
 			}
-			if (value instanceof omero.RType)
-				client.setOutput(name, (omero.RType) value);
-			if (value instanceof TableData)
-				tables.put(name, (TableData) value);
+			if (value instanceof omero.RType) client.setOutput(name,
+				(omero.RType) value);
+			if (value instanceof TableData) tables.put(name, (TableData) value);
 		}
 
 		createOutputLinks(inputMap, tables);
@@ -356,8 +353,8 @@ public class ModuleAdapter extends AbstractContextual {
 	private ExperimenterData createUser() {
 		String host = client.getProperty("omero.host");
 		if (host.equals("")) {
-			String router = client.getProperty("omero.ClientCallback.Router");
-			String[] comp = router.split("\\s+");
+			final String router = client.getProperty("omero.ClientCallback.Router");
+			final String[] comp = router.split("\\s+");
 			for (int i = 0; i < comp.length; i++) {
 				if (comp[i].equals("-h")) {
 					host = comp[i + 1];
@@ -383,18 +380,17 @@ public class ModuleAdapter extends AbstractContextual {
 	 * match the omero client outputs.
 	 */
 	private List<ImageData> getOutputImages(final long userId,
-		final BrowseFacility browse, final SecurityContext ctx)
-		throws ServerError
+		final BrowseFacility browse, final SecurityContext ctx) throws ServerError
 	{
 		final Collection<ImageData> orphans = browse.getOrphanedImages(ctx, userId);
 
 		final HashMap<Long, ImageData> mappedOrphans = new HashMap<>();
-		for (ImageData i : orphans)
+		for (final ImageData i : orphans)
 			mappedOrphans.put(i.getId(), i);
 
 		final List<ImageData> images = new ArrayList<>();
 
-		for (String key : client.getOutputKeys()) {
+		for (final String key : client.getOutputKeys()) {
 			final omero.RType type = client.getOutput(key);
 			if (type instanceof RLong) {
 				if (mappedOrphans.containsKey(((RLong) type).getValue())) images.add(
@@ -417,7 +413,7 @@ public class ModuleAdapter extends AbstractContextual {
 			return Collections.singletonList(browse.getImage(ctx, id.getValue()));
 		}
 		final List<ImageData> images = new ArrayList<>();
-		for (String key : inputMap.keySet()) {
+		for (final String key : inputMap.keySet()) {
 			if (inputMap.get(key) instanceof Dataset) {
 				final RLong id = (RLong) client.getInput(key);
 				images.add(browse.getImage(ctx, id.getValue()));
@@ -431,8 +427,9 @@ public class ModuleAdapter extends AbstractContextual {
 	 * Attaches the given output images to the datasets of the given input images.
 	 */
 	private void attachImagesToDatasets(final List<ImageData> inputImages,
-		final List<ImageData> outputImages, final DataManagerFacility dm, final BrowseFacility browse,
-		SecurityContext ctx) throws DSOutOfServiceException, DSAccessException
+		final List<ImageData> outputImages, final DataManagerFacility dm,
+		final BrowseFacility browse, final SecurityContext ctx)
+		throws DSOutOfServiceException, DSAccessException
 	{
 		final HashMap<Long, DatasetData> datasets = new HashMap<>();
 
@@ -440,11 +437,11 @@ public class ModuleAdapter extends AbstractContextual {
 		// FIXME: ImageData has a getDatasets() method, but it is null since the
 		// underlying ImageI is unloaded.
 		final Collection<DatasetData> allDatasets = browse.getDatasets(ctx);
-		for (DatasetData d : allDatasets) {
-			Collection<ImageData> allImages = browse.getImagesForDatasets(ctx,
+		for (final DatasetData d : allDatasets) {
+			final Collection<ImageData> allImages = browse.getImagesForDatasets(ctx,
 				Collections.singleton(d.getId()));
-			for (ImageData image : allImages) {
-				for (ImageData input : inputImages) {
+			for (final ImageData image : allImages) {
+				for (final ImageData input : inputImages) {
 					if (input.getId() == image.getId()) datasets.put(d.getId(), d);
 				}
 			}
@@ -452,7 +449,7 @@ public class ModuleAdapter extends AbstractContextual {
 
 		// attach all output images to these datasets
 		if (!datasets.isEmpty()) {
-			for (Long id : datasets.keySet())
+			for (final Long id : datasets.keySet())
 				dm.addImagesToDataset(ctx, outputImages, datasets.get(id));
 		}
 	}

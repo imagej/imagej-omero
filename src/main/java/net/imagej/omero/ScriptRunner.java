@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -37,7 +37,7 @@ import org.scijava.plugin.Parameter;
 
 /**
  * Executes ImageJ {@link Module}s as OMERO scripts.
- * 
+ *
  * @author Curtis Rueden
  * @see "https://www.openmicroscopy.org/site/support/omero4/developers/Modules/Scripts.html"
  */
@@ -76,8 +76,8 @@ public class ScriptRunner extends AbstractContextual {
 		final omero.client c = new omero.client();
 
 		// initialize module converter
-		final ModuleAdapter adaptedModule =
-			new ModuleAdapter(getContext(), info, c);
+		final ModuleAdapter adaptedModule = new ModuleAdapter(getContext(), info,
+			c);
 
 		// perform appropriate action (either parse or launch)
 		try {

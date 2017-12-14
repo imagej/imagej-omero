@@ -104,7 +104,7 @@ public class UploadTableTest {
 		try {
 			credentials = new OMEROLocation("localhost", 4064, "omero", "omero");
 		}
-		catch (URISyntaxException exc) {
+		catch (final URISyntaxException exc) {
 			exc.printStackTrace();
 		}
 		service = new Context(OMEROService.class).getService(OMEROService.class);

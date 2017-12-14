@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -40,6 +40,16 @@ import java.util.Set;
 import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.scijava.Context;
+import org.scijava.module.AbstractModuleItem;
+import org.scijava.module.ModuleItem;
+import org.scijava.util.ColorRGB;
+import org.scijava.util.MersenneTwisterFast;
+
 import omero.RArray;
 import omero.RBool;
 import omero.RDouble;
@@ -53,18 +63,9 @@ import omero.RString;
 import omero.RType;
 import omero.grid.Param;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.scijava.Context;
-import org.scijava.module.AbstractModuleItem;
-import org.scijava.module.ModuleItem;
-import org.scijava.util.ColorRGB;
-import org.scijava.util.MersenneTwisterFast;
-
 /**
  * Tests {@link DefaultOMEROService}.
- * 
+ *
  * @author Curtis Rueden
  */
 public class OMEROServiceTest {
@@ -208,7 +209,7 @@ public class OMEROServiceTest {
 	// -- Helper methods --
 
 	private <T> ModuleItem<T> createItem(final Class<T> type) {
-		return new TestModuleItem<T>(type);
+		return new TestModuleItem<>(type);
 	}
 
 	private <T> void assertParam(final OMEROService omeroService,
