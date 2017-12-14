@@ -6,4 +6,4 @@ RUN chown -R mvn /src
 
 USER mvn
 WORKDIR /src
-CMD mvn install
+CMD mvn failsafe:integration-test -DskipITs=false 
