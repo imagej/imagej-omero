@@ -17,7 +17,7 @@ public class OmeroIT {
 	public void testConnectingToServer() throws CannotCreateSessionException,
 		PermissionDeniedException, ServerError
 	{
-		client = new omero.client("localhost", 4064);
+		client = new omero.client("omero", 4064);
 		client.createSession("root", "omero");
 	}
 }
