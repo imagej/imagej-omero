@@ -16,6 +16,13 @@ import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
 import omero.ServerError;
 
+/**
+ * Minimal integration tests for upload/download functionalities. The intention
+ * of these tests is to test connecting to the OMERO server, not to check the
+ * actual conversions.
+ *
+ * @author Alison Walter
+ */
 @Category(IntegrationTest.class)
 public class OmeroIT {
 
