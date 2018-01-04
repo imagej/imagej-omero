@@ -2,7 +2,13 @@
 package net.imagej.omero.it;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import io.scif.services.DatasetIOService;
+
+import java.io.IOException;
+
+import net.imagej.Dataset;
 import net.imagej.omero.OMEROCredentials;
 import net.imagej.omero.OMEROService;
 
@@ -62,5 +68,30 @@ public class OmeroIT {
 
 		assertNotNull(client.getSessionId());
 		client.closeSession();
+	}
+
+	@Test
+	public void testDownloadImage() throws ServerError, IOException,
+		CannotCreateSessionException, PermissionDeniedException
+	{
+		client.createSession(OMERO_USER, OMERO_PASSWORD);
+		final Dataset d = omero.downloadImage(client, 1);
+		client.closeSession();
+
+		assertNotNull(d.getImgPlus());
+	}
+
+	@Test
+	public void testUploadImage() throws IOException, ServerError,
+		CannotCreateSessionException, PermissionDeniedException
+	{
+		final DatasetIOService io = context.getService(DatasetIOService.class);
+		final Dataset d = io.open("http://imagej.net/images/blobs.gif");
+
+		client.createSession(OMERO_USER, OMERO_PASSWORD);
+		final long id = omero.uploadImage(client, d);
+		client.closeSession();
+
+		assertTrue(id > 0);
 	}
 }
