@@ -1,16 +1,23 @@
 
 package net.imagej.omero.it;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import io.scif.services.DatasetIOService;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
+import net.imagej.omero.DefaultOMEROSession;
 import net.imagej.omero.OMEROCredentials;
 import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROSession;
+import net.imagej.table.ByteTable;
+import net.imagej.table.DefaultByteTable;
+import net.imagej.table.Table;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,6 +28,10 @@ import org.scijava.Context;
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
 import omero.ServerError;
+import omero.gateway.exception.DSAccessException;
+import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.facility.TablesFacility;
+import omero.gateway.model.TableData;
 
 /**
  * Minimal integration tests for upload/download functionalities. The intention
@@ -93,5 +104,57 @@ public class OmeroIT {
 		client.closeSession();
 
 		assertTrue(id > 0);
+	}
+
+	// TODO: Split into two tests
+	@Test
+	public void testTable() throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException
+	{
+		final byte[][] d = new byte[][] {
+			{ 127, 0, -128 },
+			{ -1, -6, -23 },
+			{ 100, 87, 4 }
+		};
+		final ByteTable table = new DefaultByteTable(3, 3);
+		for (int c = 0; c < table.getColumnCount(); c++) {
+			table.setColumnHeader(c, "Heading " + (c + 1));
+			for (int r = 0; r < table.getRowCount(); r++)
+				table.set(c, r, d[c][r]);
+		}
+
+		final long tableId = omero.uploadTable(cred, "test-table", table, 1);
+
+		// When upload table was called it created a session, which cleared out
+		// the username and password from the credentials. The credentials must
+		// have a username and password to create security contexts.
+		final OMEROCredentials tc = new OMEROCredentials();
+		tc.setServer(OMERO_SERVER);
+		tc.setPort(OMERO_PORT);
+		tc.setUser(OMERO_USER);
+		tc.setPassword(OMERO_PASSWORD);
+
+		try (final OMEROSession session = new DefaultOMEROSession(tc)) {
+			final TablesFacility tablesFacility = session.getGateway().getFacility(
+				TablesFacility.class);
+			final TableData td = tablesFacility.getTableInfo(session
+				.getSecurityContext(), tableId);
+
+			assertEquals(td.getColumns().length, 3);
+			assertEquals(td.getColumns()[0].getName(), "Heading 1");
+			assertEquals(td.getColumns()[1].getName(), "Heading 2");
+			assertEquals(td.getColumns()[2].getName(), "Heading 3");
+			assertEquals(td.getNumberOfRows(), 3);
+		}
+
+		final OMEROCredentials tcOne = new OMEROCredentials();
+		tcOne.setServer(OMERO_SERVER);
+		tcOne.setPort(OMERO_PORT);
+		tcOne.setUser(OMERO_USER);
+		tcOne.setPassword(OMERO_PASSWORD);
+		final Table<?, ?> t = omero.downloadTable(tcOne, tableId);
+
+		assertNotNull(t);
 	}
 }
