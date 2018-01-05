@@ -9,16 +9,31 @@ import io.scif.services.DatasetIOService;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
+import net.imagej.omero.rois.OMERORoi;
 import net.imagej.table.ByteTable;
 import net.imagej.table.DefaultByteTable;
 import net.imagej.table.Table;
+import net.imglib2.RealPoint;
+import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.MaskPredicate;
+import net.imglib2.roi.RealMaskRealInterval;
+import net.imglib2.roi.geom.real.Box;
+import net.imglib2.roi.geom.real.DefaultLine;
+import net.imglib2.roi.geom.real.DefaultPolygon2D;
+import net.imglib2.roi.geom.real.Ellipsoid;
+import net.imglib2.roi.geom.real.Line;
+import net.imglib2.roi.geom.real.OpenBox;
+import net.imglib2.roi.geom.real.PointMask;
+import net.imglib2.roi.geom.real.Polygon2D;
 
 import org.junit.After;
 import org.junit.Before;
@@ -32,6 +47,7 @@ import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
+import omero.gateway.facility.ROIFacility;
 import omero.gateway.facility.TablesFacility;
 import omero.gateway.model.FileAnnotationData;
 import omero.gateway.model.ImageData;
@@ -170,5 +186,80 @@ public class OmeroIT {
 		assertEquals(td.getColumns()[1].getName(), "Heading 2");
 		assertEquals(td.getColumns()[2].getName(), "Heading 3");
 		assertEquals(td.getNumberOfRows(), 3);
+	}
+
+	@Test
+	public void testDownloadROI() throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException
+	{
+		final List<MaskPredicate<?>> rois = omero.downloadROIs(location, 1);
+
+		final OMEROSession session = omero.session(location);
+		final ROIFacility roifac = session.getGateway().getFacility(
+			ROIFacility.class);
+
+		final int numRois = roifac.getROICount(session.getSecurityContext(), 1);
+		assertEquals(numRois, rois.size());
+
+		int numEllipsoid = 0;
+		int numBox = 0;
+		int numPoint = 0;
+		for (MaskPredicate<?> roi : rois) {
+			// remove additional dim wrapper
+			if (roi instanceof OMERORoi) roi = ((OMERORoi) roi).getShapes().values()
+				.iterator().next();
+
+			if (roi instanceof Ellipsoid) {
+				numEllipsoid++;
+				assertTrue(roi.boundaryType() == BoundaryType.OPEN);
+			}
+			else if (roi instanceof Box) {
+				numBox++;
+				assertTrue(roi.boundaryType() == BoundaryType.OPEN);
+			}
+			else if (roi instanceof PointMask) {
+				numPoint++;
+				assertTrue(roi.boundaryType() == BoundaryType.CLOSED);
+			}
+			else {
+				// if its not any of the above shapes, always fail
+				assertNotNull(null);
+			}
+		}
+
+		assertEquals(10, numEllipsoid);
+		assertEquals(10, numBox);
+		assertEquals(10, numPoint);
+	}
+
+	@Test
+	public void testUploadROI() throws DSOutOfServiceException, DSAccessException,
+		ExecutionException, ServerError, PermissionDeniedException,
+		CannotCreateSessionException
+	{
+		final Polygon2D<RealPoint> p = new DefaultPolygon2D(new double[] { 12.5, 16,
+			20 }, new double[] { 11, 45, 11.5 });
+		final Line<RealPoint> l = new DefaultLine(new double[] { 0.5, 10 },
+			new double[] { 90, 81 }, false);
+		final Box<RealPoint> b = new OpenBox(new double[] { 10, 10 }, new double[] {
+			17, 20 });
+		final List<RealMaskRealInterval> rois = new ArrayList<>();
+		rois.add(p);
+		rois.add(l);
+		rois.add(b);
+
+		final OMEROSession session = omero.session(location);
+		final ROIFacility roifac = session.getGateway().getFacility(
+			ROIFacility.class);
+		final int numRoisBefore = roifac.getROICount(session.getSecurityContext(),
+			1);
+
+		final long[] ids = omero.uploadROIs(location, rois, 1);
+		assertEquals(rois.size(), ids.length);
+
+		final int numRoisAfter = roifac.getROICount(session.getSecurityContext(),
+			1);
+		assertEquals(numRoisAfter, numRoisBefore + rois.size());
 	}
 }
