@@ -85,6 +85,11 @@ public class DefaultOMEROSession implements OMEROSession {
 		final omero.client c, final OMEROService omeroService) throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException
 	{
+		if ((credentials.getUser() == null || credentials.getPassword() == null) &&
+			credentials.getSessionID() == null) throw new IllegalArgumentException(
+				"Cannot create OMEROSession: OMEROLocation must specify username and " +
+					"password OR session ID");
+
 		// initialize the client
 		boolean close = false;
 		if (c == null) {
@@ -102,14 +107,15 @@ public class DefaultOMEROSession implements OMEROSession {
 		if (credentials.getUser() != null && credentials.getPassword() != null) {
 			final String user = credentials.getUser();
 			final String password = credentials.getPassword();
-			setGateway();
-			setExperimenter(credentials);
-			setSecurityContext(credentials);
 			session = client.createSession(user, password);
 		}
 		else {
-			session = client.createSession();
+			session = client.joinSession(credentials.getSessionID());
 		}
+
+		setGateway();
+		setExperimenter(credentials);
+		setSecurityContext(credentials);
 
 		// Until imagej-omero #30 is resolved; see:
 		// https://github.com/imagej/imagej-omero/issues/30
@@ -350,11 +356,12 @@ public class DefaultOMEROSession implements OMEROSession {
 	private void setExperimenter(final OMEROLocation credentials)
 		throws ServerError
 	{
-		final LoginCredentials cred = new LoginCredentials();
-		cred.getServer().setHostname(credentials.getServer());
-		cred.getServer().setPort(credentials.getPort());
-		cred.getUser().setUsername(credentials.getUser());
-		cred.getUser().setPassword(credentials.getPassword());
+		final LoginCredentials cred;
+		if (credentials.getSessionID() != null) cred = new LoginCredentials(
+			credentials.getSessionID(), null, credentials.getServer(), credentials
+				.getPort());
+		else cred = new LoginCredentials(credentials.getUser(), credentials
+			.getPassword(), credentials.getServer(), credentials.getPort());
 
 		if (gateway == null) setGateway();
 
