@@ -49,11 +49,14 @@ public class OMEROLocation extends URILocation {
 
 	private final boolean encrypted;
 
+	private final String sessionID;
+
 	public OMEROLocation(final String server, final int port, final String user,
 		final String password) throws URISyntaxException
 	{
 		super(new URI(null, user + ":" + password, server, port, null, null, null));
 		encrypted = false;
+		sessionID = null;
 	}
 
 	public OMEROLocation(final String server, final int port, final String user,
@@ -61,17 +64,25 @@ public class OMEROLocation extends URILocation {
 	{
 		super(new URI(null, user + ":" + password, server, port, null, null, null));
 		this.encrypted = encrypted;
+		sessionID = null;
+	}
+
+	public OMEROLocation(final String server, final int port,
+		final String sessionID) throws URISyntaxException
+	{
+		super(new URI(null, null, server, port, null, null, null));
+		encrypted = false;
+		this.sessionID = sessionID;
 	}
 
 	public OMEROLocation(final Map<String, Object> args)
 		throws URISyntaxException
 	{
-		super(new URI(null, args.get("user") + ":" + args.get("password"),
-			(String) args.get("server"), Integer.parseInt(args.get("port")
-				.toString()), null, null, null));
+		super(createURI(args));
 		if (args.containsKey("encrypted")) encrypted = Boolean.parseBoolean(args
 			.get("encrypted").toString());
 		else encrypted = false;
+		sessionID = args.get("sessionID").toString();
 	}
 
 	// -- OMEROLocation methods --
@@ -85,15 +96,21 @@ public class OMEROLocation extends URILocation {
 	}
 
 	public String getUser() {
-		return getURI().getUserInfo().split(":")[0];
+		return getURI().getUserInfo() == null ? null : getURI().getUserInfo().split(
+			":")[0];
 	}
 
 	public String getPassword() {
-		return getURI().getUserInfo().split(":")[1];
+		return getURI().getUserInfo() == null ? null : getURI().getUserInfo().split(
+			":")[1];
 	}
 
 	public boolean isEncrypted() {
 		return encrypted;
+	}
+
+	public String getSessionID() {
+		return sessionID;
 	}
 
 	@Override
@@ -109,5 +126,21 @@ public class OMEROLocation extends URILocation {
 	@Override
 	public int hashCode() {
 		return getURI().hashCode();
+	}
+
+	// -- Helper methods --
+
+	private static URI createURI(final Map<String, Object> args)
+		throws NumberFormatException, URISyntaxException
+	{
+		final String server = (String) args.get("server");
+		final int port = Integer.parseInt(args.get("port").toString());
+		if (args.containsKey("user") && args.containsKey("password"))
+			return new URI(null, args.get("user") + ":" + args.get("password"),
+				server, port, null, null, null);
+		else if (args.containsKey("sessionID")) return new URI(null, null, server,
+			port, null, null, null);
+		throw new IllegalArgumentException(
+			"Need username and password OR session ID to create OMEROLocation");
 	}
 }
