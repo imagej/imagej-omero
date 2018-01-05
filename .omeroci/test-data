@@ -22,7 +22,7 @@ DATASET=$(omero obj new Dataset name=TestDataset)
 PROJECT=$(omero obj new Project name=TestProject)
 omero obj new ProjectDatasetLink parent=$PROJECT child=$DATASET
 
-FILENAME="$WORKDIR/test&rectangle=10&ellipsis=10&points=10.fake"
+FILENAME="$WORKDIR/test&ellipses=10&points=10&rectangles=10.fake"
 touch "$FILENAME"
 IMAGE=$(omero import --output=ids "$FILENAME" -T $DATASET)
 
