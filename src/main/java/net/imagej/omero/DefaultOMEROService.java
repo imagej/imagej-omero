@@ -507,9 +507,9 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Override
 	public long[] uploadROIs(final OMEROLocation credentials,
-		final List<MaskPredicate<?>> ijROIs, final long imageID) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+		final List<? extends MaskPredicate<?>> ijROIs, final long imageID)
+		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
+		ExecutionException, DSOutOfServiceException, DSAccessException
 	{
 		final OMEROSession session = session(credentials);
 		final ROIFacility roifac = session.getGateway().getFacility(

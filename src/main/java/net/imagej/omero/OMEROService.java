@@ -177,10 +177,10 @@ public interface OMEROService extends ImageJService {
 	 * Converts the given {@link MaskPredicate}s to OMERO ROIs, uploads them to
 	 * the OMEROServer, and attaches them to the image with the specified ID.
 	 */
-	long[] uploadROIs(OMEROLocation credentials, List<MaskPredicate<?>> ijROIs,
-		long imageID) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException;
+	long[] uploadROIs(OMEROLocation credentials,
+		List<? extends MaskPredicate<?>> ijROIs, long imageID) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException;
 
 	/**
 	 * Returns an {@link OMEROSession} using the given {@link OMEROLocation}. If a
