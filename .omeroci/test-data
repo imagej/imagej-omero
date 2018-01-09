@@ -35,3 +35,8 @@ do
     oid=$(echo $shape | awk -F, '{print $3}')
     omero obj new ShapeAnnotationLink parent=$class:$oid child=$OPEN
 done
+
+export OMERO_PREFIX=/opt/omero/server/OMERO.server
+export PYTHONPATH=$OMERO_PREFIX/lib/python
+
+python /imagej-omero/.omeroci/create-table.py
