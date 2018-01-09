@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import io.scif.services.DatasetIOService;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
@@ -30,7 +31,10 @@ import Glacier2.PermissionDeniedException;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.TablesFacility;
+import omero.gateway.model.FileAnnotationData;
+import omero.gateway.model.ImageData;
 import omero.gateway.model.TableData;
 
 /**
@@ -106,9 +110,47 @@ public class OmeroIT {
 		assertTrue(id > 0);
 	}
 
-	// TODO: Split into two tests
 	@Test
-	public void testTable() throws ServerError, PermissionDeniedException,
+	public void testDownloadTable() throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException
+	{
+		// get table ID
+		final OMEROCredentials tc = new OMEROCredentials();
+		tc.setServer(OMERO_SERVER);
+		tc.setPort(OMERO_PORT);
+		tc.setUser(OMERO_USER);
+		tc.setPassword(OMERO_PASSWORD);
+		long tableID = 0;
+		try (final OMEROSession session = new DefaultOMEROSession(tc)) {
+			final BrowseFacility browse = session.getGateway().getFacility(
+				BrowseFacility.class);
+			final TablesFacility tablesFacility = session.getGateway().getFacility(
+				TablesFacility.class);
+			final ImageData image = browse.getImage(session.getSecurityContext(), 1);
+			final Collection<FileAnnotationData> files = tablesFacility
+				.getAvailableTables(session.getSecurityContext(), image);
+
+			for (final FileAnnotationData file : files) {
+				final TableData t = tablesFacility.getTableInfo(session
+					.getSecurityContext(), file.getFileID());
+				if (t.getColumns()[0].getName().equals("Header 1")) {
+					tableID = t.getOriginalFileId();
+					break;
+				}
+			}
+		}
+
+		// now download the table
+		final Table<?, ?> ijTable = omero.downloadTable(cred, tableID);
+
+		assertNotNull(ijTable);
+		assertEquals(3, ijTable.getColumnCount());
+		assertEquals(3, ijTable.getRowCount());
+	}
+
+	@Test
+	public void testUploadTable() throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
@@ -124,7 +166,7 @@ public class OmeroIT {
 				table.set(c, r, d[c][r]);
 		}
 
-		final long tableId = omero.uploadTable(cred, "test-table", table, 1);
+		final long tableId = omero.uploadTable(cred, "test-table-upload", table, 1);
 
 		// When upload table was called it created a session, which cleared out
 		// the username and password from the credentials. The credentials must
@@ -147,14 +189,5 @@ public class OmeroIT {
 			assertEquals(td.getColumns()[2].getName(), "Heading 3");
 			assertEquals(td.getNumberOfRows(), 3);
 		}
-
-		final OMEROCredentials tcOne = new OMEROCredentials();
-		tcOne.setServer(OMERO_SERVER);
-		tcOne.setPort(OMERO_PORT);
-		tcOne.setUser(OMERO_USER);
-		tcOne.setPassword(OMERO_PASSWORD);
-		final Table<?, ?> t = omero.downloadTable(tcOne, tableId);
-
-		assertNotNull(t);
 	}
 }
