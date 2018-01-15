@@ -226,6 +226,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<excludedGroups>net.imagej.omero.it.IntegrationTest</excludedGroups>
+					<excludedGroups>net.imagej.omero.benchmark.Benchmark</excludedGroups>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -234,6 +235,7 @@
 				<configuration>
 					<skipITs>${skipITs}</skipITs>
 					<groups>net.imagej.omero.it.IntegrationTest</groups>
+					<excludedGroups>net.imagej.omero.benchmark.Benchmark</excludedGroups>
 				</configuration>
 				<executions>
 					<execution>
