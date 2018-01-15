@@ -248,4 +248,51 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>benchmark-it-imagej-omero</id>
+			<activation>
+				<property>
+					<name>benchmark-it</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<groups>net.imagej.omero.benchmark.Benchmark</groups>
+							<excludedGroups>net.imagej.omero.it.IntegrationTest</excludedGroups>
+							<includes>
+								<include>**/*BenchmarkIT.java</include>
+							</includes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>benchmark-imagej-omero</id>
+			<activation>
+				<property>
+					<name>benchmark</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<groups>net.imagej.omero.benchmark.Benchmark</groups>
+							<excludedGroups>net.imagej.omero.it.IntegrationTest</excludedGroups>
+							<includes>
+								<include>**/*Benchmark.java</include>
+							</includes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
