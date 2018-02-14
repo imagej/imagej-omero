@@ -25,6 +25,9 @@
 
 package net.imagej.omero.rois;
 
+import net.imagej.axis.Axes;
+import net.imagej.axis.AxisType;
+import net.imagej.axis.TypedAxis;
 import net.imglib2.roi.RealMask;
 
 import omero.gateway.model.ShapeData;
@@ -38,4 +41,19 @@ import omero.gateway.model.ShapeData;
 public interface OMERORealMask<S extends ShapeData> extends RealMask {
 
 	S getShape();
+
+	// TODO: Consider generalizing this to an "opinionated ROI" interface.
+	default boolean testPosition(final TypedAxis axis, final double position) {
+		int pos;
+		if (axis == Axes.Z) pos = getShape().getZ();
+		if (axis == Axes.TIME) pos = getShape().getT();
+		if (axis == Axes.CHANNEL) pos = getShape().getC();
+		else return true;
+		return pos == -1 || pos == position;
+	}
+
+	// TODO: Consider generalizing this to an "opinionated ROI" interface.
+	default AxisType[] requiredAxisTypes() {
+		return new AxisType[] { Axes.X, Axes.Y };
+	}
 }

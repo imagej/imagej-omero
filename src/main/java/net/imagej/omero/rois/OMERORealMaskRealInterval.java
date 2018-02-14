@@ -25,6 +25,8 @@
 
 package net.imagej.omero.rois;
 
+import net.imagej.axis.Axes;
+import net.imagej.axis.TypedAxis;
 import net.imglib2.roi.RealMaskRealInterval;
 
 import omero.gateway.model.ShapeData;
@@ -37,4 +39,20 @@ import omero.gateway.model.ShapeData;
  */
 public interface OMERORealMaskRealInterval<S extends ShapeData> extends
 	OMERORealMask<S>, RealMaskRealInterval
-{}
+{
+
+	// TODO: Consider generalizing this to an "opinionated ROI" interface.
+	@Override
+	default boolean testPosition(final TypedAxis axis, final double position) {
+		if (axis == Axes.X) return position <= realMax(0) && position >= realMin(0);
+		if (axis == Axes.Y) return position <= realMax(1) && position >= realMin(1);
+		if (axis == Axes.Z) return getShape().getZ() == -1 ? true : getShape()
+			.getZ() == position;
+		if (axis == Axes.TIME) return getShape().getT() == -1 ? true : getShape()
+			.getT() == position;
+		if (axis == Axes.CHANNEL) return getShape().getC() == -1 ? true : getShape()
+			.getC() == position;
+		return true;
+	}
+
+}
