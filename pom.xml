@@ -121,6 +121,7 @@
 		<omero-blitz.version>5.4.3-ice36-b77</omero-blitz.version>
 		<enforcer.skip>true</enforcer.skip>
 		<skipITs>true</skipITs>
+		<imglib2-roi.version>0.5.0</imglib2-roi.version>
 
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
@@ -138,6 +139,17 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-common</artifactId>
+		</dependency>
+
+		<!-- ImgLib2 dependencies -->
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-roi</artifactId>
+			<version>${imglib2-roi.version}</version>
 		</dependency>
 
 		<!-- SCIFIO dependencies -->
