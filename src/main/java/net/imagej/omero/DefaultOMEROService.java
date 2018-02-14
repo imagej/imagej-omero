@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -76,7 +76,7 @@ import omero.gateway.model.TableDataColumn;
 
 /**
  * Default ImageJ service for managing OMERO data conversion.
- * 
+ *
  * @author Curtis Rueden
  */
 @Plugin(type = Service.class)
@@ -126,9 +126,8 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public omero.RType prototype(final Class<?> type) {
 		// image types
-		if (Dataset.class.isAssignableFrom(type) ||
-			DatasetView.class.isAssignableFrom(type) ||
-			ImageDisplay.class.isAssignableFrom(type))
+		if (Dataset.class.isAssignableFrom(type) || DatasetView.class
+			.isAssignableFrom(type) || ImageDisplay.class.isAssignableFrom(type))
 		{
 			// use an image ID
 			return omero.rtypes.rlong(0);
@@ -214,7 +213,7 @@ public class DefaultOMEROService extends AbstractService implements
 		if (value instanceof Map) {
 			final Map<?, ?> map = (Map<?, ?>) value;
 			final HashMap<String, omero.RType> val =
-				new HashMap<String, omero.RType>();
+				new HashMap<>();
 			for (final Object key : map.keySet()) {
 				val.put(key.toString(), toOMERO(map.get(key)));
 			}
@@ -259,7 +258,8 @@ public class DefaultOMEROService extends AbstractService implements
 		if (value instanceof ImageDisplay) {
 			final ImageDisplay imageDisplay = (ImageDisplay) value;
 			// TODO: Support more aspects of image displays; e.g., multiple datasets.
-			return toOMERO(client, imageDisplayService.getActiveDataset(imageDisplay));
+			return toOMERO(client, imageDisplayService.getActiveDataset(
+				imageDisplay));
 		}
 		if (value instanceof Table) {
 			return convertOMEROTable((Table<?, ?>) value);
@@ -283,10 +283,10 @@ public class DefaultOMEROService extends AbstractService implements
 			final Collection<Object> collection;
 			if (value instanceof omero.RArray || value instanceof omero.RList) {
 				// NB: See special handling for omero.RArray below.
-				collection = new ArrayList<Object>();
+				collection = new ArrayList<>();
 			}
 			else if (value instanceof omero.RSet) {
-				collection = new HashSet<Object>();
+				collection = new HashSet<>();
 			}
 			else {
 				log.error("Unsupported collection: " + value.getClass().getName());
@@ -314,7 +314,7 @@ public class DefaultOMEROService extends AbstractService implements
 		if (value instanceof omero.RMap) {
 			// map of objects
 			final Map<String, omero.RType> omeroMap = ((omero.RMap) value).getValue();
-			final Map<String, Object> map = new HashMap<String, Object>();
+			final Map<String, Object> map = new HashMap<>();
 			for (final String key : omeroMap.keySet()) {
 				map.put(key, toImageJ(client, omeroMap.get(key), null));
 			}
@@ -352,8 +352,8 @@ public class DefaultOMEROService extends AbstractService implements
 		// TODO: Reuse existing client instead of creating a new connection.
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
-		final String omeroSource =
-			"omero:" + credentials(client) + "&imageID=" + imageID;
+		final String omeroSource = "omero:" + credentials(client) + "&imageID=" +
+			imageID;
 
 		return datasetIOService.open(omeroSource);
 	}
@@ -365,9 +365,9 @@ public class DefaultOMEROService extends AbstractService implements
 		// TODO: Reuse existing client instead of creating a new connection.
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
-		final String omeroDestination =
-			"name=" + dataset.getName() + "&" + credentials(client) //
-				+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
+		final String omeroDestination = "name=" + dataset.getName() + "&" +
+			credentials(client) //
+			+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
 
 		final Metadata metadata = datasetIOService.save(dataset, omeroDestination);
 
@@ -560,8 +560,8 @@ public class DefaultOMEROService extends AbstractService implements
 		// use SciJava Common's automagical conversion routine
 		final T converted = convertService.convert(value, type);
 		if (converted == null) {
-			log.error("Cannot convert: " + value.getClass().getName() + " to " +
-				type.getName());
+			log.error("Cannot convert: " + value.getClass().getName() + " to " + type
+				.getName());
 		}
 		return converted;
 	}

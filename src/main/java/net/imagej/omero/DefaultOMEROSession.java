@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -58,7 +58,7 @@ import omero.model.PixelsType;
 
 /**
  * Helper class for managing OMERO client sessions.
- * 
+ *
  * @author Curtis Rueden
  */
 public class DefaultOMEROSession implements OMEROSession {
@@ -74,7 +74,8 @@ public class DefaultOMEROSession implements OMEROSession {
 	// -- Constructors --
 
 	public DefaultOMEROSession(final OMEROCredentials credentials)
-		throws ServerError, PermissionDeniedException, CannotCreateSessionException
+		throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException
 	{
 		this(credentials, null);
 	}
@@ -103,7 +104,8 @@ public class DefaultOMEROSession implements OMEROSession {
 			if (close) client.closeSession();
 			session = client.joinSession(sessionID);
 		}
-		else if (credentials.getUser() != null && credentials.getPassword() != null)
+		else if (credentials.getUser() != null && credentials
+			.getPassword() != null)
 		{
 			final String user = credentials.getUser();
 			final String password = credentials.getPassword();
@@ -189,8 +191,8 @@ public class DefaultOMEROSession implements OMEROSession {
 
 		// load the Image from the remote server
 		final List<Long> ids = Arrays.asList(imageID);
-		final List<Image> images =
-			session.getContainerService().getImages("Image", ids, null);
+		final List<Image> images = session.getContainerService().getImages("Image",
+			ids, null);
 		if (images == null || images.isEmpty()) {
 			throw new IllegalArgumentException("Invalid image ID: " + imageID);
 		}
@@ -282,7 +284,7 @@ public class DefaultOMEROSession implements OMEROSession {
 		final int sizeZ = zLen == 0 ? 1 : zLen;
 		final int sizeT = tLen == 0 ? 1 : tLen;
 		final int sizeC = cLen == 0 ? 1 : cLen;
-		final List<Integer> channelList = new ArrayList<Integer>(sizeC);
+		final List<Integer> channelList = new ArrayList<>(sizeC);
 		for (int c = 0; c < sizeC; c++) {
 			// TODO: Populate actual emission wavelengths?
 			channelList.add(c);
@@ -291,15 +293,13 @@ public class DefaultOMEROSession implements OMEROSession {
 		final PixelsType pixelsType = getPixelsType(pixelType);
 		final String name = meta.getName();
 		final String description = meta.getName();
-		final RLong id =
-			session.getPixelsService().createImage(sizeX, sizeY, sizeZ, sizeT,
-				channelList, pixelsType, name, description);
+		final RLong id = session.getPixelsService().createImage(sizeX, sizeY, sizeZ,
+			sizeT, channelList, pixelsType, name, description);
 		if (id == null) throw new FormatException("Cannot create image");
 
 		// retrieve the newly created Image
-		final List<Image> results =
-			session.getContainerService().getImages(Image.class.getName(),
-				Arrays.asList(id.getValue()), null);
+		final List<Image> results = session.getContainerService().getImages(
+			Image.class.getName(), Arrays.asList(id.getValue()), null);
 		return new ImageData(results.get(0));
 	}
 
@@ -312,8 +312,8 @@ public class DefaultOMEROSession implements OMEROSession {
 	private PixelsType getPixelsType(final String pixelType) throws ServerError,
 		FormatException
 	{
-		final List<IObject> list =
-			session.getPixelsService().getAllEnumerations(PixelsType.class.getName());
+		final List<IObject> list = session.getPixelsService().getAllEnumerations(
+			PixelsType.class.getName());
 		final Iterator<IObject> iter = list.iterator();
 		while (iter.hasNext()) {
 			final PixelsType type = (PixelsType) iter.next();
@@ -323,9 +323,8 @@ public class DefaultOMEROSession implements OMEROSession {
 		throw new FormatException("Invalid pixel type: " + pixelType);
 	}
 
-	private int
-		axisLength(final ImageMetadata imageMeta, final AxisType axisType)
-			throws FormatException
+	private int axisLength(final ImageMetadata imageMeta, final AxisType axisType)
+		throws FormatException
 	{
 		final long axisLength = imageMeta.getAxisLength(axisType);
 		if (axisLength > Integer.MAX_VALUE) {
@@ -347,9 +346,10 @@ public class DefaultOMEROSession implements OMEROSession {
 
 	/**
 	 * Attempts to connect to the gateway using the given credentials. If it can
-	 * successfully connect, then it sets experimenter. 
+	 * successfully connect, then it sets experimenter.
 	 */
-	private void setExperimenter(OMEROCredentials credentials) throws ServerError
+	private void setExperimenter(final OMEROCredentials credentials)
+		throws ServerError
 	{
 		final LoginCredentials cred = new LoginCredentials();
 		cred.getServer().setHostname(credentials.getServer());
@@ -357,12 +357,12 @@ public class DefaultOMEROSession implements OMEROSession {
 		cred.getUser().setUsername(credentials.getUser());
 		cred.getUser().setPassword(credentials.getPassword());
 
-		if(gateway == null) setGateway();
+		if (gateway == null) setGateway();
 
 		try {
 			experimenter = gateway.connect(cred);
 		}
-		catch (DSOutOfServiceException exc) {
+		catch (final DSOutOfServiceException exc) {
 			final ServerError err = new ServerError();
 			err.initCause(exc);
 			throw err;
