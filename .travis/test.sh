@@ -14,6 +14,9 @@ then
     git clone -b ${INFRABRANCH} ${INFRAREPO} .omero
 fi
 
+.omero/download.sh ${BACKUPURL} $PWD/.travis
+.omero/persist.sh --restore $PWD/.travis
+
 # FIXME: setting DOCKER_ARGS here should work but it's not.
 # It fails with:
 # [ERROR] Could not create local repository at /home/mvn/.m2/repository -> [Help 1]
