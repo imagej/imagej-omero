@@ -107,6 +107,21 @@ public class OmeroIT {
 	}
 
 	@Test
+	public void testDownloadThenUploadImage() throws CannotCreateSessionException,
+		PermissionDeniedException, ServerError, IOException
+	{
+		final long originalId = 1;
+		client.createSession(OMERO_USER, OMERO_PASSWORD);
+
+		final Dataset d = omero.downloadImage(client, originalId);
+		final long newId = omero.uploadImage(client, d);
+
+		client.closeSession();
+
+		assertTrue(originalId != newId);
+	}
+
+	@Test
 	public void testDownloadTable() throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
@@ -159,5 +174,27 @@ public class OmeroIT {
 			assertEquals(td.getColumns()[2].getName(), "Heading 3");
 			assertEquals(td.getNumberOfRows(), 3);
 		}
+	}
+
+	@Test
+	public void testDownloadThenUploadTable() throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
+		final long originalId = 83;
+		final Table<?, ?> ijTable = omero.downloadTable(cred, originalId);
+
+		// When download table was called it created a session, which cleared out
+		// the username and password from the credentials. The credentials must
+		// have a username and password to create security contexts.
+		final OMEROCredentials tc = new OMEROCredentials();
+		tc.setServer(OMERO_SERVER);
+		tc.setPort(OMERO_PORT);
+		tc.setUser(OMERO_USER);
+		tc.setPassword(OMERO_PASSWORD);
+
+		final long newId = omero.uploadTable(tc, "table-version2", ijTable, 1);
+
+		assertTrue(originalId != newId);
 	}
 }
