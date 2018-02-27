@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import io.scif.services.DatasetIOService;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
@@ -31,10 +30,7 @@ import Glacier2.PermissionDeniedException;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
-import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.TablesFacility;
-import omero.gateway.model.FileAnnotationData;
-import omero.gateway.model.ImageData;
 import omero.gateway.model.TableData;
 
 /**
@@ -115,34 +111,8 @@ public class OmeroIT {
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
-		// get table ID
-		final OMEROCredentials tc = new OMEROCredentials();
-		tc.setServer(OMERO_SERVER);
-		tc.setPort(OMERO_PORT);
-		tc.setUser(OMERO_USER);
-		tc.setPassword(OMERO_PASSWORD);
-		long tableID = 0;
-		try (final OMEROSession session = new DefaultOMEROSession(tc)) {
-			final BrowseFacility browse = session.getGateway().getFacility(
-				BrowseFacility.class);
-			final TablesFacility tablesFacility = session.getGateway().getFacility(
-				TablesFacility.class);
-			final ImageData image = browse.getImage(session.getSecurityContext(), 1);
-			final Collection<FileAnnotationData> files = tablesFacility
-				.getAvailableTables(session.getSecurityContext(), image);
-
-			for (final FileAnnotationData file : files) {
-				final TableData t = tablesFacility.getTableInfo(session
-					.getSecurityContext(), file.getFileID());
-				if (t.getColumns()[0].getName().equals("Header 1")) {
-					tableID = t.getOriginalFileId();
-					break;
-				}
-			}
-		}
-
 		// now download the table
-		final Table<?, ?> ijTable = omero.downloadTable(cred, tableID);
+		final Table<?, ?> ijTable = omero.downloadTable(cred, 83);
 
 		assertNotNull(ijTable);
 		assertEquals(3, ijTable.getColumnCount());
