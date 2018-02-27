@@ -1,4 +1,4 @@
-/*
+/*-
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
@@ -22,30 +22,9 @@
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
  */
+package net.imagej.omero.it;
 
-package net.imagej.omero;
 
-import net.imagej.omero.commands.OpenImageFromOMERO;
-
-import org.scijava.Context;
-import org.scijava.command.CommandService;
-import org.scijava.ui.UIService;
-
-/**
- * Manual test for {@link OpenImageFromOMERO}.
- * 
- * @author Curtis Rueden
- */
-public final class Main {
-
-	private Main() {
-		// prevent instantiation of utility class
-	}
-
-	public static void main(final String... args) {
-		final Context c = new Context();
-		c.service(UIService.class).showUI();
-		c.service(CommandService.class).run(OpenImageFromOMERO.class, true);
-	}
+public interface IntegrationTest {
 
 }

@@ -4,3 +4,5 @@
 /target/
 .*un~
 .omero
+.travis/omero_test_infra_backup.zip
+.travis/imagejomero_*.tar
