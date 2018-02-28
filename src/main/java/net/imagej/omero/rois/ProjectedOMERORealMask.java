@@ -63,6 +63,10 @@ public class ProjectedOMERORealMask<S extends ShapeData> extends
 		};
 	}
 
+	public OMERORealMask<S> getSource() {
+		return shape;
+	}
+
 	@Override
 	public boolean test(final RealLocalizable t) {
 		final RealPoint current = testPoint.get();
