@@ -53,7 +53,7 @@ import org.scijava.log.LogService;
 import omero.gateway.model.MaskData;
 
 /**
- * Tests {@link OMEROToImageJMask}, {@link ImageJToOMEROMask}, and
+ * Tests {@link OMEROToImageJMask}, {@link MaskIntervalToMaskData}, and
  * {@link OMEROMaskUnwrapper}.
  *
  * @author Alison Walter
@@ -84,7 +84,7 @@ public class MaskConversionTest {
 		final OMEROMask wrap = new DefaultOMEROMask(omeroMask);
 
 		final Converter<?, ?> cOne = convert.getHandler(ijMask, MaskData.class);
-		assertTrue(cOne instanceof ImageJToOMEROMask);
+		assertTrue(cOne instanceof MaskIntervalToMaskData);
 
 		final Converter<?, ?> cTwo = convert.getHandler(fiveD, MaskData.class);
 		assertNull(cTwo);

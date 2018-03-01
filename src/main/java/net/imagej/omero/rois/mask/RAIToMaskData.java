@@ -25,35 +25,57 @@
 
 package net.imagej.omero.rois.mask;
 
-import net.imagej.omero.rois.AbstractMaskPredicateToShapeData;
-import net.imglib2.Localizable;
+import java.lang.reflect.Type;
+
+import net.imagej.omero.rois.RoiConverters;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.roi.MaskInterval;
-import net.imglib2.roi.mask.integer.MaskIntervalAsRandomAccessibleInterval;
-import net.imglib2.roi.mask.integer.RandomAccessibleAsMask;
-import net.imglib2.roi.mask.integer.RandomAccessibleIntervalAsMaskInterval;
 import net.imglib2.type.BooleanType;
-import net.imglib2.type.logic.BoolType;
+import net.imglib2.util.Util;
 
+import org.scijava.convert.AbstractConverter;
+import org.scijava.convert.ConversionRequest;
 import org.scijava.convert.Converter;
 import org.scijava.plugin.Plugin;
 
 import omero.gateway.model.MaskData;
 
 /**
- * Converts a {@link RandomAccessibleAsMask} to an OMERO {@link MaskData}.
+ * Converts a {@link RandomAccessibleInterval} to an OMERO {@link MaskData}.
  *
  * @author Alison Walter
  */
 @Plugin(type = Converter.class)
-public class ImageJToOMEROMask extends
-	AbstractMaskPredicateToShapeData<Localizable, MaskInterval, MaskData>
+public class RAIToMaskData extends
+	AbstractConverter<RandomAccessibleInterval<?>, MaskData>
 {
 
 	@Override
-	public Class<MaskInterval> getInputType() {
-		return MaskInterval.class;
+	public boolean canConvert(final ConversionRequest request) {
+		final Object src = request.sourceObject();
+		if (src == null) {
+			return false;
+		}
+		if (request.destType() != null) return canConvert(src, request.destType());
+		return canConvert(src, request.destClass());
+	}
+
+	@Override
+	public boolean canConvert(final Object src, final Type dest) {
+		if (src == null) return false;
+		return canConvert(src) && super.canConvert(src, dest);
+	}
+
+	@Override
+	public boolean canConvert(final Object src, final Class<?> dest) {
+		if (src == null) return false;
+		return canConvert(src) && super.canConvert(src, dest);
+	}
+
+	@Override
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public Class<RandomAccessibleInterval<?>> getInputType() {
+		return (Class) RandomAccessibleInterval.class;
 	}
 
 	@Override
@@ -62,24 +84,40 @@ public class ImageJToOMEROMask extends
 	}
 
 	@Override
-	public MaskData convert(final MaskInterval mask, final String boundaryType) {
-		final MaskData m = toMaskData(mask);
-		m.setText(boundaryType);
-		return m;
+	@SuppressWarnings("unchecked")
+	public <T> T convert(final Object src, final Class<T> dest) {
+		if (src == null || dest == null) throw new NullPointerException();
+		if (!getInputType().isInstance(src)) {
+			throw new IllegalArgumentException("Expected: " + getInputType()
+				.getSimpleName() + " Received: " + src.getClass().getSimpleName());
+		}
+		if (!dest.isAssignableFrom(getOutputType())) {
+			throw new IllegalArgumentException("Expected: " + getOutputType()
+				.getSimpleName() + " Received: " + dest.getSimpleName());
+		}
+
+		final MaskData md = toMaskData((RandomAccessibleInterval<?>) src);
+		md.setText(RoiConverters.UNSPECIFIED_BOUNDARY_TEXT);
+		return (T) md;
 	}
 
 	// -- Helper methods --
 
-	@SuppressWarnings("unchecked")
+	private boolean canConvert(final Object src) {
+		if (src instanceof RandomAccessibleInterval) {
+			final RandomAccessibleInterval<?> rai = (RandomAccessibleInterval<?>) src;
+			return rai.numDimensions() == 2 && Util.getTypeFromInterval(
+				rai) instanceof BooleanType;
+		}
+		return false;
+	}
+
 	private <B extends BooleanType<B>> MaskData toMaskData(
-		final MaskInterval interval)
+		final RandomAccessibleInterval<?> src)
 	{
-		RandomAccessibleInterval<B> rai = null;
-		if (interval instanceof RandomAccessibleIntervalAsMaskInterval) rai =
-			((RandomAccessibleIntervalAsMaskInterval<B>) interval).getSource();
-		else rai =
-			(RandomAccessibleInterval<B>) new MaskIntervalAsRandomAccessibleInterval<>(
-				interval, new BoolType());
+
+		@SuppressWarnings("unchecked")
+		final RandomAccessibleInterval<B> rai = (RandomAccessibleInterval<B>) src;
 
 		final long xd = rai.dimension(0) - 1;
 		final long yd = rai.dimension(1) - 1;

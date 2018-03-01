@@ -28,7 +28,6 @@ package net.imagej.omero.rois;
 import java.lang.reflect.Type;
 
 import net.imglib2.roi.MaskPredicate;
-import net.imglib2.roi.composite.CompositeMaskPredicate;
 
 import org.scijava.convert.AbstractConverter;
 import org.scijava.convert.ConversionRequest;
@@ -51,9 +50,7 @@ public abstract class AbstractMaskPredicateToShapeData<L, M extends MaskPredicat
 	@Override
 	public boolean canConvert(final ConversionRequest request) {
 		final Object src = request.sourceObject();
-		if (src == null) {
-			return false;
-		}
+		if (src == null) return false;
 		if (request.destType() != null) return canConvert(src, request.destType());
 		return canConvert(src, request.destClass());
 	}
@@ -65,9 +62,8 @@ public abstract class AbstractMaskPredicateToShapeData<L, M extends MaskPredicat
 		final Class<?> srcClass = src.getClass();
 		if (src instanceof MaskPredicate) {
 			final MaskPredicate<L> m = (MaskPredicate<L>) src;
-			if (m.numDimensions() == 2 && !(m instanceof CompositeMaskPredicate)) {
-				return canConvert(srcClass, GenericUtils.getClass(dest));
-			}
+			if (m.numDimensions() == 2) return canConvert(srcClass, GenericUtils
+				.getClass(dest));
 		}
 		return false;
 	}
@@ -79,9 +75,7 @@ public abstract class AbstractMaskPredicateToShapeData<L, M extends MaskPredicat
 		final Class<?> srcClass = src.getClass();
 		if (src instanceof MaskPredicate) {
 			final MaskPredicate<L> m = (MaskPredicate<L>) src;
-			if (m.numDimensions() == 2 && !(m instanceof CompositeMaskPredicate)) {
-				return canConvert(srcClass, dest);
-			}
+			if (m.numDimensions() == 2) return canConvert(srcClass, dest);
 		}
 		return false;
 	}
