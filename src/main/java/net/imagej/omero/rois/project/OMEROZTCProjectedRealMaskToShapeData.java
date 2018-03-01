@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.rois;
+package net.imagej.omero.rois.project;
 
 import org.scijava.convert.AbstractConverter;
 import org.scijava.convert.ConvertService;
@@ -34,22 +34,22 @@ import org.scijava.plugin.Plugin;
 import omero.gateway.model.ShapeData;
 
 /**
- * Converts an {@link ProjectedOMERORealMask} to {@link ShapeData}.
+ * Converts an {@link OMEROZTCProjectedRealMask} to {@link ShapeData},
+ * preserving its Z, T, and C positions.
  *
  * @author Alison Walter
  */
 @Plugin(type = Converter.class)
-public class ProjectedOMERORealMaskToShapeData extends
-	AbstractConverter<ProjectedOMERORealMask<?>, ShapeData>
+public class OMEROZTCProjectedRealMaskToShapeData extends
+	AbstractConverter<OMEROZTCProjectedRealMask, ShapeData>
 {
 
 	@Parameter
 	private ConvertService convert;
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public Class<ProjectedOMERORealMask<?>> getInputType() {
-		return (Class) ProjectedOMERORealMask.class;
+	public Class<OMEROZTCProjectedRealMask> getInputType() {
+		return OMEROZTCProjectedRealMask.class;
 	}
 
 	@Override
@@ -70,8 +70,18 @@ public class ProjectedOMERORealMaskToShapeData extends
 				.getSimpleName() + " Received: " + dest.getSimpleName());
 		}
 
-		return (T) convert.convert(((ProjectedOMERORealMask<?>) src).getSource(),
-			ShapeData.class);
+		final OMEROZTCProjectedRealMask rm = (OMEROZTCProjectedRealMask) src;
+		final ShapeData s = convert.convert(rm.getSource(), ShapeData.class);
+		if (s == null) throw new IllegalArgumentException("Cannot convert " + rm
+			.getSource().getClass() + " to ShapeData");
+
+		// NB: For setZ, etc. passing in -1 will result in that position being set
+		// to 0
+		if (rm.getZPosition() != -1) s.setZ(rm.getZPosition());
+		if (rm.getTimePosition() != -1) s.setT(rm.getTimePosition());
+		if (rm.getChannelPosition() != -1) s.setC(rm.getChannelPosition());
+
+		return (T) s;
 	}
 
 }

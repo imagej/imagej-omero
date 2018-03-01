@@ -23,8 +23,9 @@
  * #L%
  */
 
-package net.imagej.omero.rois;
+package net.imagej.omero.rois.transform;
 
+import org.scijava.Priority;
 import org.scijava.convert.AbstractConverter;
 import org.scijava.convert.ConvertService;
 import org.scijava.convert.Converter;
@@ -34,27 +35,27 @@ import org.scijava.plugin.Plugin;
 import omero.gateway.model.ShapeData;
 
 /**
- * Converts an {@link OMEROZTCProjectedRealMask} to {@link ShapeData},
- * preserving its Z, T, and C positions.
+ * Converts {@link TransformedOMERORealMaskRealInterval} to {@link ShapeData}.
  *
  * @author Alison Walter
  */
-@Plugin(type = Converter.class)
-public class OMEROZTCProjectedRealMaskToShapeData extends
-	AbstractConverter<OMEROZTCProjectedRealMask, ShapeData>
+@Plugin(type = Converter.class, priority = Priority.HIGH)
+public class TransformedOMERORealMaskRealIntervalToShapeData extends
+	AbstractConverter<TransformedOMERORealMaskRealInterval<?>, ShapeData>
 {
 
 	@Parameter
 	private ConvertService convert;
 
 	@Override
-	public Class<OMEROZTCProjectedRealMask> getInputType() {
-		return OMEROZTCProjectedRealMask.class;
+	public Class<ShapeData> getOutputType() {
+		return ShapeData.class;
 	}
 
 	@Override
-	public Class<ShapeData> getOutputType() {
-		return ShapeData.class;
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public Class<TransformedOMERORealMaskRealInterval<?>> getInputType() {
+		return (Class) TransformedOMERORealMaskRealInterval.class;
 	}
 
 	@Override
@@ -70,18 +71,8 @@ public class OMEROZTCProjectedRealMaskToShapeData extends
 				.getSimpleName() + " Received: " + dest.getSimpleName());
 		}
 
-		final OMEROZTCProjectedRealMask rm = (OMEROZTCProjectedRealMask) src;
-		final ShapeData s = convert.convert(rm.getSource(), ShapeData.class);
-		if (s == null) throw new IllegalArgumentException("Cannot convert " + rm
-			.getSource().getClass() + " to ShapeData");
-
-		// NB: For setZ, etc. passing in -1 will result in that position being set
-		// to 0
-		if (rm.getZPosition() != -1) s.setZ(rm.getZPosition());
-		if (rm.getTimePosition() != -1) s.setT(rm.getTimePosition());
-		if (rm.getChannelPosition() != -1) s.setC(rm.getChannelPosition());
-
-		return (T) s;
+		// this conversion should just unwrap, null the id, and add boundary text
+		return (T) convert.convert(((TransformedOMERORealMaskRealInterval<?>) src)
+			.arg0(), ShapeData.class);
 	}
-
 }

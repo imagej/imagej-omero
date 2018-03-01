@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.rois;
+package net.imagej.omero.rois.project;
 
 import net.imglib2.roi.RealMaskRealInterval;
 

@@ -36,6 +36,7 @@ import net.imagej.omero.rois.ellipse.OMEROEllipse;
 import net.imagej.omero.rois.ellipse.OpenOMEROEllipse;
 import net.imagej.omero.rois.point.OMEROPoint;
 import net.imagej.omero.rois.rectangle.OMERORectangle;
+import net.imagej.omero.rois.transform.TransformedOMERORealMaskRealInterval;
 
 import org.junit.After;
 import org.junit.Before;

@@ -23,10 +23,11 @@
  * #L%
  */
 
-package net.imagej.omero.rois;
+package net.imagej.omero.rois.transform;
 
 import java.util.function.Predicate;
 
+import net.imagej.omero.rois.OMERORealMaskRealInterval;
 import net.imglib2.AbstractWrappedRealInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.RealLocalizable;

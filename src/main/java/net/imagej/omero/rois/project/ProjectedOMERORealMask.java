@@ -23,9 +23,10 @@
  * #L%
  */
 
-package net.imagej.omero.rois;
+package net.imagej.omero.rois.project;
 
 import net.imagej.axis.TypedAxis;
+import net.imagej.omero.rois.OMERORealMask;
 import net.imagej.space.AnnotatedSpace;
 import net.imglib2.AbstractEuclideanSpace;
 import net.imglib2.RealLocalizable;

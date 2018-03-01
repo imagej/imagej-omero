@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.imagej.axis.TypedAxis;
+import net.imagej.omero.rois.project.DefaultOMERORoiProjector;
 import net.imagej.space.TypedSpace;
 
 /**

@@ -23,7 +23,15 @@
  * #L%
  */
 
-package net.imagej.omero.rois;
+package net.imagej.omero.rois.transform;
+
+import java.lang.reflect.Type;
+
+import net.imagej.omero.rois.OMERORealMaskRealInterval;
+import net.imagej.omero.rois.RoiConverters;
+import net.imglib2.realtransform.AffineGet;
+import net.imglib2.roi.Bounds;
+import net.imglib2.roi.Operators.RealTransformMaskOperator;
 
 import org.scijava.Priority;
 import org.scijava.convert.AbstractConverter;
@@ -33,28 +41,44 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import omero.gateway.model.ShapeData;
+import omero.model.AffineTransform;
 
 /**
- * Converts {@link TransformedOMERORealMaskRealInterval} to {@link ShapeData}.
+ * Converts a transformed {@link ShapeData} to a
+ * {@link TransformedOMERORealMaskRealInterval}.
  *
  * @author Alison Walter
  */
 @Plugin(type = Converter.class, priority = Priority.HIGH)
-public class TransformedOMERORealMaskRealIntervalToShapeData extends
-	AbstractConverter<TransformedOMERORealMaskRealInterval<?>, ShapeData>
+public class ShapeDataToTransformedOMERORealMaskRealInterval extends
+	AbstractConverter<ShapeData, TransformedOMERORealMaskRealInterval<?>>
 {
 
 	@Parameter
 	private ConvertService convert;
 
 	@Override
-	public Class<ShapeData> getOutputType() {
+	public boolean canConvert(final Object src, final Type dest) {
+		if (super.canConvert(src, dest)) return ((ShapeData) src)
+			.getTransform() != null;
+		return false;
+	}
+
+	@Override
+	public boolean canConvert(final Object src, final Class<?> dest) {
+		if (super.canConvert(src, dest)) return ((ShapeData) src)
+			.getTransform() != null;
+		return false;
+	}
+
+	@Override
+	public Class<ShapeData> getInputType() {
 		return ShapeData.class;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public Class<TransformedOMERORealMaskRealInterval<?>> getInputType() {
+	public Class<TransformedOMERORealMaskRealInterval<?>> getOutputType() {
 		return (Class) TransformedOMERORealMaskRealInterval.class;
 	}
 
@@ -71,8 +95,21 @@ public class TransformedOMERORealMaskRealIntervalToShapeData extends
 				.getSimpleName() + " Received: " + dest.getSimpleName());
 		}
 
-		// this conversion should just unwrap, null the id, and add boundary text
-		return (T) convert.convert(((TransformedOMERORealMaskRealInterval<?>) src)
-			.arg0(), ShapeData.class);
+		final ShapeData shape = (ShapeData) src;
+
+		// Keep a copy of the transform, and then set transform to null. This
+		// ensures that the convert(...) call does not match this converter again
+		final AffineTransform copy = shape.getTransform();
+		shape.setTransform(null);
+		final OMERORealMaskRealInterval<?> rmri = convert.convert(shape,
+			OMERORealMaskRealInterval.class);
+
+		// Reset transform back to original
+		rmri.getShape().setTransform(copy);
+
+		final AffineGet transformToSource = RoiConverters.createAffine(copy);
+		return (T) new TransformedOMERORealMaskRealInterval<>(rmri,
+			new Bounds.RealTransformRealInterval(rmri, transformToSource),
+			new RealTransformMaskOperator(transformToSource));
 	}
 }

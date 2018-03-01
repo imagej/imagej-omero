@@ -23,41 +23,20 @@
  * #L%
  */
 
-package net.imagej.omero.rois;
-
-import java.util.Arrays;
+package net.imagej.omero.rois.project;
 
 import net.imagej.axis.TypedAxis;
+import net.imagej.omero.rois.OMERORealMask;
 import net.imagej.space.TypedSpace;
 
-import omero.gateway.model.ShapeData;
-
 /**
- * Default implementation of {@link OMERORoiProjector}.
+ * Projects a {@link OMERORealMask} into the given space.
  *
  * @author Alison Walter
+ * @param <I> Type of the source to be projected into the given space
+ * @param <O> type of the projected output
  */
-public class DefaultOMERORoiProjector implements
-	OMERORoiProjector<OMERORealMask<? extends ShapeData>, OMERORealMask<? extends ShapeData>>
-{
+public interface OMERORoiProjector<I extends OMERORealMask<?>, O extends OMERORealMask<?>> {
 
-	@Override
-	public OMERORealMask<?> project(final OMERORealMask<?> source,
-		final TypedSpace<? extends TypedAxis> space)
-	{
-		if (space.numDimensions() < 2 || !hasRequiredAxes(source, space))
-			throw new IllegalArgumentException(
-				"Space must have an X and Y dimension");
-
-		return new ProjectedOMERORealMask<>(source, space);
-	}
-
-	// -- Helper methods --
-
-	private <A extends TypedAxis> boolean hasRequiredAxes(
-		final OMERORealMask<?> source, final TypedSpace<A> space)
-	{
-		return !Arrays.stream(source.requiredAxisTypes()).anyMatch(required -> space
-			.dimensionIndex(required) < 0);
-	}
+	O project(final I source, final TypedSpace<? extends TypedAxis> space);
 }
