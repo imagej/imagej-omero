@@ -42,6 +42,7 @@ import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.TableData;
+import omero.model.TagAnnotationI;
 
 /**
  * Interface for ImageJ services that manage OMERO data conversion.
@@ -170,5 +171,34 @@ public interface OMEROService extends ImageJService {
 	 * @param session The session to be removed
 	 */
 	void removeSession(OMEROSession session);
+
+	/**
+	 * Returns a {@link TagAnnotationI} with the given description and text value.
+	 * If no such {@link TagAnnotationI} is found on the server, one is created,
+	 * saved to the server, and returned.
+	 *
+	 * @param description the description of the tag
+	 * @param value the text value of the tag
+	 * @param location credentials for connecting to the server, if these isn't a
+	 *          current {@link OMEROSession} for these credentials one is created
+	 * @return a {@link TagAnnotationI} with the given description and text value
+	 */
+	TagAnnotationI getAnnotation(String description, String value,
+		OMEROLocation location) throws ExecutionException, ServerError,
+		DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Returns a {@link TagAnnotationI} with the given description and text value.
+	 * If no such {@link TagAnnotationI} is found on the server, one is created
+	 * and returned. The credentials used for this query are those of the
+	 * {@link OMEROSession} related with the current running thread.
+	 *
+	 * @param description the description of the tag
+	 * @param value the text value of the tag
+	 * @return a {@link TagAnnotationI} with the given description and text value
+	 */
+	TagAnnotationI getAnnotation(String description, String value)
+		throws ExecutionException, ServerError, DSOutOfServiceException,
+		DSAccessException;
 
 }
