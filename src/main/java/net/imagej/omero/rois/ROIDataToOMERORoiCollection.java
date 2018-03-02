@@ -11,12 +11,12 @@
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -25,12 +25,21 @@
 
 package net.imagej.omero.rois;
 
+import java.lang.reflect.Type;
+import java.util.Iterator;
+import java.util.List;
+
+import net.imglib2.roi.MaskPredicate;
+
 import org.scijava.convert.AbstractConverter;
+import org.scijava.convert.ConversionRequest;
 import org.scijava.convert.ConvertService;
 import org.scijava.convert.Converter;
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import omero.gateway.model.ROIData;
+import omero.gateway.model.ShapeData;
 
 /**
  * Converts an OMERO {@link ROIData} to an {@link OMERORoiCollection}.
@@ -41,6 +50,31 @@ import omero.gateway.model.ROIData;
 public class ROIDataToOMERORoiCollection extends
 	AbstractConverter<ROIData, OMERORoiCollection>
 {
+
+	@Parameter
+	private ConvertService convert;
+
+	@Override
+	public boolean canConvert(final ConversionRequest request) {
+		final Object src = request.sourceObject();
+		if (src == null) {
+			return false;
+		}
+		if (request.destType() != null) return canConvert(src, request.destType());
+		return canConvert(src, request.destClass());
+	}
+
+	@Override
+	public boolean canConvert(final Object src, final Type dest) {
+		if (super.canConvert(src, dest)) return checkShapeData((ROIData) src);
+		return false;
+	}
+
+	@Override
+	public boolean canConvert(final Object src, final Class<?> dest) {
+		if (super.canConvert(src, dest)) return checkShapeData((ROIData) src);
+		return false;
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -62,6 +96,23 @@ public class ROIDataToOMERORoiCollection extends
 	@Override
 	public Class<ROIData> getInputType() {
 		return ROIData.class;
+	}
+
+	// -- Helper methods --
+
+	/**
+	 * Ensure all the shapes in the ROIData can be converted.
+	 *
+	 * @param rd ROIData whose shapes should be checked
+	 * @return true if all supported, false otherwise
+	 */
+	private boolean checkShapeData(final ROIData rd) {
+		final Iterator<List<ShapeData>> itr = rd.getIterator();
+		while (itr.hasNext()) {
+			for (final ShapeData shape : itr.next())
+				if (!convert.supports(shape, MaskPredicate.class)) return false;
+		}
+		return true;
 	}
 
 }
