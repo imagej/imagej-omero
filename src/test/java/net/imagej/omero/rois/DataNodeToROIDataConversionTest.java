@@ -661,5 +661,23 @@ public class DataNodeToROIDataConversionTest {
 			throw new IllegalArgumentException("Invalid description: " + description);
 		}
 
+		@Override
+		public List<DataNode<?>> downloadROIs(OMEROLocation credentials,
+			long imageID) throws ServerError, PermissionDeniedException,
+			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+			DSAccessException
+		{
+			return null;
+		}
+
+		@Override
+		public <D extends DataNode<?>> long[] uploadROIs(OMEROLocation credentials,
+			List<D> ijROIs, long imageID) throws ServerError,
+			PermissionDeniedException, CannotCreateSessionException,
+			ExecutionException, DSOutOfServiceException, DSAccessException
+		{
+			return null;
+		}
+
 	}
 }

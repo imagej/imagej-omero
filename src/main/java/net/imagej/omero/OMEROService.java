@@ -26,12 +26,14 @@
 package net.imagej.omero;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+import net.imagej.omero.rois.DataNode;
 import net.imagej.table.Table;
 
 import org.scijava.module.ModuleItem;
@@ -138,6 +140,23 @@ public interface OMEROService extends ImageJService {
 	Table<?, ?> downloadTable(OMEROLocation credentials, long tableID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
 		ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Downloads the ROIs associated with the given {@code imageID} from OMERO,
+	 * and returns them as a {@code List} of {@link DataNode}s.
+	 */
+	List<DataNode<?>> downloadROIs(OMEROLocation credentials, long imageID)
+		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
+		ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Converts the given {@link DataNode}s to OMERO ROIs, uploads them to the
+	 * OMEROServer, and attaches them to the image with the specified ID.
+	 */
+	<D extends DataNode<?>> long[] uploadROIs(OMEROLocation credentials,
+		List<D> ijROIs, long imageID) throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException;
 
 	/**
 	 * Returns an {@link OMEROSession} using the given {@link OMEROLocation}. If a

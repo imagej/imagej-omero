@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,10 +48,22 @@ import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
+import net.imagej.omero.rois.DataNode;
+import net.imagej.omero.rois.DefaultDataNode;
 import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
 import net.imagej.table.TableDisplay;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealInterval;
+import net.imglib2.roi.Mask;
+import net.imglib2.roi.MaskPredicate;
+import net.imglib2.roi.Masks;
+import net.imglib2.roi.RealMask;
+import net.imglib2.type.logic.BoolType;
+import net.imglib2.view.Views;
 
 import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
@@ -73,8 +86,11 @@ import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.DataManagerFacility;
+import omero.gateway.facility.ROIFacility;
 import omero.gateway.facility.TablesFacility;
 import omero.gateway.model.ImageData;
+import omero.gateway.model.ROIData;
+import omero.gateway.model.ROIResult;
 import omero.gateway.model.TableData;
 import omero.gateway.model.TableDataColumn;
 import omero.gateway.model.TagAnnotationData;
@@ -478,6 +494,70 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
+	public List<DataNode<?>> downloadROIs(final OMEROLocation credentials,
+		final long imageID) throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException
+	{
+		final List<DataNode<?>> dn = new ArrayList<>();
+		final OMEROSession session = session(credentials);
+		final ROIFacility roifac = session.getGateway().getFacility(
+			ROIFacility.class);
+		final List<ROIResult> roiresults = roifac.loadROIs(session
+			.getSecurityContext(), imageID);
+		final Iterator<ROIResult> r = roiresults.iterator();
+		while (r.hasNext()) {
+			final ROIResult res = r.next();
+			final Collection<ROIData> rois = res.getROIs();
+			for (final ROIData roi : rois) {
+				final DataNode<?> ijRoi = convertService.convert(roi, DataNode.class);
+				if (ijRoi == null) throw new IllegalArgumentException(
+					"ROIData cannot be converted to ImageJ ROI");
+				dn.add(ijRoi);
+			}
+		}
+		return dn;
+	}
+
+	@Override
+	public <D extends DataNode<?>> long[] uploadROIs(
+		final OMEROLocation credentials, final List<D> ijROIs, final long imageID)
+		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
+		ExecutionException, DSOutOfServiceException, DSAccessException
+	{
+		final OMEROSession session = session(credentials);
+		final ROIFacility roifac = session.getGateway().getFacility(
+			ROIFacility.class);
+		final Interval interval = null;
+
+		final List<ROIData> omeroROIs = new ArrayList<>();
+		for (final DataNode<?> dn : ijROIs) {
+			ROIData oR;
+			if (!(dn.getData() instanceof Interval) && !(dn
+				.getData() instanceof RealInterval) && dn
+					.getData() instanceof MaskPredicate) oR = convertService.convert(
+						interval((MaskPredicate<?>) dn.getData(), interval, imageID,
+							session), ROIData.class);
+			else oR = convertService.convert(dn, ROIData.class);
+			if (oR == null) throw new IllegalArgumentException("Unsupported type: " +
+				dn.getData().getClass());
+			omeroROIs.add(oR);
+		}
+
+		final Collection<ROIData> updatedOmeroROIs = roifac.saveROIs(session
+			.getSecurityContext(), imageID, omeroROIs);
+
+		final long[] ids = new long[updatedOmeroROIs.size()];
+		int count = 0;
+		for (final ROIData roi : updatedOmeroROIs) {
+			ids[count] = roi.asIObject().getId().getValue();
+			count++;
+		}
+
+		return ids;
+	}
+
+	@Override
 	public OMEROSession session(final OMEROLocation location) {
 		final OMEROSession session = sessions.computeIfAbsent(location,
 			c2 -> createSession(c2));
@@ -718,4 +798,59 @@ public class DefaultOMEROService extends AbstractService implements
 		// if no matching tags, create tag
 		return (TagAnnotationI) createTag(description, value, s).asIObject();
 	}
+
+	/**
+	 * Puts interval bounds on an unbounded {@link MaskPredicate}. The bounds will
+	 * correspond to the size of the image. If the {@link MaskPredicate} is a
+	 * {@link RealMask}, it is also rasterized.
+	 *
+	 * @param m an unbounded {@link MaskPredicate}
+	 * @param interval the interval to apply, if null it is computed
+	 * @param imageID the ID of the OMERO image whose interval should be applied
+	 * @param session the current session
+	 * @return a DataNode whose data is a RandomAccessibleInterval representation
+	 *         of the original data
+	 * @throws ExecutionException
+	 * @throws DSOutOfServiceException
+	 * @throws DSAccessException
+	 */
+	private DataNode<RandomAccessibleInterval<BoolType>> interval(
+		final MaskPredicate<?> m, Interval interval, final long imageID,
+		final OMEROSession session) throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
+		if (interval == null) interval = getImageInterval(session, imageID);
+
+		RandomAccessibleInterval<BoolType> rai;
+		if (m instanceof Mask) rai = Views.interval(Masks.toRandomAccessible(
+			(Mask) m), interval);
+		else rai = Views.interval(Views.raster(Masks.toRealRandomAccessible(
+			(RealMask) m)), interval);
+
+		return new DefaultDataNode<>(rai, null, null);
+	}
+
+	/**
+	 * Retrieve the {@link ImageData} from the OMERO server, and compute its
+	 * {@link Interval}.
+	 *
+	 * @param session current session
+	 * @param imageID ID of {@link ImageData} whose bounds should be computed
+	 * @return the computed {@link Interval}
+	 * @throws ExecutionException
+	 * @throws DSOutOfServiceException
+	 * @throws DSAccessException
+	 */
+	private Interval getImageInterval(final OMEROSession session,
+		final long imageID) throws ExecutionException, DSOutOfServiceException,
+		DSAccessException
+	{
+		final BrowseFacility browse = session.getGateway().getFacility(
+			BrowseFacility.class);
+		final ImageData image = browse.getImage(session.getSecurityContext(),
+			imageID);
+		return new FinalInterval(new long[] { 0, 0 }, new long[] { image
+			.getDefaultPixels().getSizeX(), image.getDefaultPixels().getSizeY() });
+	}
+
 }
