@@ -25,11 +25,29 @@
 
 package net.imagej.omero.rois;
 
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROSession;
+import net.imglib2.Interval;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.MaskPredicate;
 
+import org.scijava.log.LogService;
+
+import omero.ServerError;
+import omero.gateway.exception.DSAccessException;
+import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.facility.MetadataFacility;
+import omero.gateway.model.AnnotationData;
+import omero.gateway.model.ShapeData;
+import omero.gateway.model.TagAnnotationData;
 import omero.model.AffineTransformI;
+import omero.model.TagAnnotation;
+import omero.model.TagAnnotationI;
 
 /**
  * Utility class for working with ROI converters.
@@ -45,6 +63,52 @@ public class RoiConverters {
 
 	/** Description value of imagej-omero version tags */
 	public final static String IJO_VERSION_DESC = "ij-omero-version";
+
+	/**
+	 * Gets the boundary behavior of this shape. If this shape was previously an
+	 * ImageJ mask it will retrieve the boundary behavior from an annotation; if
+	 * not, it will default to {@code CLOSED} boundary behavior.
+	 *
+	 * @param shape OMERO shape which will be checked for a boundaryType
+	 *          annotation
+	 * @return if {@code shape} was previously converted to an ImageJ mask, then
+	 *         its previous boundary behavior is returned otherwise {@code CLOSED}
+	 *         is returned.
+	 */
+	public static <S extends ShapeData> BoundaryType boundaryType(final S shape,
+		final OMEROSession session, final LogService log)
+	{
+		List<AnnotationData> annotations;
+		try {
+			final MetadataFacility proxy = session.getGateway().getFacility(
+				MetadataFacility.class);
+			annotations = proxy.getAnnotations(session.getSecurityContext(), shape);
+		}
+		catch (final DSOutOfServiceException | ExecutionException
+				| DSAccessException exc)
+		{
+			log.warn("Error encountered when attempting to retrieve annotations for" +
+				" boundary behavior, defaulting to closed boundary behavior.", exc);
+			return BoundaryType.CLOSED;
+		}
+
+		if (annotations == null || annotations.isEmpty())
+			return BoundaryType.CLOSED;
+		for (final AnnotationData ad : annotations) {
+			if (ad instanceof TagAnnotationData && ((TagAnnotationData) ad)
+				.getDescription().equals("boundaryType"))
+			{
+				final TagAnnotationData t = (TagAnnotationData) ad;
+				final String type = t.getTagValue();
+				if (type.toLowerCase().equals("open")) return BoundaryType.OPEN;
+				else if (type.toLowerCase().equals("unspecified"))
+					return BoundaryType.UNSPECIFIED;
+				else return BoundaryType.CLOSED;
+			}
+		}
+		// If no such tag found, use Closed
+		return BoundaryType.CLOSED;
+	}
 
 	/**
 	 * Converts an OMERO {@link omero.model.AffineTransform AffineTransform} to an
@@ -86,6 +150,33 @@ public class RoiConverters {
 		transform.setA11(omero.rtypes.rdouble(transformFromSource.get(1, 1)));
 		transform.setA12(omero.rtypes.rdouble(transformFromSource.get(1, 2)));
 		return transform;
+	}
+
+	/**
+	 * Creates/Retrieves a {@link TagAnnotation} which contains the boundary
+	 * behavior of this Mask.
+	 *
+	 * @param mask a {@link MaskPredicate} whose boundary behavior will be
+	 *          represented in the annotation
+	 * @param omero an {@link OMEROService} for retrieving the tag
+	 * @param log a {@link LogService} to record any issues
+	 * @return an annotation which contains information about the masks boundary
+	 *         behavior
+	 */
+	public static <L> TagAnnotationI getAnnotation(final MaskPredicate<L> mask,
+		final OMEROService omero, final LogService log)
+	{
+		TagAnnotationI tag = null;
+		try {
+			tag = omero.getAnnotation("imagej:boundaryType", mask.boundaryType()
+				.toString().toLowerCase());
+		}
+		catch (ServerError | ExecutionException | DSOutOfServiceException
+				| DSAccessException exc)
+		{
+			log.error("Cannot retrieve/create tag", exc);
+		}
+		return tag;
 	}
 
 	public static String createBoundaryTypeString(final BoundaryType bt) {
