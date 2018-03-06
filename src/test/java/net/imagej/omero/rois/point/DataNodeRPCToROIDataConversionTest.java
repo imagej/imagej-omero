@@ -344,6 +344,13 @@ public class DataNodeRPCToROIDataConversionTest {
 		}
 
 		@Override
+		public DataNode<?> downloadROI(OMEROLocation credentials, long roiID)
+			throws DSOutOfServiceException, DSAccessException, ExecutionException
+		{
+			return null;
+		}
+
+		@Override
 		public <D extends DataNode<?>> long[] uploadROIs(
 			final OMEROLocation credentials, final List<D> ijROIs, final long imageID)
 			throws ServerError, PermissionDeniedException,

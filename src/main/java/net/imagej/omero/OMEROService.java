@@ -43,6 +43,7 @@ import Glacier2.PermissionDeniedException;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.model.ROIData;
 import omero.gateway.model.TableData;
 import omero.model.TagAnnotationI;
 
@@ -148,6 +149,14 @@ public interface OMEROService extends ImageJService {
 	List<DataNode<?>> downloadROIs(OMEROLocation credentials, long imageID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
 		ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Downloads the {@link ROIData} with the given {@code roiID} from OMERO, and
+	 * returns it as a {@link DataNode}.
+	 */
+	DataNode<?> downloadROI(final OMEROLocation credentials,
+		final long roiID) throws DSOutOfServiceException, DSAccessException,
+		ExecutionException;
 
 	/**
 	 * Converts the given {@link DataNode}s to OMERO ROIs, uploads them to the

@@ -671,6 +671,13 @@ public class DataNodeToROIDataConversionTest {
 		}
 
 		@Override
+		public DataNode<?> downloadROI(OMEROLocation credentials, long roiID)
+			throws DSOutOfServiceException, DSAccessException, ExecutionException
+		{
+			return null;
+		}
+
+		@Override
 		public <D extends DataNode<?>> long[] uploadROIs(OMEROLocation credentials,
 			List<D> ijROIs, long imageID) throws ServerError,
 			PermissionDeniedException, CannotCreateSessionException,

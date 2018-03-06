@@ -520,6 +520,19 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
+	public DataNode<?> downloadROI(final OMEROLocation credentials,
+		final long roiID) throws DSOutOfServiceException, DSAccessException,
+		ExecutionException
+	{
+		final OMEROSession session = session(credentials);
+		final ROIFacility roifac = session.getGateway().getFacility(
+			ROIFacility.class);
+		final ROIResult roi = roifac.loadROI(session.getSecurityContext(), roiID);
+		final ROIData rd = roi.getROIs().iterator().next();
+		return convertService.convert(rd, DataNode.class);
+	}
+
+	@Override
 	public <D extends DataNode<?>> long[] uploadROIs(
 		final OMEROLocation credentials, final List<D> ijROIs, final long imageID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
