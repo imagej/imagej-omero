@@ -173,6 +173,7 @@ public class ModuleAdapter extends AbstractContextual {
 	 * @throws DSAccessException
 	 * @throws DSOutOfServiceException
 	 */
+	@SuppressWarnings("unchecked")
 	public void launch() throws ServerError, IOException, ExecutionException,
 		PermissionDeniedException, CannotCreateSessionException,
 		DSOutOfServiceException, DSAccessException
@@ -194,13 +195,12 @@ public class ModuleAdapter extends AbstractContextual {
 		final Module module = moduleService.waitFor(future);
 
 		final HashMap<String, TableData> tables = new HashMap<>();
-		final HashMap<String, ROIData> rois = new HashMap<>();
+		final HashMap<String, List<ROIData>> rois = new HashMap<>();
 
 		// populate outputs, except tables and ROIs
 		log.debug(info.getTitle() + ": populating outputs");
 		for (final ModuleItem<?> item : module.getInfo().outputs()) {
-			final Object value = omeroService.toOMERO(client, item.getValue(
-				module));
+			final Object value = omeroService.toOMERO(client, item.getValue(module));
 			final String name = getOutputName(item);
 			if (value == null) {
 				log.warn(info.getTitle() + ": output '" + name + "' is null");
@@ -208,7 +208,10 @@ public class ModuleAdapter extends AbstractContextual {
 			if (value instanceof omero.RType) client.setOutput(name,
 				(omero.RType) value);
 			if (value instanceof TableData) tables.put(name, (TableData) value);
-			if (value instanceof ROIData) rois.put(name, (ROIData) value);
+			if (value instanceof ROIData) rois.put(name, Collections.singletonList(
+				(ROIData) value));
+			if (value instanceof List && ((List<?>) value).iterator()
+				.next() instanceof ROIData) rois.put(name, (List<ROIData>) value);
 		}
 
 		createOutputLinks(inputMap, tables, rois);
@@ -495,42 +498,59 @@ public class ModuleAdapter extends AbstractContextual {
 		}
 	}
 
+	/**
+	 * Saves and attaches {@link ROIData} to images. It also sets output IDs in
+	 * the omero client.
+	 */
 	private void attachROIsToImages(final List<ImageData> images,
-		final HashMap<String, ROIData> rois, final SecurityContext ctx,
-		final ExperimenterData user) throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, ServerError
+		final HashMap<String, List<ROIData>> rois, final SecurityContext ctx)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException,
+		ServerError
 	{
 		// Assign names to ROIData
 		for (final String name : rois.keySet()) {
+			for (final ROIData roi : rois.get(name)) {
 				String roiName = "";
-				final Roi roiI = (Roi) rois.get(name).asIObject();
+				final Roi roiI = (Roi) roi.asIObject();
 				if (roiI.getName() == null) roiName = name;
 				else roiName = roiI.getName().getValue() + " " + name;
 				roiI.setName(omero.rtypes.rstring(roiName));
+			}
 		}
 
 		final ROIFacility roiFacility = gateway.getFacility(ROIFacility.class);
-		Collection<ROIData> savedRois = rois.values();
 
 		// Upload ROIs without image
-		if (images.isEmpty())
-			savedRois = roiFacility.saveROIs(ctx, -1, user.getId(), savedRois);
+		if (images.isEmpty()) {
+			for (final String key : rois.keySet()) {
+				final Collection<ROIData> savedRois = roiFacility.saveROIs(ctx, -1, rois
+					.get(key));
+				rois.put(key, new ArrayList<>(savedRois));
+			}
+		}
 
 		// Upload ROIs and attach to images
 		else {
 			for (final ImageData image : images) {
-				savedRois = roiFacility.saveROIs(ctx, image.getId(), savedRois);
+				for (final String key : rois.keySet()) {
+					final Collection<ROIData> savedRois = roiFacility.saveROIs(ctx, image
+						.getId(), rois.get(key));
+					rois.put(key, new ArrayList<>(savedRois));
+				}
 			}
 		}
 
 		// Add output IDs to client
 		for (final String name : rois.keySet()) {
-			for (final ROIData roi : savedRois) {
-				final Roi roiI = (Roi) roi.asIObject();
-				if (roiI.getName().getValue().contains(name)) {
-					client.setOutput(name, roiI.getId());
-					savedRois.remove(roi);
-				}
+			final List<ROIData> savedRois = rois.get(name);
+			if (client.getOutput(name) instanceof omero.RList) {
+				final omero.RLong[] ids = new omero.RLong[savedRois.size()];
+				for (int i = 0; i < ids.length; i++)
+					ids[i] = omero.rtypes.rlong(savedRois.get(i).getId());
+				client.setOutput(name, omero.rtypes.rlist(ids));
+			}
+			else {
+				client.setOutput(name, omero.rtypes.rlong(savedRois.get(0).getId()));
 			}
 		}
 	}
@@ -540,7 +560,7 @@ public class ModuleAdapter extends AbstractContextual {
 	 */
 	private void createOutputLinks(final HashMap<String, Object> inputMap,
 		final HashMap<String, TableData> tables,
-		final HashMap<String, ROIData> rois) throws ExecutionException,
+		final HashMap<String, List<ROIData>> rois) throws ExecutionException,
 		ServerError, DSOutOfServiceException, DSAccessException
 	{
 		final ExperimenterData user = createUser();
@@ -563,7 +583,7 @@ public class ModuleAdapter extends AbstractContextual {
 		if (!rois.isEmpty()) {
 			if (inputImages.isEmpty()) log.warn(
 				"Uploaded ROIs not attached to any image");
-			attachROIsToImages(inputImages, rois, ctx, user);
+			attachROIsToImages(inputImages, rois, ctx);
 		}
 	}
 

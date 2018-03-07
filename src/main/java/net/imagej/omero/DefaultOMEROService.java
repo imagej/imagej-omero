@@ -312,6 +312,12 @@ public class DefaultOMEROService extends AbstractService implements
 		{
 			return convertService.convert(value, ROIData.class);
 		}
+		if (value instanceof List && checkROIList((List<?>) value)) {
+			final List<Object> l = new ArrayList<>(((List<?>) value).size());
+			for (Object o : (List<?>) value)
+				l.add(toOMERO(o));
+			return l;
+		}
 
 		return toOMERO(value);
 	}
@@ -889,6 +895,25 @@ public class DefaultOMEROService extends AbstractService implements
 			imageID);
 		return new FinalInterval(new long[] { 0, 0 }, new long[] { image
 			.getDefaultPixels().getSizeX(), image.getDefaultPixels().getSizeY() });
+	}
+
+	/**
+	 * Check if the given list contains only {@link DataNode}s which can be
+	 * converted to {@link ROIData}
+	 *
+	 * @param rois the {@code List} to check
+	 * @return {@code true} if all components can be converted to {@link ROIData},
+	 *         {@code false} otherwise
+	 */
+	private boolean checkROIList(final List<?> rois) {
+		if (rois.isEmpty()) return false;
+		for (Object o : rois) {
+			if (o instanceof OMERORoiCollection) continue;
+			else if (o instanceof DataNode && ((DataNode<?>) o)
+				.getData() instanceof MaskPredicate) continue;
+			else return false;
+		}
+		return true;
 	}
 
 }
