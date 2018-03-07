@@ -50,6 +50,7 @@ import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
 import net.imagej.omero.rois.DataNode;
 import net.imagej.omero.rois.DefaultDataNode;
+import net.imagej.omero.rois.OMERORoiCollection;
 import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
@@ -170,6 +171,9 @@ public class DefaultOMEROService extends AbstractService implements
 			return omero.rtypes.rlong(0);
 		}
 
+		// ROI
+		if (DataNode.class.isAssignableFrom(type)) return omero.rtypes.rlong(0);
+
 		// primitive types
 		final Class<?> saneType = ConversionUtils.getNonprimitiveType(type);
 		if (Boolean.class.isAssignableFrom(saneType)) {
@@ -273,6 +277,8 @@ public class DefaultOMEROService extends AbstractService implements
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
+		// -- Image cases --
+
 		if (value instanceof Dataset) {
 			// upload image to OMERO, returning the resultant image ID
 			final long imageID = uploadImage(client, (Dataset) value);
@@ -289,12 +295,24 @@ public class DefaultOMEROService extends AbstractService implements
 			return toOMERO(client, imageDisplayService.getActiveDataset(
 				imageDisplay));
 		}
+
+		// -- Table cases --
+
 		if (value instanceof Table) {
 			return convertOMEROTable((Table<?, ?>) value);
 		}
 		if (value instanceof TableDisplay) {
 			return toOMERO(client, ((TableDisplay) value).get(0));
 		}
+
+		// -- ROI cases --
+
+		if (value instanceof OMERORoiCollection || (value instanceof DataNode &&
+			((DataNode<?>) value).getData() instanceof MaskPredicate))
+		{
+			return convertService.convert(value, ROIData.class);
+		}
+
 		return toOMERO(value);
 	}
 
@@ -719,6 +737,13 @@ public class DefaultOMEROService extends AbstractService implements
 				@SuppressWarnings("unchecked")
 				final T table = (T) downloadTable(credentials, tableID);
 				return table;
+			}
+			if (DataNode.class.isAssignableFrom(type)) {
+				final long roiID = ((Number) value).longValue();
+				final OMEROLocation credentials = createCredentials(client);
+				@SuppressWarnings("unchecked")
+				final T dataNode = (T) downloadROI(credentials, roiID);
+				return dataNode;
 			}
 		}
 
