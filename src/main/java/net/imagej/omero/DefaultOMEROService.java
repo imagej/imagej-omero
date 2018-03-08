@@ -308,10 +308,17 @@ public class DefaultOMEROService extends AbstractService implements
 
 		// -- ROI cases --
 
-		if (value instanceof OMERORoiCollection || (value instanceof DataNode &&
-			((DataNode<?>) value).getData() instanceof MaskPredicate))
+		if (value instanceof OMERORoiCollection) return convertService.convert(
+			value, ROIData.class);
+		if ((value instanceof DataNode && ((DataNode<?>) value)
+			.getData() instanceof MaskPredicate))
 		{
-			return convertService.convert(value, ROIData.class);
+			final MaskPredicate<?> mp = (MaskPredicate<?>) ((DataNode<?>) value)
+				.getData();
+			if (mp instanceof Interval || mp instanceof RealInterval)
+				return convertService.convert(value, ROIData.class);
+			throw new IllegalArgumentException("MaskPredicate must be MaskInterval " +
+				"or RealMaskRealInterval to be converted to ROIData");
 		}
 		if (value instanceof List && checkROIList((List<?>) value)) {
 			final List<Object> l = new ArrayList<>(((List<?>) value).size());
