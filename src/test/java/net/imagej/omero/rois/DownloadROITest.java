@@ -111,6 +111,8 @@ public class DownloadROITest {
 		service.context().dispose();
 	}
 
+	// -- test omeroService.downloadROIs(...) --
+
 	@Test
 	public void testDownloadSingleROI() throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
@@ -278,6 +280,57 @@ public class DownloadROITest {
 		service.downloadROIs(location, 1);
 	}
 
+	// -- test downloadROI(...) --
+
+	@Test
+	public void testDownloadROIDataViaID() throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
+		final EllipseData ed = new EllipseData(22, 22, 3, 5);
+		final ROIResult rr = createROIResult(createROIData(ed));
+		setUpMethodCallsTwo(rr);
+
+		final DataNode<?> dn = service.downloadROI(location, 1);
+
+		assertTrue(dn instanceof OMERORoiCollection);
+
+		final OMERORoiCollection orc = (OMERORoiCollection) dn;
+		final List<DataNode<?>> children = orc.children();
+		assertEquals(1, children.size());
+		assertTrue(children.get(0) instanceof OMERORoiElement);
+
+		final OMERORoiElement ore = (OMERORoiElement) children.get(0);
+		assertTrue(ore.getData() instanceof Ellipsoid);
+	}
+
+	@Test
+	public void testDownloadROIDataWithManyShapesViaID() throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
+		final RectangleData rdZero = new RectangleData(10, 22.25, 67, 94);
+		final RectangleData rdOne = new RectangleData(10, 22.25, 67, 94);
+		final RectangleData rdTwo = new RectangleData(10, 22.25, 67, 94);
+		final RectangleData rdThree = new RectangleData(10, 22.25, 67, 94);
+		final RectangleData rdFour = new RectangleData(10, 22.25, 67, 94);
+		final ROIResult rr = createROIResult(createROIData(rdZero, rdOne, rdTwo,
+			rdThree, rdFour));
+		setUpMethodCallsTwo(rr);
+
+		final DataNode<?> dn = service.downloadROI(location, 1);
+
+		assertTrue(dn instanceof OMERORoiCollection);
+
+		final List<DataNode<?>> children = dn.children();
+		assertEquals(5, children.size());
+
+		for (final DataNode<?> child : children) {
+			assertTrue(child instanceof OMERORoiElement);
+			assertTrue(child.getData() instanceof Box);
+		}
+	}
+
 	// -- Helper methods --
 
 	private void setUpMethodCalls(final ROIResult... results) throws ServerError,
@@ -298,6 +351,24 @@ public class DownloadROITest {
 			}
 		};
 	}
+
+	private void setUpMethodCallsTwo(final ROIResult rr) throws ServerError,
+	PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+	DSOutOfServiceException, DSAccessException
+{
+	new Expectations() {
+
+		{
+			new DefaultOMEROSession(location, service);
+
+			gateway.getFacility(ROIFacility.class);
+			result = roiFac;
+
+			roiFac.loadROI((SecurityContext) any, anyLong);
+			result = rr;
+		}
+	};
+}
 
 	private ROIData createROIData(final ShapeData... shapes) {
 		final Random rand = new Random();
