@@ -159,7 +159,7 @@ public class OmeroIT {
 	@Test
 	public void testUploadTable() throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException, URISyntaxException
+		DSAccessException
 	{
 		final byte[][] d = new byte[][] {
 			{ 127, 0, -128 },
@@ -175,13 +175,7 @@ public class OmeroIT {
 
 		final long tableId = omero.uploadTable(cred, "test-table-upload", table, 1);
 
-		// When upload table was called it created a session, which cleared out
-		// the username and password from the credentials. The credentials must
-		// have a username and password to create security contexts.
-		final OMEROLocation tc = new OMEROLocation(OMERO_SERVER, OMERO_PORT,
-			OMERO_USER, OMERO_PASSWORD);
-
-		try (final OMEROSession session = new DefaultOMEROSession(tc, omero)) {
+		try (final OMEROSession session = new DefaultOMEROSession(cred, omero)) {
 			final TablesFacility tablesFacility = session.getGateway().getFacility(
 				TablesFacility.class);
 			final TableData td = tablesFacility.getTableInfo(session
@@ -198,18 +192,12 @@ public class OmeroIT {
 	@Test
 	public void testDownloadThenUploadTable() throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException, URISyntaxException
+		DSOutOfServiceException, DSAccessException
 	{
 		final long originalId = 83;
 		final Table<?, ?> ijTable = omero.downloadTable(cred, originalId);
 
-		// When download table was called it created a session, which cleared out
-		// the username and password from the credentials. The credentials must
-		// have a username and password to create security contexts.
-		final OMEROLocation tc = new OMEROLocation(OMERO_SERVER, OMERO_PORT,
-			OMERO_USER, OMERO_PASSWORD);
-
-		final long newId = omero.uploadTable(tc, "table-version2", ijTable, 1);
+		final long newId = omero.uploadTable(cred, "table-version2", ijTable, 1);
 
 		assertTrue(originalId != newId);
 	}
