@@ -172,7 +172,8 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 
 		// ROI
-		if (DataNode.class.isAssignableFrom(type)) return omero.rtypes.rlong(0);
+		if (DataNode.class.isAssignableFrom(type) || MaskPredicate.class
+			.isAssignableFrom(type)) return omero.rtypes.rlong(0);
 
 		// primitive types
 		final Class<?> saneType = ConversionUtils.getNonprimitiveType(type);
@@ -318,6 +319,8 @@ public class DefaultOMEROService extends AbstractService implements
 				l.add(toOMERO(o));
 			return l;
 		}
+		if (value instanceof MaskPredicate) return toOMERO(new DefaultDataNode<>(
+			value, null, null));
 
 		return toOMERO(value);
 	}
@@ -751,6 +754,17 @@ public class DefaultOMEROService extends AbstractService implements
 				final T dataNode = (T) downloadROI(credentials, roiID);
 				return dataNode;
 			}
+			if (MaskPredicate.class.isAssignableFrom(type)) {
+				final long roiID = ((Number) value).longValue();
+				final OMEROLocation credentials = createCredentials(client);
+				final DataNode<?> dataNode = downloadROI(credentials, roiID);
+				final List<DataNode<?>> children = dataNode.children();
+				@SuppressWarnings("unchecked")
+				final T omeroMP = (T) children.get(0).getData();
+				if (children.size() > 1) log.warn("Requested OMERO ROI has more than " +
+					"one ShapeData. Only one shape will be returned.");
+				return omeroMP;
+			}
 		}
 
 		// use SciJava Common's automagical conversion routine
@@ -911,6 +925,7 @@ public class DefaultOMEROService extends AbstractService implements
 			if (o instanceof OMERORoiCollection) continue;
 			else if (o instanceof DataNode && ((DataNode<?>) o)
 				.getData() instanceof MaskPredicate) continue;
+			else if (o instanceof MaskPredicate) continue;
 			else return false;
 		}
 		return true;
