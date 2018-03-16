@@ -323,11 +323,11 @@ public class DefaultOMEROService extends AbstractService implements
 		if (value instanceof List && checkROIList((List<?>) value)) {
 			final List<Object> l = new ArrayList<>(((List<?>) value).size());
 			for (Object o : (List<?>) value)
-				l.add(toOMERO(o));
+				l.add(toOMERO(client, o));
 			return l;
 		}
-		if (value instanceof MaskPredicate) return toOMERO(new DefaultDataNode<>(
-			value, null, null));
+		if (value instanceof MaskPredicate) return toOMERO(client,
+			new DefaultDataNode<>(value, null, null));
 
 		return toOMERO(value);
 	}
