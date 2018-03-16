@@ -79,10 +79,16 @@ public class OMEROLocation extends URILocation {
 		throws URISyntaxException
 	{
 		super(createURI(args));
+
+		// Set encrypted if present
 		if (args.containsKey("encrypted")) encrypted = Boolean.parseBoolean(args
 			.get("encrypted").toString());
 		else encrypted = false;
-		sessionID = args.get("sessionID").toString();
+
+		// Set sessionID if present
+		if (args.containsKey("sessionID")) sessionID = args.get("sessionID")
+			.toString();
+		else sessionID = null;
 	}
 
 	// -- OMEROLocation methods --
