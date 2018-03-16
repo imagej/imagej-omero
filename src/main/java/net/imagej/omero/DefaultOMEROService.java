@@ -669,9 +669,28 @@ public class DefaultOMEROService extends AbstractService implements
 	 * given client.
 	 */
 	private static String credentials(final omero.client client) {
-		return "server=" + client.getProperty("omero.host") + //
+		return "server=" + getHost(client) + //
 			"&port=" + client.getProperty("omero.port") + //
 			"&sessionID=" + client.getSessionId();
+	}
+
+	private OMEROLocation createCredentials(final omero.client client)
+		throws NumberFormatException, URISyntaxException
+	{
+		return new OMEROLocation(getHost(client), Integer.parseInt(client
+			.getProperty("omero.port")), client.getProperty("omero.user"), client
+				.getProperty("omero.pass"));
+	}
+
+	private static String getHost(final omero.client client) {
+		String host = client.getProperty("omero.host");
+		if (host == null || host.isEmpty()) {
+			final String router = client.getProperty("Ice.Default.Router");
+			final int index = router.indexOf("-h ");
+			if (index == -1) throw new IllegalArgumentException("hostname required");
+			host = router.substring(index + 3, router.length());
+		}
+		return host;
 	}
 
 	/**
@@ -790,14 +809,6 @@ public class DefaultOMEROService extends AbstractService implements
 		@SuppressWarnings("unchecked")
 		final T[] array = (T[]) Array.newInstance(type, 0);
 		return collection.toArray(array);
-	}
-
-	private OMEROLocation createCredentials(final omero.client client)
-		throws NumberFormatException, URISyntaxException
-	{
-		return new OMEROLocation(client.getProperty("omero.host"), Integer.parseInt(
-			client.getProperty("omero.port")), client.getProperty("omero.user"),
-			client.getProperty("omero.pass"));
 	}
 
 	/**
