@@ -543,7 +543,7 @@ public class ModuleAdapter extends AbstractContextual {
 		// Add output IDs to client
 		for (final String name : rois.keySet()) {
 			final List<ROIData> savedRois = rois.get(name);
-			if (client.getOutput(name) instanceof omero.RList) {
+			if (rois.get(name).size() > 1) {
 				final omero.RLong[] ids = new omero.RLong[savedRois.size()];
 				for (int i = 0; i < ids.length; i++)
 					ids[i] = omero.rtypes.rlong(savedRois.get(i).getId());
