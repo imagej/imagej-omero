@@ -515,6 +515,7 @@ public class ModuleAdapter extends AbstractContextual {
 				if (roiI.getName() == null) roiName = name;
 				else roiName = roiI.getName().getValue() + " " + name;
 				roiI.setName(omero.rtypes.rstring(roiName));
+				roi.setImage(null);
 			}
 		}
 
