@@ -529,14 +529,17 @@ public class ModuleAdapter extends AbstractContextual {
 			}
 		}
 
-		// Upload ROIs and attach to images
+		// Upload ROIs and attach to image
+		// NB: In OMERO an Image can have multiple ROIs but a single ROI cannot
+		// reference multiple Images.
 		else {
-			for (final ImageData image : images) {
-				for (final String key : rois.keySet()) {
-					final Collection<ROIData> savedRois = roiFacility.saveROIs(ctx, image
-						.getId(), rois.get(key));
-					rois.put(key, new ArrayList<>(savedRois));
-				}
+			if (images.size() > 1) log.warn(
+				"ROIs can only have one image, attaching ROIs to image: " + images.get(
+					images.size() - 1).getId());
+			for (final String key : rois.keySet()) {
+				final Collection<ROIData> savedRois = roiFacility.saveROIs(ctx, images
+					.get(images.size() - 1).getId(), rois.get(key));
+				rois.put(key, new ArrayList<>(savedRois));
 			}
 		}
 
