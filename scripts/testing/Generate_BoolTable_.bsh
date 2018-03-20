@@ -1,0 +1,28 @@
+// @OUTPUT net.imagej.table.BoolTable table
+
+import net.imagej.table.DefaultBoolTable;
+
+HEADERS = new String[] {"Header1", "Header2", "Header3"};
+
+DATA = new boolean[][] {
+  {true, true, true},
+  {true, false, true},
+  {true, true, false},
+  {true, false, false},
+  {false, true, true},
+  {false, false, true},
+  {false, true, false},
+  {false, false, false},
+};
+
+table = new DefaultBoolTable(DATA[0].length, DATA.length);
+
+for (int i = 0; i < HEADERS.length; i++) {
+  table.setColumnHeader(i, HEADERS[i]);
+}
+
+for (int r = 0; r < DATA.length; r++) {
+  for (int c = 0; c < DATA[r].length; c++) {
+    table.setValue(c, r, DATA[r][c]);
+  }
+}
