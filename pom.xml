@@ -117,7 +117,7 @@
 	- Board of Regents of the University of Wisconsin-Madison
 	- Glencoe Software, Inc.
 	- University of Dundee</license.copyrightOwners>
-	<license.projectName>ImageJ software for multidimensional image processing and analysis.</license.projectName>
+		<license.projectName>ImageJ software for multidimensional image processing and analysis.</license.projectName>
 		<omero-blitz.version>5.4.3-ice36-b77</omero-blitz.version>
 		<enforcer.skip>true</enforcer.skip>
 		<skipITs>true</skipITs>
