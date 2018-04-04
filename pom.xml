@@ -198,8 +198,9 @@
 		</dependency>
 
 		<!-- Test dependencies -->
-		<!-- JMockit must come before junit -->
+
 		<dependency>
+			<!-- JMockit must come before junit -->
 			<groupId>org.jmockit</groupId>
 			<artifactId>jmockit</artifactId>
 			<version>1.33</version>
