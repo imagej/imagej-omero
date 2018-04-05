@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>17.1.1</version>
+		<version>20.1.0</version>
 		<relativePath />
 	</parent>
 
@@ -117,13 +117,20 @@
 	- Board of Regents of the University of Wisconsin-Madison
 	- Glencoe Software, Inc.
 	- University of Dundee</license.copyrightOwners>
-	<license.projectName>ImageJ software for multidimensional image processing and analysis.</license.projectName>
-		<omero-blitz.version>5.4.3-ice36-b77</omero-blitz.version>
-		<enforcer.skip>true</enforcer.skip>
-		<skipITs>true</skipITs>
+		<license.projectName>ImageJ software for multidimensional image processing and analysis.</license.projectName>
 
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
+
+		<!-- NB: JUnit and JMockit both contain the JUnit runner class -->
+		<allowedDuplicateClasses>org.hibernate.stat.ConcurrentStatisticsImpl,org.junit.runner.Runner</allowedDuplicateClasses>
+
+		<!-- Test configuration -->
+		<skipITs>true</skipITs>
+		<groups>net.imagej.omero.it.IntegrationTest</groups>
+		<excludedGroups>net.imagej.omero.it.IntegrationTest</excludedGroups>
+
+		<jmockit.version>1.33</jmockit.version>
 	</properties>
 
 	<repositories>
@@ -156,119 +163,26 @@
 		<dependency>
 			<groupId>omero</groupId>
 			<artifactId>blitz</artifactId>
-			<version>${omero-blitz.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.ldap</groupId>
-					<artifactId>spring-ldap</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.hibernate</groupId>
-					<artifactId>hibernate-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>hsqldb</groupId>
-					<artifactId>hsqldb</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.testng</groupId>
-					<artifactId>testng</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>jul-to-slf4j</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>jcl-over-slf4j</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<!-- NB: SLF4J is a dependency of omero-client. -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.2</version>
-			<scope>runtime</scope>
 		</dependency>
 
 		<!-- Test dependencies -->
-		<!-- JMockit must come before junit -->
 		<dependency>
+			<!-- NB: JMockit must come before JUnit. -->
 			<groupId>org.jmockit</groupId>
 			<artifactId>jmockit</artifactId>
-			<version>1.33</version>
+			<version>${jmockit.version}</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<scope>test</scope>
-		</dependency>
-
 		<!-- Apache dependencies -->
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>3.2.2</version>
-		</dependency>
-
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
-			<version>2.6</version>
 		</dependency>
 	</dependencies>
-
-	<!-- NB: JUnit and JMockit both contain the JUnit runner class -->
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<configuration>
-					<rules>
-						<banDuplicateClasses>
-							<ignoreClasses>
-								<ignoreClass>org.junit.runner.Runner</ignoreClass>
-							</ignoreClasses>
-						</banDuplicateClasses>
-					</rules>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<excludedGroups>net.imagej.omero.it.IntegrationTest</excludedGroups>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>2.18.1</version>
-				<configuration>
-					<skipITs>${skipITs}</skipITs>
-					<groups>net.imagej.omero.it.IntegrationTest</groups>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
 </project>
