@@ -124,6 +124,8 @@
 
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
+
+		<jmockit.version>1.33</jmockit.version>
 	</properties>
 
 	<repositories>
@@ -200,10 +202,10 @@
 		<!-- Test dependencies -->
 
 		<dependency>
-			<!-- JMockit must come before junit -->
+			<!-- NB: JMockit must come before JUnit. -->
 			<groupId>org.jmockit</groupId>
 			<artifactId>jmockit</artifactId>
-			<version>1.33</version>
+			<version>${jmockit.version}</version>
 			<scope>test</scope>
 		</dependency>
 
