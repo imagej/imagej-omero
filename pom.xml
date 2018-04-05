@@ -239,7 +239,6 @@
 		</dependency>
 	</dependencies>
 
-	<!-- NB: JUnit and JMockit both contain the JUnit runner class -->
 	<build>
 		<plugins>
 			<plugin>
@@ -248,6 +247,7 @@
 					<rules>
 						<banDuplicateClasses>
 							<ignoreClasses>
+								<!-- NB: JUnit and JMockit both contain the JUnit runner class -->
 								<ignoreClass>org.junit.runner.Runner</ignoreClass>
 							</ignoreClasses>
 						</banDuplicateClasses>
