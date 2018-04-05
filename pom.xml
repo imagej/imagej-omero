@@ -196,7 +196,6 @@
 		</dependency>
 
 		<!-- Test dependencies -->
-
 		<dependency>
 			<!-- NB: JMockit must come before JUnit. -->
 			<groupId>org.jmockit</groupId>
@@ -204,7 +203,6 @@
 			<version>${jmockit.version}</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
