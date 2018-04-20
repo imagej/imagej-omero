@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>20.1.0</version>
+		<version>20.2.0</version>
 		<relativePath />
 	</parent>
 
@@ -122,13 +122,8 @@
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
-		<!-- NB: JUnit and JMockit both contain the JUnit runner class -->
-		<allowedDuplicateClasses>org.hibernate.stat.ConcurrentStatisticsImpl,org.junit.runner.Runner</allowedDuplicateClasses>
-
 		<!-- Test configuration -->
 		<skipITs>true</skipITs>
-
-		<jmockit.version>1.33</jmockit.version>
 	</properties>
 
 	<repositories>
@@ -168,7 +163,6 @@
 			<!-- NB: JMockit must come before JUnit. -->
 			<groupId>org.jmockit</groupId>
 			<artifactId>jmockit</artifactId>
-			<version>${jmockit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
