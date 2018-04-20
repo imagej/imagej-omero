@@ -188,17 +188,7 @@
 	<build>
 		<plugins>
 			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<excludedGroups>net.imagej.omero.it.IntegrationTest</excludedGroups>
-				</configuration>
-			</plugin>
-			<plugin>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<configuration>
-					<skipITs>${skipITs}</skipITs>
-					<groups>net.imagej.omero.it.IntegrationTest</groups>
-				</configuration>
 				<executions>
 					<execution>
 						<goals>
