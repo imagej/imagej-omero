@@ -184,7 +184,6 @@
 		</dependency>
 	</dependencies>
 
-	<!-- NB: JUnit and JMockit both contain the JUnit runner class -->
 	<build>
 		<plugins>
 			<plugin>
