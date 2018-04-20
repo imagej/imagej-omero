@@ -127,8 +127,6 @@
 
 		<!-- Test configuration -->
 		<skipITs>true</skipITs>
-		<groups>net.imagej.omero.it.IntegrationTest</groups>
-		<excludedGroups>net.imagej.omero.it.IntegrationTest</excludedGroups>
 
 		<jmockit.version>1.33</jmockit.version>
 	</properties>
@@ -185,4 +183,31 @@
 			<artifactId>commons-lang</artifactId>
 		</dependency>
 	</dependencies>
+
+	<!-- NB: JUnit and JMockit both contain the JUnit runner class -->
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludedGroups>net.imagej.omero.it.IntegrationTest</excludedGroups>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<skipITs>${skipITs}</skipITs>
+					<groups>net.imagej.omero.it.IntegrationTest</groups>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
