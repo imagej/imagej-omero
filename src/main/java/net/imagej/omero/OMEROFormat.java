@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -43,6 +43,7 @@ import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -59,8 +60,6 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import omero.RInt;
 import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
@@ -82,10 +81,10 @@ import omero.model.enums.UnitsTime;
 /**
  * A SCIFIO {@link Format} which provides read/write access to pixels on an
  * OMERO server.
- * 
+ *
  * @author Curtis Rueden
  */
-@Plugin(type = Format.class, priority = Priority.HIGH_PRIORITY)
+@Plugin(type = Format.class, priority = Priority.HIGH)
 public class OMEROFormat extends AbstractFormat {
 
 	// -- Format methods --
@@ -117,7 +116,7 @@ public class OMEROFormat extends AbstractFormat {
 	public static class Metadata extends AbstractMetadata {
 
 		@Field
-		private OMEROCredentials credentials;
+		private OMEROLocation credentials;
 
 		@Field
 		private String name;
@@ -175,7 +174,7 @@ public class OMEROFormat extends AbstractFormat {
 
 		// -- io.scif.omero.OMEROFormat.Metadata methods --
 
-		public OMEROCredentials getCredentials() {
+		public OMEROLocation getCredentials() {
 			return credentials;
 		}
 
@@ -255,7 +254,7 @@ public class OMEROFormat extends AbstractFormat {
 			this.name = name;
 		}
 
-		public void setCredentials(final OMEROCredentials credentials) {
+		public void setCredentials(final OMEROLocation credentials) {
 			this.credentials = credentials;
 		}
 
@@ -335,8 +334,8 @@ public class OMEROFormat extends AbstractFormat {
 			final long existingID = getImageID();
 			final long id = image.getId().getValue();
 			if (existingID != id) {
-				throw new IllegalArgumentException("existing image ID (" +
-					existingID + ") does not match the given Image (" + id + ")");
+				throw new IllegalArgumentException("existing image ID (" + existingID +
+					") does not match the given Image (" + id + ")");
 			}
 		}
 
@@ -348,8 +347,8 @@ public class OMEROFormat extends AbstractFormat {
 			final long existingID = getPixelsID();
 			final long id = pixels.getId().getValue();
 			if (existingID != id) {
-				throw new IllegalArgumentException("existing pixels ID (" +
-					existingID + ") does not match the given Pixels (" + id + ")");
+				throw new IllegalArgumentException("existing pixels ID (" + existingID +
+					") does not match the given Pixels (" + id + ")");
 			}
 		}
 
@@ -394,6 +393,9 @@ public class OMEROFormat extends AbstractFormat {
 		@Parameter
 		private MetadataService metadataService;
 
+		@Parameter
+		private OMEROService omeroService;
+
 		@Override
 		public void typedParse(final RandomAccessInputStream stream,
 			final Metadata meta, final SCIFIOConfig config) throws IOException,
@@ -406,7 +408,7 @@ public class OMEROFormat extends AbstractFormat {
 			final OMEROSession session;
 			final Pixels pix;
 			try {
-				session = createSession(meta);
+				session = omeroService.session(meta.getCredentials());
 				pix = session.loadPixels(meta);
 				session.loadImageName(meta);
 			}
@@ -434,23 +436,22 @@ public class OMEROFormat extends AbstractFormat {
 
 			// parse pixel type
 			meta.setPixelType(pix.getPixelsType().getValue().getValue());
-
-			// terminate OMERO session
-			session.close();
 		}
 
 	}
 
 	public static class Reader extends ByteArrayReader<Metadata> {
 
+		@Parameter
+		private OMEROService omeroService;
+
 		private OMEROSession session;
 		private RawPixelsStorePrx store;
 
 		@Override
-		public ByteArrayPlane openPlane(final int imageIndex,
-			final long planeIndex, final ByteArrayPlane plane, final long[] planeMin,
-			final long[] planeMax, final SCIFIOConfig config) throws FormatException,
-			IOException
+		public ByteArrayPlane openPlane(final int imageIndex, final long planeIndex,
+			final ByteArrayPlane plane, final long[] planeMin, final long[] planeMax,
+			final SCIFIOConfig config) throws FormatException, IOException
 		{
 			// TODO: Consider whether to reuse OMERO session from the parsing step.
 			if (session == null) initSession();
@@ -490,7 +491,7 @@ public class OMEROFormat extends AbstractFormat {
 
 		private void initSession() throws FormatException {
 			try {
-				session = createSession(getMetadata());
+				session = omeroService.session(getMetadata().getCredentials());
 				store = session.openPixels(getMetadata());
 			}
 			catch (final ServerError err) {
@@ -511,6 +512,9 @@ public class OMEROFormat extends AbstractFormat {
 		@Parameter
 		private LogService log;
 
+		@Parameter
+		private OMEROService omeroService;
+
 		private OMEROSession session;
 		private RawPixelsStorePrx store;
 
@@ -519,17 +523,20 @@ public class OMEROFormat extends AbstractFormat {
 			final Plane plane, final long[] planeMin, final long[] planeMax)
 			throws FormatException, IOException
 		{
-			// TODO: Consider whether to reuse OMERO session from somewhere else.
 			if (session == null) initSession();
 
 			final byte[] bytes = plane.getBytes();
 			final int[] zct = zct(imageIndex, planeIndex, getMetadata());
 			try {
 				log.debug("writePlane: bytes = " + bytes.length);
-				log.debug("writePlane: z = " + zct[0] + " c = " + zct[1] + " t = " + zct[2]);
-				log.debug("writePlane: w = " + plane.getImageMetadata().getAxisLength(0));
-				log.debug("writePlane: h = " + plane.getImageMetadata().getAxisLength(1));
-				log.debug("writePlane: num planar = " + plane.getImageMetadata().getPlanarAxisCount());
+				log.debug("writePlane: z = " + zct[0] + " c = " + zct[1] + " t = " +
+					zct[2]);
+				log.debug("writePlane: w = " + plane.getImageMetadata().getAxisLength(
+					0));
+				log.debug("writePlane: h = " + plane.getImageMetadata().getAxisLength(
+					1));
+				log.debug("writePlane: num planar = " + plane.getImageMetadata()
+					.getPlanarAxisCount());
 				store.setPlane(bytes, zct[0], zct[1], zct[2]);
 			}
 			catch (final ServerError err) {
@@ -550,8 +557,9 @@ public class OMEROFormat extends AbstractFormat {
 					getMetadata().setImageID(image.getId().getValue());
 
 					// try to attach image to dataset
-					if (session.getExperimenter() != null && session.getGateway() 
-							!= null && getMetadata().getDatasetID() != 0) {
+					if (session.getExperimenter() != null && session
+						.getGateway() != null && getMetadata().getDatasetID() != 0)
+					{
 						attachImageToDataset(image, getMetadata().getDatasetID());
 					}
 
@@ -580,7 +588,7 @@ public class OMEROFormat extends AbstractFormat {
 				// This is set in the method: AbstractWriter#setDest(String, int).
 				parseArguments(metadataService, meta.getDatasetName(), meta);
 
-				session = createSession(meta);
+				session = omeroService.session(meta.getCredentials());
 				store = session.createPixels(meta);
 			}
 			catch (final ServerError err) {
@@ -591,23 +599,22 @@ public class OMEROFormat extends AbstractFormat {
 		/**
 		 * Attaches an image to an OMERO dataset.
 		 */
-		private void attachImageToDataset(Image image, long datasetID)
-		{
+		private void attachImageToDataset(final Image image, final long datasetID) {
 			try {
 				final Gateway gateway = session.getGateway();
 				final SecurityContext ctx = session.getSecurityContext();
 				final BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
-				final DataManagerFacility dmf =
-						gateway.getFacility(DataManagerFacility.class);
+				final DataManagerFacility dmf = gateway.getFacility(
+					DataManagerFacility.class);
 
-				final ArrayList<Long> collect = new ArrayList<Long>();
+				final ArrayList<Long> collect = new ArrayList<>();
 				collect.add(datasetID);
 				final Collection<DatasetData> temp = browse.getDatasets(ctx, collect);
 
 				if (!temp.isEmpty()) {
 					final DatasetData ds = temp.iterator().next();
-					final ImageData imgdata =
-							browse.getImage(ctx, image.getId().getValue());
+					final ImageData imgdata = browse.getImage(ctx, image.getId()
+						.getValue());
 					dmf.addImageToDataset(ctx, imgdata, ds);
 				}
 			}
@@ -629,7 +636,7 @@ public class OMEROFormat extends AbstractFormat {
 	public static int[] zct(final int imageIndex, final long planeIndex,
 		final Metadata metadata)
 	{
-		final AxisType[] axes = {Axes.Z, Axes.CHANNEL, Axes.TIME};
+		final AxisType[] axes = { Axes.Z, Axes.CHANNEL, Axes.TIME };
 		final long[] zct = rasterToPosition(imageIndex, planeIndex, metadata, axes);
 		final int[] result = new int[zct.length];
 		for (int i = 0; i < zct.length; i++)
@@ -640,7 +647,7 @@ public class OMEROFormat extends AbstractFormat {
 	/**
 	 * Gets the position per axis of the given plane index, reordering the axes as
 	 * requested.
-	 * 
+	 *
 	 * @param imageIndex TODO
 	 * @param planeIndex The plane to convert to axis coordinates.
 	 * @param metadata TODO
@@ -649,13 +656,13 @@ public class OMEROFormat extends AbstractFormat {
 	 *          axis's position.
 	 * @return TODO
 	 */
-	public static long[]
-		rasterToPosition(final int imageIndex, final long planeIndex,
-			final Metadata metadata, final AxisType... axisTypes)
+	public static long[] rasterToPosition(final int imageIndex,
+		final long planeIndex, final Metadata metadata,
+		final AxisType... axisTypes)
 	{
 		// FIXME: Move this into SCIFIO core in a utility class.
-		final long[] nPos =
-			FormatTools.rasterToPosition(imageIndex, planeIndex, metadata);
+		final long[] nPos = FormatTools.rasterToPosition(imageIndex, planeIndex,
+			metadata);
 
 		final ImageMetadata imageMeta = metadata.get(imageIndex);
 		final int planarAxisCount = imageMeta.getPlanarAxisCount();
@@ -670,39 +677,27 @@ public class OMEROFormat extends AbstractFormat {
 	}
 
 	public static void parseArguments(final MetadataService metadataService,
-		final String string, final Metadata meta)
+		final String string, final Metadata meta) throws FormatException
 	{
 		// strip omero prefix and/or suffix
-		final String clean =
-			string.replaceFirst("^omero:", "").replaceFirst("\\.omero$", "");
+		final String clean = string.replaceFirst("^omero:", "").replaceFirst(
+			"\\.omero$", "");
 
 		final Map<String, Object> map = metadataService.parse(clean, "&");
-		final OMEROCredentials credentials = new OMEROCredentials();
-		// populate OMERO credentials
-		metadataService.populate(credentials, map);
-		meta.setCredentials(credentials);
+
+		try {
+			final OMEROLocation credentials = new OMEROLocation(map);
+			meta.setCredentials(credentials);
+		}
+		catch (final URISyntaxException exc) {
+			throw connectionException(exc);
+		}
+
 		// populate other metadata: image ID, etc.
 		metadataService.populate(meta, map);
 	}
 
 	// -- Helper methods --
-
-	private static OMEROSession createSession(final Metadata meta)
-		throws FormatException
-	{
-		try {
-			return new DefaultOMEROSession(meta.getCredentials());
-		}
-		catch (final ServerError err) {
-			throw communicationException(err);
-		}
-		catch (final PermissionDeniedException exc) {
-			throw connectionException(exc);
-		}
-		catch (final CannotCreateSessionException exc) {
-			throw connectionException(exc);
-		}
-	}
 
 	private static FormatException communicationException(final Throwable cause) {
 		return new FormatException("Error communicating with OMERO", cause);

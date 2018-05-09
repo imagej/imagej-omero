@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -26,12 +26,14 @@
 package net.imagej.omero;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+import net.imagej.omero.rois.DataNode;
 import net.imagej.table.Table;
 
 import org.scijava.module.ModuleItem;
@@ -41,11 +43,13 @@ import Glacier2.PermissionDeniedException;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
+import omero.gateway.model.ROIData;
 import omero.gateway.model.TableData;
+import omero.model.TagAnnotationI;
 
 /**
  * Interface for ImageJ services that manage OMERO data conversion.
- * 
+ *
  * @author Curtis Rueden
  */
 public interface OMEROService extends ImageJService {
@@ -76,16 +80,16 @@ public interface OMEROService extends ImageJService {
 	 * <p>
 	 * In the case of {@link Table}s, it will be converted to a {@link TableData}.
 	 * </p>
+	 *
 	 * @throws DSAccessException
 	 * @throws DSOutOfServiceException
 	 * @throws ExecutionException
 	 * @throws CannotCreateSessionException
 	 * @throws PermissionDeniedException
 	 */
-	Object toOMERO(omero.client client, Object value)
-		throws omero.ServerError, IOException, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException;
+	Object toOMERO(omero.client client, Object value) throws omero.ServerError,
+		IOException, PermissionDeniedException, CannotCreateSessionException,
+		ExecutionException, DSOutOfServiceException, DSAccessException;
 
 	/**
 	 * Converts an OMERO parameter value to an ImageJ value of the given type.
@@ -119,12 +123,13 @@ public interface OMEROService extends ImageJService {
 	 * server. Tables must be attached to a DataObject, thus the given image ID
 	 * must be valid or this method will throw an exception.
 	 */
-	long uploadTable(OMEROCredentials credentials, String name,
+	long uploadTable(OMEROLocation credentials, String name,
 		Table<?, ?> imageJTable, final long imageID) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException,
-		ExecutionException, DSOutOfServiceException, DSAccessException;
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException;
 
-	/** Converts the given ImageJ table to an OMERO table, but does not save the
+	/**
+	 * Converts the given ImageJ table to an OMERO table, but does not save the
 	 * table to the server.
 	 */
 	TableData convertOMEROTable(Table<?, ?> imageJTable);
@@ -133,8 +138,95 @@ public interface OMEROService extends ImageJService {
 	 * Downloads the table with the given ID from OMERO, storing the result into a
 	 * new ImageJ {@link Table}.
 	 */
-	Table<?, ?> downloadTable(OMEROCredentials credentials, long tableID)
+	Table<?, ?> downloadTable(OMEROLocation credentials, long tableID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
 		ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Downloads the ROIs associated with the given {@code imageID} from OMERO,
+	 * and returns them as a {@code List} of {@link DataNode}s.
+	 */
+	List<DataNode<?>> downloadROIs(OMEROLocation credentials, long imageID)
+		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
+		ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Downloads the {@link ROIData} with the given {@code roiID} from OMERO, and
+	 * returns it as a {@link DataNode}.
+	 */
+	DataNode<?> downloadROI(final OMEROLocation credentials,
+		final long roiID) throws DSOutOfServiceException, DSAccessException,
+		ExecutionException;
+
+	/**
+	 * Converts the given {@link DataNode}s to OMERO ROIs, uploads them to the
+	 * OMEROServer, and attaches them to the image with the specified ID.
+	 */
+	<D extends DataNode<?>> long[] uploadROIs(OMEROLocation credentials,
+		List<D> ijROIs, long imageID) throws ServerError, PermissionDeniedException,
+		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+		DSAccessException;
+
+	/**
+	 * Returns an {@link OMEROSession} using the given {@link OMEROLocation}. If a
+	 * session with this location already exists it is returned, if not a new one
+	 * is created.
+	 *
+	 * @param location OMEROLocation
+	 * @return OMEROSession
+	 */
+	OMEROSession session(OMEROLocation location);
+
+	/**
+	 * Returns the {@link OMEROSession} related to the running thread.
+	 *
+	 * @return the OMEROSession with the current thread
+	 */
+	OMEROSession session();
+
+	/**
+	 * Creates an OMEROSession. This <strong>does not</strong> cache the session
+	 * nor does it associate this session with the thread.
+	 *
+	 * @param location OMEROLocation to be used to create the session
+	 * @return a new OMEROSession
+	 */
+	OMEROSession createSession(OMEROLocation location);
+
+	/**
+	 * Remove the specified {@link OMEROSession} for the cache of stored sessions.
+	 *
+	 * @param session The session to be removed
+	 */
+	void removeSession(OMEROSession session);
+
+	/**
+	 * Returns a {@link TagAnnotationI} with the given description and text value.
+	 * If no such {@link TagAnnotationI} is found on the server, one is created,
+	 * saved to the server, and returned.
+	 *
+	 * @param description the description of the tag
+	 * @param value the text value of the tag
+	 * @param location credentials for connecting to the server, if these isn't a
+	 *          current {@link OMEROSession} for these credentials one is created
+	 * @return a {@link TagAnnotationI} with the given description and text value
+	 */
+	TagAnnotationI getAnnotation(String description, String value,
+		OMEROLocation location) throws ExecutionException, ServerError,
+		DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Returns a {@link TagAnnotationI} with the given description and text value.
+	 * If no such {@link TagAnnotationI} is found on the server, one is created
+	 * and returned. The credentials used for this query are those of the
+	 * {@link OMEROSession} related with the current running thread.
+	 *
+	 * @param description the description of the tag
+	 * @param value the text value of the tag
+	 * @return a {@link TagAnnotationI} with the given description and text value
+	 */
+	TagAnnotationI getAnnotation(String description, String value)
+		throws ExecutionException, ServerError, DSOutOfServiceException,
+		DSAccessException;
 
 }

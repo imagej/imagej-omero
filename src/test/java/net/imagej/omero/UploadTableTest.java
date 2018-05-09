@@ -27,6 +27,7 @@ package net.imagej.omero;
 
 import static org.junit.Assert.assertEquals;
 
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.table.BoolColumn;
@@ -83,7 +84,7 @@ import omero.model.WellSampleI;
  */
 public class UploadTableTest {
 
-	private OMEROCredentials credentials;
+	private OMEROLocation credentials;
 	private OMEROService service;
 
 	@Mocked
@@ -100,7 +101,12 @@ public class UploadTableTest {
 
 	@Before
 	public void setUp() {
-		credentials = new OMEROCredentials();
+		try {
+			credentials = new OMEROLocation("localhost", 4064, "omero", "omero");
+		}
+		catch (URISyntaxException exc) {
+			exc.printStackTrace();
+		}
 		service = new Context(OMEROService.class).getService(OMEROService.class);
 	}
 
@@ -434,7 +440,7 @@ public class UploadTableTest {
 		new Expectations() {
 
 			{
-				new DefaultOMEROSession(credentials);
+				new DefaultOMEROSession(credentials, service);
 
 				gateway.getFacility(BrowseFacility.class);
 				result = browseFacility;

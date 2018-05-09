@@ -29,6 +29,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.table.BoolColumn;
@@ -40,7 +41,6 @@ import net.imagej.table.LongTable;
 import net.imagej.table.ResultsTable;
 import net.imagej.table.Table;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,13 +64,13 @@ import omero.gateway.model.TableDataColumn;
 import omero.model.ImageI;
 
 /**
- * Tests {@link DefaultOMEROService#downloadTable(OMEROCredentials, long)}.
+ * Tests {@link DefaultOMEROService#downloadTable(OMEROLocation, long)}.
  *
  * @author Alison Walter
  */
 public class DownloadTableTest {
 
-	private OMEROCredentials credentials;
+	private OMEROLocation credentials;
 	private OMEROService service;
 
 	@Mocked
@@ -84,7 +84,12 @@ public class DownloadTableTest {
 
 	@Before
 	public void setUp() {
-		credentials = new OMEROCredentials();
+		try {
+			credentials = new OMEROLocation("localhost", 4064, "omero", "omero");
+		}
+		catch (final URISyntaxException exc) {
+			exc.printStackTrace();
+		}
 		service = new Context(OMEROService.class).getService(OMEROService.class);
 	}
 
@@ -248,8 +253,8 @@ public class DownloadTableTest {
 				assertTrue(DefaultColumn.class.isInstance(imageJTable.get(c)));
 				assertTrue(imageJTable.get(c).getType() == LongArray.class);
 				final Long[] l = (Long[]) data[c][r];
-				final Object[] ijl = ((DefaultColumn<LongArray>) imageJTable.get(c)).get(
-					r).toArray();
+				final Object[] ijl = ((DefaultColumn<LongArray>) imageJTable.get(c))
+					.get(r).toArray();
 				assertArrayEquals(l, ijl);
 			}
 		}
@@ -312,8 +317,8 @@ public class DownloadTableTest {
 		final Object[][] data = new Object[4][];
 		data[0] = new String[] { "abc", "123", "hi!" };
 		data[1] = new Boolean[] { false, true, false };
-		data[2] = new Double[][] { { 0.125, 3879123.5, -93.25 }, { 0d, -123353.03125,
-			-5.5 }, { 100.25, 0.125, -9000.5 } };
+		data[2] = new Double[][] { { 0.125, 3879123.5, -93.25 }, { 0d,
+			-123353.03125, -5.5 }, { 100.25, 0.125, -9000.5 } };
 		data[3] = new Long[] { -9028131908l, 0l, 12l };
 
 		final TableData table = new TableData(tdc, data);
@@ -412,7 +417,7 @@ public class DownloadTableTest {
 		new Expectations() {
 
 			{
-				new DefaultOMEROSession(credentials);
+				new DefaultOMEROSession(credentials, service);
 
 				gateway.getFacility(TablesFacility.class);
 				result = tablesFacility;

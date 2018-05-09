@@ -55,6 +55,9 @@ public interface OMEROSession extends Closeable {
 	/** Gets the {@code Gateway} associated with this OMEROSession */
 	Gateway getGateway();
 
+	/** Gets the session ID associated with this OMEROSession */
+	String getSessionID();
+
 	/** Gets an OMERO {@code Pixels} descriptor, loading remotely as needed. */
 	Pixels loadPixels(OMEROFormat.Metadata meta) throws ServerError;
 
