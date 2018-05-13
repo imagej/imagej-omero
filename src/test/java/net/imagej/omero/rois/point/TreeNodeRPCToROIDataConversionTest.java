@@ -38,8 +38,6 @@ import net.imagej.Dataset;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
-import net.imagej.omero.rois.DataNode;
-import net.imagej.omero.rois.DefaultDataNode;
 import net.imagej.omero.rois.RoiConverters;
 import net.imagej.table.Table;
 import net.imglib2.RealLocalizable;
@@ -61,6 +59,8 @@ import org.scijava.module.ModuleItem;
 import org.scijava.plugin.Plugin;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
+import org.scijava.util.DefaultTreeNode;
+import org.scijava.util.TreeNode;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
@@ -80,11 +80,11 @@ import omero.model.TagAnnotation;
 import omero.model.TagAnnotationI;
 
 /**
- * Tests for {@link DataNodeRPCToROIData}.
+ * Tests for {@link TreeNodeRPCToROIData}.
  *
  * @author Alison Walter
  */
-public class DataNodeRPCToROIDataConversionTest {
+public class TreeNodeRPCToROIDataConversionTest {
 
 	private List<RealLocalizable> pts;
 	private ConvertService convert;
@@ -116,18 +116,18 @@ public class DataNodeRPCToROIDataConversionTest {
 		final RealPointCollection<?> kdTreeRPC = new KDTreeRealPointCollection<>(
 			pts);
 
-		final DataNode<?> defaultDN = new DefaultDataNode<>(defaultRPC, null, null);
-		final DataNode<?> rpslDN = new DefaultDataNode<>(rpslRPC, null, null);
-		final DataNode<?> kdTreeDN = new DefaultDataNode<>(kdTreeRPC, null, null);
+		final TreeNode<?> defaultDN = new DefaultTreeNode<>(defaultRPC, null);
+		final TreeNode<?> rpslDN = new DefaultTreeNode<>(rpslRPC, null);
+		final TreeNode<?> kdTreeDN = new DefaultTreeNode<>(kdTreeRPC, null);
 
 		final Converter<?, ?> defaultC = convert.getHandler(defaultDN,
 			ROIData.class);
 		final Converter<?, ?> rpslC = convert.getHandler(rpslDN, ROIData.class);
 		final Converter<?, ?> kdTreeC = convert.getHandler(kdTreeDN, ROIData.class);
 
-		assertTrue(defaultC instanceof DataNodeRPCToROIData);
-		assertTrue(rpslC instanceof DataNodeRPCToROIData);
-		assertTrue(kdTreeC instanceof DataNodeRPCToROIData);
+		assertTrue(defaultC instanceof TreeNodeRPCToROIData);
+		assertTrue(rpslC instanceof TreeNodeRPCToROIData);
+		assertTrue(kdTreeC instanceof TreeNodeRPCToROIData);
 	}
 
 	@Test
@@ -135,7 +135,7 @@ public class DataNodeRPCToROIDataConversionTest {
 		final RealPointCollection<?> rpc = new DefaultWritableRealPointCollection<>(
 			pts);
 
-		final DataNode<?> dn = new DefaultDataNode<>(rpc, null, null);
+		final TreeNode<?> dn = new DefaultTreeNode<>(rpc, null);
 		final ROIData rd = convert.convert(dn, ROIData.class);
 
 		checkROIData(rd);
@@ -147,7 +147,7 @@ public class DataNodeRPCToROIDataConversionTest {
 		final RealPointCollection<?> rpc =
 			new RealPointSampleListWritableRealPointCollection<>(pts);
 
-		final DataNode<?> dn = new DefaultDataNode<>(rpc, null, null);
+		final TreeNode<?> dn = new DefaultTreeNode<>(rpc, null);
 		final ROIData rd = convert.convert(dn, ROIData.class);
 
 		checkROIData(rd);
@@ -158,7 +158,7 @@ public class DataNodeRPCToROIDataConversionTest {
 	public void testKDTreeConversion() {
 		final RealPointCollection<?> rpc = new KDTreeRealPointCollection<>(pts);
 
-		final DataNode<?> dn = new DefaultDataNode<>(rpc, null, null);
+		final TreeNode<?> dn = new DefaultTreeNode<>(rpc, null);
 		final ROIData rd = convert.convert(dn, ROIData.class);
 
 		checkROIData(rd);
@@ -335,7 +335,7 @@ public class DataNodeRPCToROIDataConversionTest {
 		}
 
 		@Override
-		public List<DataNode<?>> downloadROIs(final OMEROLocation credentials,
+		public List<TreeNode<?>> downloadROIs(final OMEROLocation credentials,
 			final long imageID) throws ServerError, PermissionDeniedException,
 			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 			DSAccessException
@@ -344,14 +344,14 @@ public class DataNodeRPCToROIDataConversionTest {
 		}
 
 		@Override
-		public DataNode<?> downloadROI(OMEROLocation credentials, long roiID)
+		public TreeNode<?> downloadROI(OMEROLocation credentials, long roiID)
 			throws DSOutOfServiceException, DSAccessException, ExecutionException
 		{
 			return null;
 		}
 
 		@Override
-		public <D extends DataNode<?>> long[] uploadROIs(
+		public <D extends TreeNode<?>> long[] uploadROIs(
 			final OMEROLocation credentials, final List<D> ijROIs, final long imageID)
 			throws ServerError, PermissionDeniedException,
 			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,

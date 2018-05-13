@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.scijava.convert.ConvertService;
+import org.scijava.util.TreeNode;
 
 import omero.gateway.model.ROIData;
 import omero.gateway.model.ShapeData;
@@ -44,9 +45,9 @@ public class DefaultOMERORoiCollection implements OMERORoiCollection {
 
 	private final ConvertService convert;
 	private final ROIData roi;
-	private DataNode<?> parent;
+	private TreeNode<?> parent;
 
-	public DefaultOMERORoiCollection(final DataNode<?> parent,
+	public DefaultOMERORoiCollection(final TreeNode<?> parent,
 		final ROIData omeroRoi, final ConvertService convert)
 	{
 		roi = omeroRoi;
@@ -62,18 +63,18 @@ public class DefaultOMERORoiCollection implements OMERORoiCollection {
 	}
 
 	@Override
-	public DataNode<?> getParent() {
+	public TreeNode<?> parent() {
 		return parent;
 	}
 
 	@Override
-	public void setParent(final DataNode<?> parent) {
+	public void setParent(final TreeNode<?> parent) {
 		this.parent = parent;
 	}
 
 	@Override
-	public List<DataNode<?>> children() {
-		final ArrayList<DataNode<?>> children = new ArrayList<>(roi
+	public List<TreeNode<?>> children() {
+		final ArrayList<TreeNode<?>> children = new ArrayList<>(roi
 			.getShapeCount());
 		final Iterator<List<ShapeData>> itr = roi.getIterator();
 		while (itr.hasNext()) {
@@ -88,7 +89,7 @@ public class DefaultOMERORoiCollection implements OMERORoiCollection {
 	}
 
 	@Override
-	public ROIData getData() {
+	public ROIData data() {
 		return roi;
 	}
 }

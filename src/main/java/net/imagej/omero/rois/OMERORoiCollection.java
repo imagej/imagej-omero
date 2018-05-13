@@ -25,6 +25,8 @@
 
 package net.imagej.omero.rois;
 
+import org.scijava.util.TreeNode;
+
 import omero.gateway.model.ROIData;
 
 /**
@@ -33,6 +35,6 @@ import omero.gateway.model.ROIData;
  *
  * @author Alison Walter
  */
-public interface OMERORoiCollection extends DataNode<ROIData> {
+public interface OMERORoiCollection extends TreeNode<ROIData> {
 	// NB: Marker interface
 }

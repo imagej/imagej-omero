@@ -1,4 +1,4 @@
-/*-
+/*
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
@@ -25,49 +25,38 @@
 
 package net.imagej.omero.rois;
 
-import java.util.ArrayList;
-import java.util.List;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.BooleanType;
+import net.imglib2.util.Util;
+
+import org.scijava.convert.Converter;
+import org.scijava.plugin.Plugin;
+import org.scijava.util.TreeNode;
+
+import omero.gateway.model.ROIData;
 
 /**
- * Default implementation of {@link DataNode}.
+ * Converts a {@code TreeNode<RandomAccessibleInterval<?>>} to a
+ * {@link ROIData}.
  *
  * @author Alison Walter
- * @param <T> type of object being encapsulated
  */
-public class DefaultDataNode<T> implements DataNode<T> {
+@Plugin(type = Converter.class)
+public class TreeNodeRAIToROIData extends
+	AbstractTreeNodeToROIData<TreeNode<RandomAccessibleInterval<?>>>
+{
 
-	private DataNode<?> parent;
-	private final List<DataNode<?>> children;
-	private final T data;
-
-	public DefaultDataNode(final T data, final DataNode<?> parent,
-		final List<DataNode<?>> children)
-	{
-		this.data = data;
-		this.parent = parent;
-
-		if (children == null) this.children = new ArrayList<>();
-		else this.children = children;
+	@Override
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public Class<TreeNode<RandomAccessibleInterval<?>>> getInputType() {
+		return (Class) TreeNode.class;
 	}
 
 	@Override
-	public DataNode<?> getParent() {
-		return parent;
-	}
-
-	@Override
-	public void setParent(final DataNode<?> parent) {
-		this.parent = parent;
-	}
-
-	@Override
-	public List<DataNode<?>> children() {
-		return children;
-	}
-
-	@Override
-	public T getData() {
-		return data;
+	protected boolean check(final TreeNode<?> dn) {
+		return dn.data() instanceof RandomAccessibleInterval && Util
+			.getTypeFromInterval(((RandomAccessibleInterval<?>) dn
+				.data())) instanceof BooleanType;
 	}
 
 }

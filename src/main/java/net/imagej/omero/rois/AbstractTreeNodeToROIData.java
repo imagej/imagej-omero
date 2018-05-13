@@ -34,6 +34,7 @@ import org.scijava.convert.AbstractConverter;
 import org.scijava.convert.ConvertService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
+import org.scijava.util.TreeNode;
 
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
@@ -44,11 +45,11 @@ import omero.model.Roi;
 import omero.model.TagAnnotationI;
 
 /**
- * Abstract base layer for converting {@link DataNode} to {@link ROIData}.
+ * Abstract base layer for converting {@link TreeNode} to {@link ROIData}.
  *
  * @author Alison Walter
  */
-public abstract class AbstractDataNodeToROIData<D extends DataNode<?>> extends
+public abstract class AbstractTreeNodeToROIData<D extends TreeNode<?>> extends
 	AbstractConverter<D, ROIData>
 {
 
@@ -68,13 +69,13 @@ public abstract class AbstractDataNodeToROIData<D extends DataNode<?>> extends
 
 	@Override
 	public boolean canConvert(final Object src, final Type dest) {
-		if (super.canConvert(src, dest)) return check((DataNode<?>) src);
+		if (super.canConvert(src, dest)) return check((TreeNode<?>) src);
 		return false;
 	}
 
 	@Override
 	public boolean canConvert(final Object src, final Class<?> dest) {
-		if (super.canConvert(src, dest)) return check((DataNode<?>) src);
+		if (super.canConvert(src, dest)) return check((TreeNode<?>) src);
 		return false;
 	}
 
@@ -92,7 +93,7 @@ public abstract class AbstractDataNodeToROIData<D extends DataNode<?>> extends
 		}
 
 		final ROIData r = new ROIData();
-		final ShapeData s = convert.convert(((DataNode<?>) src).getData(),
+		final ShapeData s = convert.convert(((TreeNode<?>) src).data(),
 			ShapeData.class);
 		r.addShapeData(s);
 
@@ -113,5 +114,5 @@ public abstract class AbstractDataNodeToROIData<D extends DataNode<?>> extends
 		return (T) r;
 	}
 
-	abstract boolean check(DataNode<?> src);
+	abstract boolean check(TreeNode<?> src);
 }

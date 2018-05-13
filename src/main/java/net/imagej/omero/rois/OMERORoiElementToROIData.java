@@ -79,14 +79,14 @@ public class OMERORoiElementToROIData extends
 
 		final OMERORoiElement ore = (OMERORoiElement) src;
 		final ROIData r = new ROIData();
-		if (ore.getParent() instanceof OMERORoiCollection) {
-			final Roi parent = (Roi) ((ROIData) ore.getParent().getData())
+		if (ore.parent() instanceof OMERORoiCollection) {
+			final Roi parent = (Roi) ((ROIData) ore.parent().data())
 				.asIObject();
 			((Roi) r.asIObject()).setDescription(parent.getDescription());
 			((Roi) r.asIObject()).setName(parent.getName());
 		}
 
-		final ShapeData s = convert.convert(((OMERORoiElement) src).getData(),
+		final ShapeData s = convert.convert(((OMERORoiElement) src).data(),
 			ShapeData.class);
 		r.addShapeData(s);
 

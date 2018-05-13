@@ -73,6 +73,8 @@ import org.scijava.module.ModuleItem;
 import org.scijava.plugin.Plugin;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
+import org.scijava.util.DefaultTreeNode;
+import org.scijava.util.TreeNode;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
@@ -97,11 +99,11 @@ import omero.model.TagAnnotation;
 import omero.model.TagAnnotationI;
 
 /**
- * Tests converting {@link DataNode} to {@link ROIData}.
+ * Tests converting {@link TreeNode} to {@link ROIData}.
  *
  * @author Alison Walter
  */
-public class DataNodeToROIDataConversionTest {
+public class TreeNodeToROIDataConversionTest {
 
 	public ConvertService convert;
 	public String imagejOmeroVersion;
@@ -150,13 +152,13 @@ public class DataNodeToROIDataConversionTest {
 		assertTrue(convert.getHandler(bTransform,
 			ShapeData.class) instanceof RealTransformUnaryCompositeRealMaskRealIntervalToShapeData);
 
-		// check DataNode matching
+		// check TreeNode matching
 		assertTrue(convert.getHandler(orc,
 			ROIData.class) instanceof OMERORoiCollectionToROIData);
 		assertTrue(convert.getHandler(ore,
 			ROIData.class) instanceof OMERORoiElementToROIData);
-		assertTrue(convert.getHandler(new DefaultDataNode<>(b, null, null),
-			ROIData.class) instanceof DataNodeMaskPredicateToROIData);
+		assertTrue(convert.getHandler(new DefaultTreeNode<>(b, null),
+			ROIData.class) instanceof TreeNodeMaskPredicateToROIData);
 
 		// check projection matching
 		assertTrue(convert.getHandler(orm,
@@ -166,10 +168,10 @@ public class DataNodeToROIDataConversionTest {
 	}
 
 	@Test
-	public void testDefaultDataNodeToROIData() {
+	public void testDefaultTreeNodeToROIData() {
 		final Box b = new OpenWritableBox(new double[] { 10, 10 }, new double[] {
 			22, 35.5 });
-		final DataNode<Box> dn = new DefaultDataNode<>(b, null, null);
+		final TreeNode<Box> dn = new DefaultTreeNode<>(b, null);
 		final ROIData omeroRoi = convert.convert(dn, ROIData.class);
 
 		// HACK: The new shape doesn't have a ROICoordinate, so it got added to
@@ -268,7 +270,7 @@ public class DataNodeToROIDataConversionTest {
 
 		final OMERORoiCollection orc = new DefaultOMERORoiCollection(null, rd,
 			convert);
-		final List<DataNode<?>> children = orc.children();
+		final List<TreeNode<?>> children = orc.children();
 
 		final ROIData crd = convert.convert(children.get(0), ROIData.class);
 
@@ -306,8 +308,8 @@ public class DataNodeToROIDataConversionTest {
 		final OMERORealMask<?> projected = ((OMERORoiElement) orc.children().get(0))
 			.projectIntoSpace(omeroSpace);
 
-		final ROIData crd = convert.convert(new DefaultDataNode<>(projected, null,
-			null), ROIData.class);
+		final ROIData crd = convert.convert(new DefaultTreeNode<>(projected, null),
+			ROIData.class);
 
 		assertROIDataConversionCorrect(crd);
 		assertEquals(1, crd.getShapeCount());
@@ -325,8 +327,8 @@ public class DataNodeToROIDataConversionTest {
 		final OMEROZTCProjectedRealMaskRealInterval projected =
 			new OMEROZTCProjectedRealMaskRealInterval(e, 5, 22, 0);
 
-		final ROIData crd = convert.convert(new DefaultDataNode<>(projected, null,
-			null), ROIData.class);
+		final ROIData crd = convert.convert(new DefaultTreeNode<>(projected, null),
+			ROIData.class);
 
 		// NB: count hack not needed since it was put into ROIData with non-null
 		// ROICoordinate
@@ -346,8 +348,7 @@ public class DataNodeToROIDataConversionTest {
 		final AffineTransform2D rot = new AffineTransform2D();
 		rot.rotate(Math.PI / 3);
 		final RealMaskRealInterval rotE = e.transform(rot.inverse());
-		final DataNode<RealMaskRealInterval> dn = new DefaultDataNode<>(rotE, null,
-			null);
+		final TreeNode<RealMaskRealInterval> dn = new DefaultTreeNode<>(rotE, null);
 
 		final ROIData crd = convert.convert(dn, ROIData.class);
 		// HACK: The new shape doesn't have a ROICoordinate, so it got added to
@@ -462,12 +463,12 @@ public class DataNodeToROIDataConversionTest {
 		final AffineTransform2D rotate = new AffineTransform2D();
 		rotate.rotate(Math.PI / 4);
 		final RealMaskRealInterval rmi = ((RealMaskRealInterval) orc.children().get(
-			0).getData()).transform(rotate.inverse());
+			0).data()).transform(rotate.inverse());
 
-		// You need to create a new DefaultDataNode because performing operations
+		// You need to create a new DefaultTreeNode because performing operations
 		// (transform, negate, and, etc.) on OMERO Rois does not modify the
 		// underlying ROI. It creates a new wrapped version.
-		final ROIData crd = convert.convert(new DefaultDataNode<>(rmi, null, null),
+		final ROIData crd = convert.convert(new DefaultTreeNode<>(rmi, null),
 			ROIData.class);
 
 		assertROIDataConversionCorrect(crd);
@@ -662,8 +663,8 @@ public class DataNodeToROIDataConversionTest {
 		}
 
 		@Override
-		public List<DataNode<?>> downloadROIs(OMEROLocation credentials,
-			long imageID) throws ServerError, PermissionDeniedException,
+		public List<TreeNode<?>> downloadROIs(final OMEROLocation credentials,
+			final long imageID) throws ServerError, PermissionDeniedException,
 			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 			DSAccessException
 		{
@@ -671,17 +672,19 @@ public class DataNodeToROIDataConversionTest {
 		}
 
 		@Override
-		public DataNode<?> downloadROI(OMEROLocation credentials, long roiID)
-			throws DSOutOfServiceException, DSAccessException, ExecutionException
+		public TreeNode<?> downloadROI(final OMEROLocation credentials,
+			final long roiID) throws DSOutOfServiceException, DSAccessException,
+			ExecutionException
 		{
 			return null;
 		}
 
 		@Override
-		public <D extends DataNode<?>> long[] uploadROIs(OMEROLocation credentials,
-			List<D> ijROIs, long imageID) throws ServerError,
-			PermissionDeniedException, CannotCreateSessionException,
-			ExecutionException, DSOutOfServiceException, DSAccessException
+		public <D extends TreeNode<?>> long[] uploadROIs(
+			final OMEROLocation credentials, final List<D> ijROIs, final long imageID)
+			throws ServerError, PermissionDeniedException,
+			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
+			DSAccessException
 		{
 			return null;
 		}

@@ -33,10 +33,10 @@ import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
-import net.imagej.omero.rois.DataNode;
 import net.imagej.table.Table;
 
 import org.scijava.module.ModuleItem;
+import org.scijava.util.TreeNode;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
@@ -144,25 +144,25 @@ public interface OMEROService extends ImageJService {
 
 	/**
 	 * Downloads the ROIs associated with the given {@code imageID} from OMERO,
-	 * and returns them as a {@code List} of {@link DataNode}s.
+	 * and returns them as a {@code List} of {@link TreeNode}s.
 	 */
-	List<DataNode<?>> downloadROIs(OMEROLocation credentials, long imageID)
+	List<TreeNode<?>> downloadROIs(OMEROLocation credentials, long imageID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
 		ExecutionException, DSOutOfServiceException, DSAccessException;
 
 	/**
 	 * Downloads the {@link ROIData} with the given {@code roiID} from OMERO, and
-	 * returns it as a {@link DataNode}.
+	 * returns it as a {@link TreeNode}.
 	 */
-	DataNode<?> downloadROI(final OMEROLocation credentials,
+	TreeNode<?> downloadROI(final OMEROLocation credentials,
 		final long roiID) throws DSOutOfServiceException, DSAccessException,
 		ExecutionException;
 
 	/**
-	 * Converts the given {@link DataNode}s to OMERO ROIs, uploads them to the
+	 * Converts the given {@link TreeNode}s to OMERO ROIs, uploads them to the
 	 * OMEROServer, and attaches them to the image with the specified ID.
 	 */
-	<D extends DataNode<?>> long[] uploadROIs(OMEROLocation credentials,
+	<D extends TreeNode<?>> long[] uploadROIs(OMEROLocation credentials,
 		List<D> ijROIs, long imageID) throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException;

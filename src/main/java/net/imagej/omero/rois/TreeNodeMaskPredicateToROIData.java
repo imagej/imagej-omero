@@ -1,4 +1,4 @@
-/*-
+/*
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
@@ -11,12 +11,12 @@
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -25,21 +25,32 @@
 
 package net.imagej.omero.rois;
 
-import java.util.List;
+import net.imglib2.roi.MaskPredicate;
+
+import org.scijava.convert.Converter;
+import org.scijava.plugin.Plugin;
+import org.scijava.util.TreeNode;
+
+import omero.gateway.model.ROIData;
 
 /**
- * Tree node for storing meta-data.
+ * Converts a {@code TreeNode<MaskPredicate<?>>} to a {@link ROIData}.
  *
  * @author Alison Walter
- * @param <T> type of additional data associated with this
  */
-public interface DataNode<T> {
+@Plugin(type = Converter.class)
+public class TreeNodeMaskPredicateToROIData extends
+	AbstractTreeNodeToROIData<TreeNode<MaskPredicate<?>>>
+{
 
-	DataNode<?> getParent();
+	@Override
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public Class<TreeNode<MaskPredicate<?>>> getInputType() {
+		return (Class) TreeNode.class;
+	}
 
-	void setParent(final DataNode<?> parent);
-
-	List<DataNode<?>> children();
-
-	T getData();
+	@Override
+	protected boolean check(final TreeNode<?> src) {
+		return src.data() instanceof MaskPredicate;
+	}
 }

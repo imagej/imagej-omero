@@ -48,8 +48,6 @@ import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
-import net.imagej.omero.rois.DataNode;
-import net.imagej.omero.rois.DefaultDataNode;
 import net.imagej.omero.rois.OMERORoiCollection;
 import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
@@ -78,6 +76,8 @@ import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.util.ClassUtils;
 import org.scijava.util.ConversionUtils;
+import org.scijava.util.DefaultTreeNode;
+import org.scijava.util.TreeNode;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
@@ -172,7 +172,7 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 
 		// ROI
-		if (DataNode.class.isAssignableFrom(type) || MaskPredicate.class
+		if (TreeNode.class.isAssignableFrom(type) || MaskPredicate.class
 			.isAssignableFrom(type)) return omero.rtypes.rlong(0);
 
 		// primitive types
@@ -310,11 +310,11 @@ public class DefaultOMEROService extends AbstractService implements
 
 		if (value instanceof OMERORoiCollection) return convertService.convert(
 			value, ROIData.class);
-		if ((value instanceof DataNode && ((DataNode<?>) value)
-			.getData() instanceof MaskPredicate))
+		if ((value instanceof TreeNode && ((TreeNode<?>) value)
+			.data() instanceof MaskPredicate))
 		{
-			final MaskPredicate<?> mp = (MaskPredicate<?>) ((DataNode<?>) value)
-				.getData();
+			final MaskPredicate<?> mp = (MaskPredicate<?>) ((TreeNode<?>) value)
+				.data();
 			if (mp instanceof Interval || mp instanceof RealInterval)
 				return convertService.convert(value, ROIData.class);
 			throw new IllegalArgumentException("MaskPredicate must be MaskInterval " +
@@ -327,7 +327,7 @@ public class DefaultOMEROService extends AbstractService implements
 			return l;
 		}
 		if (value instanceof MaskPredicate) return toOMERO(client,
-			new DefaultDataNode<>(value, null, null));
+			new DefaultTreeNode<>(value, null));
 
 		return toOMERO(value);
 	}
@@ -528,12 +528,12 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public List<DataNode<?>> downloadROIs(final OMEROLocation credentials,
+	public List<TreeNode<?>> downloadROIs(final OMEROLocation credentials,
 		final long imageID) throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
-		final List<DataNode<?>> dn = new ArrayList<>();
+		final List<TreeNode<?>> dn = new ArrayList<>();
 		final OMEROSession session = session(credentials);
 		final ROIFacility roifac = session.getGateway().getFacility(
 			ROIFacility.class);
@@ -544,7 +544,7 @@ public class DefaultOMEROService extends AbstractService implements
 			final ROIResult res = r.next();
 			final Collection<ROIData> rois = res.getROIs();
 			for (final ROIData roi : rois) {
-				final DataNode<?> ijRoi = convertService.convert(roi, DataNode.class);
+				final TreeNode<?> ijRoi = convertService.convert(roi, TreeNode.class);
 				if (ijRoi == null) throw new IllegalArgumentException(
 					"ROIData cannot be converted to ImageJ ROI");
 				dn.add(ijRoi);
@@ -554,7 +554,7 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public DataNode<?> downloadROI(final OMEROLocation credentials,
+	public TreeNode<?> downloadROI(final OMEROLocation credentials,
 		final long roiID) throws DSOutOfServiceException, DSAccessException,
 		ExecutionException
 	{
@@ -563,11 +563,11 @@ public class DefaultOMEROService extends AbstractService implements
 			ROIFacility.class);
 		final ROIResult roi = roifac.loadROI(session.getSecurityContext(), roiID);
 		final ROIData rd = roi.getROIs().iterator().next();
-		return convertService.convert(rd, DataNode.class);
+		return convertService.convert(rd, TreeNode.class);
 	}
 
 	@Override
-	public <D extends DataNode<?>> long[] uploadROIs(
+	public <D extends TreeNode<?>> long[] uploadROIs(
 		final OMEROLocation credentials, final List<D> ijROIs, final long imageID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
 		ExecutionException, DSOutOfServiceException, DSAccessException
@@ -578,16 +578,16 @@ public class DefaultOMEROService extends AbstractService implements
 		final Interval interval = null;
 
 		final List<ROIData> omeroROIs = new ArrayList<>();
-		for (final DataNode<?> dn : ijROIs) {
+		for (final TreeNode<?> dn : ijROIs) {
 			ROIData oR;
-			if (!(dn.getData() instanceof Interval) && !(dn
-				.getData() instanceof RealInterval) && dn
-					.getData() instanceof MaskPredicate) oR = convertService.convert(
-						interval((MaskPredicate<?>) dn.getData(), interval, imageID,
+			if (!(dn.data() instanceof Interval) && !(dn
+				.data() instanceof RealInterval) && dn
+					.data() instanceof MaskPredicate) oR = convertService.convert(
+						interval((MaskPredicate<?>) dn.data(), interval, imageID,
 							session), ROIData.class);
 			else oR = convertService.convert(dn, ROIData.class);
 			if (oR == null) throw new IllegalArgumentException("Unsupported type: " +
-				dn.getData().getClass());
+				dn.data().getClass());
 			omeroROIs.add(oR);
 		}
 
@@ -773,20 +773,20 @@ public class DefaultOMEROService extends AbstractService implements
 				final T table = (T) downloadTable(credentials, tableID);
 				return table;
 			}
-			if (DataNode.class.isAssignableFrom(type)) {
+			if (TreeNode.class.isAssignableFrom(type)) {
 				final long roiID = ((Number) value).longValue();
 				final OMEROLocation credentials = createCredentials(client);
 				@SuppressWarnings("unchecked")
-				final T dataNode = (T) downloadROI(credentials, roiID);
-				return dataNode;
+				final T TreeNode = (T) downloadROI(credentials, roiID);
+				return TreeNode;
 			}
 			if (MaskPredicate.class.isAssignableFrom(type)) {
 				final long roiID = ((Number) value).longValue();
 				final OMEROLocation credentials = createCredentials(client);
-				final DataNode<?> dataNode = downloadROI(credentials, roiID);
-				final List<DataNode<?>> children = dataNode.children();
+				final TreeNode<?> TreeNode = downloadROI(credentials, roiID);
+				final List<TreeNode<?>> children = TreeNode.children();
 				@SuppressWarnings("unchecked")
-				final T omeroMP = (T) children.get(0).getData();
+				final T omeroMP = (T) children.get(0).data();
 				if (children.size() > 1) log.warn("Requested OMERO ROI has more than " +
 					"one ShapeData. Only one shape will be returned.");
 				return omeroMP;
@@ -884,13 +884,13 @@ public class DefaultOMEROService extends AbstractService implements
 	 * @param interval the interval to apply, if null it is computed
 	 * @param imageID the ID of the OMERO image whose interval should be applied
 	 * @param session the current session
-	 * @return a DataNode whose data is a RandomAccessibleInterval representation
+	 * @return a TreeNode whose data is a RandomAccessibleInterval representation
 	 *         of the original data
 	 * @throws ExecutionException
 	 * @throws DSOutOfServiceException
 	 * @throws DSAccessException
 	 */
-	private DataNode<RandomAccessibleInterval<BoolType>> interval(
+	private TreeNode<RandomAccessibleInterval<BoolType>> interval(
 		final MaskPredicate<?> m, Interval interval, final long imageID,
 		final OMEROSession session) throws ExecutionException,
 		DSOutOfServiceException, DSAccessException
@@ -903,7 +903,7 @@ public class DefaultOMEROService extends AbstractService implements
 		else rai = Views.interval(Views.raster(Masks.toRealRandomAccessible(
 			(RealMask) m)), interval);
 
-		return new DefaultDataNode<>(rai, null, null);
+		return new DefaultTreeNode<>(rai, null);
 	}
 
 	/**
@@ -930,7 +930,7 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	/**
-	 * Check if the given list contains only {@link DataNode}s which can be
+	 * Check if the given list contains only {@link TreeNode}s which can be
 	 * converted to {@link ROIData}
 	 *
 	 * @param rois the {@code List} to check
@@ -941,8 +941,8 @@ public class DefaultOMEROService extends AbstractService implements
 		if (rois.isEmpty()) return false;
 		for (Object o : rois) {
 			if (o instanceof OMERORoiCollection) continue;
-			else if (o instanceof DataNode && ((DataNode<?>) o)
-				.getData() instanceof MaskPredicate) continue;
+			else if (o instanceof TreeNode && ((TreeNode<?>) o)
+				.data() instanceof MaskPredicate) continue;
 			else if (o instanceof MaskPredicate) continue;
 			else return false;
 		}

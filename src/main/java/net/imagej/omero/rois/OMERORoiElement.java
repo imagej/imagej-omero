@@ -28,12 +28,14 @@ package net.imagej.omero.rois;
 import net.imagej.axis.TypedAxis;
 import net.imagej.space.TypedSpace;
 
+import org.scijava.util.TreeNode;
+
 /**
  * Wraps an {@link OMERORealMask} which can be projected into a given space.
  *
  * @author Alison Walter
  */
-public interface OMERORoiElement extends DataNode<OMERORealMask<?>> {
+public interface OMERORoiElement extends TreeNode<OMERORealMask<?>> {
 
 	OMERORealMask<?> projectIntoSpace(
 		final TypedSpace<? extends TypedAxis> space);

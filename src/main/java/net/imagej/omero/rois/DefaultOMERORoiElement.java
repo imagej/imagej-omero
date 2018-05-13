@@ -32,6 +32,8 @@ import net.imagej.axis.TypedAxis;
 import net.imagej.omero.rois.project.DefaultOMERORoiProjector;
 import net.imagej.space.TypedSpace;
 
+import org.scijava.util.TreeNode;
+
 /**
  * Default implementation of {@link OMERORoiElement}.
  *
@@ -40,12 +42,12 @@ import net.imagej.space.TypedSpace;
 public class DefaultOMERORoiElement implements OMERORoiElement {
 
 	private final OMERORealMask<?> source;
-	private DataNode<?> parent;
-	private final List<DataNode<?>> children;
+	private TreeNode<?> parent;
+	private final List<TreeNode<?>> children;
 	private final DefaultOMERORoiProjector projector;
 
 	public DefaultOMERORoiElement(final OMERORealMask<?> source,
-		final DataNode<?> parent, final List<DataNode<?>> children)
+		final TreeNode<?> parent, final List<TreeNode<?>> children)
 	{
 		this.source = source;
 		this.parent = parent;
@@ -55,22 +57,22 @@ public class DefaultOMERORoiElement implements OMERORoiElement {
 	}
 
 	@Override
-	public DataNode<?> getParent() {
+	public TreeNode<?> parent() {
 		return parent;
 	}
 
 	@Override
-	public void setParent(final DataNode<?> parent) {
+	public void setParent(final TreeNode<?> parent) {
 		this.parent = parent;
 	}
 
 	@Override
-	public List<DataNode<?>> children() {
+	public List<TreeNode<?>> children() {
 		return children;
 	}
 
 	@Override
-	public OMERORealMask<?> getData() {
+	public OMERORealMask<?> data() {
 		return source;
 	}
 

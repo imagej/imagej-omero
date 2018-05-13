@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.rois.DataNode;
 import net.imagej.omero.rois.RoiConverters;
 import net.imglib2.RealLocalizable;
 import net.imglib2.roi.BoundaryType;
@@ -42,6 +41,7 @@ import org.scijava.convert.Converter;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.TreeNode;
 
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
@@ -57,8 +57,8 @@ import omero.model.TagAnnotationI;
  * @author Alison Walter
  */
 @Plugin(type = Converter.class, priority = Priority.HIGH)
-public class DataNodeRPCToROIData extends
-	AbstractConverter<DataNode<RealPointCollection<?>>, ROIData>
+public class TreeNodeRPCToROIData extends
+	AbstractConverter<TreeNode<RealPointCollection<?>>, ROIData>
 {
 
 	@Parameter
@@ -69,22 +69,22 @@ public class DataNodeRPCToROIData extends
 
 	@Override
 	public boolean canConvert(final Object src, final Type dest) {
-		if (super.canConvert(src, dest)) return check((DataNode<?>) src);
+		if (super.canConvert(src, dest)) return check((TreeNode<?>) src);
 		return false;
 	}
 
 	@Override
 	public boolean canConvert(final Object src, final Class<?> dest) {
-		if (super.canConvert(src, dest)) return check((DataNode<?>) src);
+		if (super.canConvert(src, dest)) return check((TreeNode<?>) src);
 		return false;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public Class<DataNode<RealPointCollection<? extends RealLocalizable>>>
+	public Class<TreeNode<RealPointCollection<? extends RealLocalizable>>>
 		getInputType()
 	{
-		return (Class) DataNode.class;
+		return (Class) TreeNode.class;
 	}
 
 	@Override
@@ -107,7 +107,7 @@ public class DataNodeRPCToROIData extends
 
 		final ROIData r = new ROIData();
 		final RealPointCollection<?> rpc =
-			(RealPointCollection<?>) ((DataNode<?>) src).getData();
+			(RealPointCollection<?>) ((TreeNode<?>) src).data();
 		final String bt = boundaryType(rpc.boundaryType());
 		final Iterator<?> pts = rpc.points().iterator();
 		while (pts.hasNext())
@@ -132,8 +132,8 @@ public class DataNodeRPCToROIData extends
 
 	// -- Helper methods --
 
-	private boolean check(final DataNode<?> src) {
-		return src.getData() instanceof RealPointCollection;
+	private boolean check(final TreeNode<?> src) {
+		return src.data() instanceof RealPointCollection;
 	}
 
 	private String boundaryType(final BoundaryType bt) {

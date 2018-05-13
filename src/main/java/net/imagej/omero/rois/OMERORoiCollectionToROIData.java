@@ -85,7 +85,7 @@ public class OMERORoiCollectionToROIData extends
 				.getSimpleName() + " Received: " + dest.getSimpleName());
 		}
 
-		final ROIData r = ((OMERORoiCollection) src).getData();
+		final ROIData r = ((OMERORoiCollection) src).data();
 		final Iterator<List<ShapeData>> itr = r.getIterator();
 
 		while (itr.hasNext()) {
