@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.geom.real.Box;
@@ -116,7 +116,7 @@ public class RectangleConversionTest {
 		final RectangleData omeroRectangle = convert.convert(ijRectangle,
 			RectangleData.class);
 
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, omeroRectangle.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, omeroRectangle.getText());
 		assertEquals(-1, omeroRectangle.getZ());
 		assertEquals(-1, omeroRectangle.getT());
 		assertEquals(-1, omeroRectangle.getC());
@@ -136,7 +136,7 @@ public class RectangleConversionTest {
 		final RectangleData omeroRectangle = convert.convert(ijRectangle,
 			RectangleData.class);
 
-		assertEquals(RoiConverters.OPEN_BOUNDARY_TEXT, omeroRectangle.getText());
+		assertEquals(ROIConverters.OPEN_BOUNDARY_TEXT, omeroRectangle.getText());
 		assertEquals(-1, omeroRectangle.getZ());
 		assertEquals(-1, omeroRectangle.getT());
 		assertEquals(-1, omeroRectangle.getC());
@@ -160,7 +160,7 @@ public class RectangleConversionTest {
 		final OMERORectangle wrap = new ClosedOMERORectangle(omeroRectangle);
 		final RectangleData unwrapped = convert.convert(wrap, RectangleData.class);
 
-		assertEquals("Rectangle " + RoiConverters.CLOSED_BOUNDARY_TEXT, unwrapped
+		assertEquals("Rectangle " + ROIConverters.CLOSED_BOUNDARY_TEXT, unwrapped
 			.getText());
 		assertEquals(-1, unwrapped.getId());
 
@@ -176,7 +176,7 @@ public class RectangleConversionTest {
 	@Test
 	public void testRectangleDataWithTextValue() {
 		final RectangleData omeroRectangle = new RectangleData(13, 6, 2.5, 0.25);
-		omeroRectangle.setText("rectangle" + RoiConverters.OPEN_BOUNDARY_TEXT +
+		omeroRectangle.setText("rectangle" + ROIConverters.OPEN_BOUNDARY_TEXT +
 			" stuff");
 		final Box ijRectangle = convert.convert(omeroRectangle, Box.class);
 
@@ -184,7 +184,7 @@ public class RectangleConversionTest {
 
 		final RectangleData unwrapped = convert.convert(ijRectangle,
 			RectangleData.class);
-		assertEquals("rectangle" + RoiConverters.OPEN_BOUNDARY_TEXT + " stuff",
+		assertEquals("rectangle" + ROIConverters.OPEN_BOUNDARY_TEXT + " stuff",
 			unwrapped.getText());
 	}
 }

@@ -27,7 +27,7 @@ package net.imagej.omero.rois.mask;
 
 import java.lang.reflect.Type;
 
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.BooleanType;
@@ -97,7 +97,7 @@ public class RAIToMaskData extends
 		}
 
 		final MaskData md = toMaskData((RandomAccessibleInterval<?>) src);
-		md.setText(RoiConverters.UNSPECIFIED_BOUNDARY_TEXT);
+		md.setText(ROIConverters.UNSPECIFIED_BOUNDARY_TEXT);
 		return (T) md;
 	}
 

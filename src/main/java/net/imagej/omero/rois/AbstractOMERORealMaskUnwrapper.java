@@ -56,7 +56,7 @@ public abstract class AbstractOMERORealMaskUnwrapper<S extends ShapeData, O exte
 
 		final S shape = ((OMERORealMask<S>) src).getShape();
 
-		final String bt = generateBoundaryTypeString(shape, RoiConverters
+		final String bt = generateBoundaryTypeString(shape, ROIConverters
 			.createBoundaryTypeString(((O) src).boundaryType()));
 
 		setBoundaryType(shape, bt);

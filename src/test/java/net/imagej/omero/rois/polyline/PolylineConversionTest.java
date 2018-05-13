@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.roi.BoundaryType;
@@ -138,7 +138,7 @@ public class PolylineConversionTest {
 		final PolylineData omeroPolyline = convert.convert(ijPolyline,
 			PolylineData.class);
 
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, omeroPolyline.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, omeroPolyline.getText());
 
 		final List<Point2D.Double> omeroPolyPts = omeroPolyline.getPoints();
 		assertEquals(ijPolyline.numVertices(), omeroPolyPts.size());
@@ -158,7 +158,7 @@ public class PolylineConversionTest {
 		final PolylineData unwrap = convert.convert(wrap, PolylineData.class);
 
 		assertEquals(-1, unwrap.getId());
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, unwrap.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, unwrap.getText());
 
 		final List<Point2D.Double> omeroPolyPts = omeroPolyline.getPoints();
 		final List<Point2D.Double> unwrapPolyPts = unwrap.getPoints();
@@ -179,7 +179,7 @@ public class PolylineConversionTest {
 		assertEquals(BoundaryType.CLOSED, ijPolyline.boundaryType());
 
 		final PolylineData unwrap = convert.convert(ijPolyline, PolylineData.class);
-		assertEquals("polyline " + RoiConverters.CLOSED_BOUNDARY_TEXT, unwrap
+		assertEquals("polyline " + ROIConverters.CLOSED_BOUNDARY_TEXT, unwrap
 			.getText());
 	}
 }

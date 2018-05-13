@@ -54,7 +54,7 @@ import omero.model.TagAnnotationI;
  *
  * @author Alison Walter
  */
-public class RoiConverters {
+public class ROIConverters {
 
 	/** String identifiers for boundary imagej boundary behaviors */
 	public final static String CLOSED_BOUNDARY_TEXT = "ij-bt:[C]";

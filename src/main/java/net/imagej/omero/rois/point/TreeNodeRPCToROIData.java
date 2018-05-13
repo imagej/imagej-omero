@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.RealLocalizable;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.geom.real.RealPointCollection;
@@ -115,7 +115,7 @@ public class TreeNodeRPCToROIData extends
 
 		try {
 			final TagAnnotationI tag = omero.getAnnotation(
-				RoiConverters.IJO_VERSION_DESC, omero.getVersion());
+				ROIConverters.IJO_VERSION_DESC, omero.getVersion());
 
 			// created new ROIData so its already loaded, and annotation can just be
 			// attached
@@ -137,10 +137,10 @@ public class TreeNodeRPCToROIData extends
 	}
 
 	private String boundaryType(final BoundaryType bt) {
-		if (bt.equals(BoundaryType.OPEN)) return RoiConverters.OPEN_BOUNDARY_TEXT;
+		if (bt.equals(BoundaryType.OPEN)) return ROIConverters.OPEN_BOUNDARY_TEXT;
 		else if (bt.equals(BoundaryType.UNSPECIFIED))
-			return RoiConverters.UNSPECIFIED_BOUNDARY_TEXT;
-		return RoiConverters.CLOSED_BOUNDARY_TEXT;
+			return ROIConverters.UNSPECIFIED_BOUNDARY_TEXT;
+		return ROIConverters.CLOSED_BOUNDARY_TEXT;
 	}
 
 	private PointData createPoint(final RealLocalizable l,

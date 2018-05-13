@@ -42,13 +42,13 @@ import omero.gateway.model.ROIData;
 import omero.gateway.model.ShapeData;
 
 /**
- * Converts an OMERO {@link ROIData} to an {@link OMERORoiCollection}.
+ * Converts an OMERO {@link ROIData} to an {@link OMEROROICollection}.
  *
  * @author Alison Walter
  */
 @Plugin(type = Converter.class)
-public class ROIDataToOMERORoiCollection extends
-	AbstractConverter<ROIData, OMERORoiCollection>
+public class ROIDataToOMEROROICollection extends
+	AbstractConverter<ROIData, OMEROROICollection>
 {
 
 	@Parameter
@@ -84,13 +84,13 @@ public class ROIDataToOMERORoiCollection extends
 		if (!dest.isAssignableFrom(getOutputType()))
 			throw new IllegalArgumentException("Invalid destination class: " + dest);
 
-		return (T) new DefaultOMERORoiCollection((ROIData) src, getContext()
+		return (T) new DefaultOMEROROICollection((ROIData) src, getContext()
 			.getService(ConvertService.class));
 	}
 
 	@Override
-	public Class<OMERORoiCollection> getOutputType() {
-		return OMERORoiCollection.class;
+	public Class<OMEROROICollection> getOutputType() {
+		return OMEROROICollection.class;
 	}
 
 	@Override

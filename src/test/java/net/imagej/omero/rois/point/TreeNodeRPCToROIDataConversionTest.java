@@ -38,7 +38,7 @@ import net.imagej.Dataset;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imagej.table.Table;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
@@ -177,7 +177,7 @@ public class TreeNodeRPCToROIDataConversionTest {
 		assertEquals(1, anno.size());
 		assertTrue(anno.get(0).getChild() instanceof TagAnnotation);
 		final TagAnnotation tag = (TagAnnotation) anno.get(0).getChild();
-		assertEquals(RoiConverters.IJO_VERSION_DESC, tag.getDescription()
+		assertEquals(ROIConverters.IJO_VERSION_DESC, tag.getDescription()
 			.getValue());
 		assertEquals(convert.getContext().getService(OMEROService.class)
 			.getVersion(), tag.getTextValue().getValue());
@@ -193,7 +193,7 @@ public class TreeNodeRPCToROIDataConversionTest {
 			for (final ShapeData shape : shapes) {
 				assertTrue(shape instanceof PointData);
 				final PointData pd = (PointData) shape;
-				assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, pd.getText());
+				assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, pd.getText());
 				findMatch(pd, copy);
 				count++;
 			}
@@ -325,7 +325,7 @@ public class TreeNodeRPCToROIDataConversionTest {
 			final String value) throws ExecutionException, ServerError,
 			DSOutOfServiceException, DSAccessException
 		{
-			if (description == RoiConverters.IJO_VERSION_DESC) {
+			if (description == ROIConverters.IJO_VERSION_DESC) {
 				final TagAnnotationI tag = new TagAnnotationI();
 				tag.setDescription(omero.rtypes.rstring(description));
 				tag.setTextValue(omero.rtypes.rstring(value));

@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.geom.real.DefaultWritableLine;
 import net.imglib2.roi.geom.real.Line;
@@ -120,7 +120,7 @@ public class LineConversionTest {
 			0);
 		assertEquals(ijLine.endpointTwo().getDoublePosition(1), omeroLine.getY2(),
 			0);
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, omeroLine.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, omeroLine.getText());
 	}
 
 	@Test
@@ -131,7 +131,7 @@ public class LineConversionTest {
 		final LineData unwrap = convert.convert(wrap, LineData.class);
 
 		assertEquals(-1, unwrap.getId());
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, unwrap.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, unwrap.getText());
 	}
 
 	@Test
@@ -144,7 +144,7 @@ public class LineConversionTest {
 		assertEquals(BoundaryType.CLOSED, ijLine.boundaryType());
 
 		final LineData unwrap = convert.convert(ijLine, LineData.class);
-		assertEquals("line " + RoiConverters.CLOSED_BOUNDARY_TEXT, unwrap
+		assertEquals("line " + ROIConverters.CLOSED_BOUNDARY_TEXT, unwrap
 			.getText());
 	}
 }

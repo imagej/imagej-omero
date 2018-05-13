@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccess;
@@ -102,7 +102,7 @@ public class CompositeMaskPredicateToMaskData {
 				.smallestContainingInterval(and));
 
 		assertIsEqual(rai, md);
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, md.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, md.getText());
 	}
 
 	@Test
@@ -122,7 +122,7 @@ public class CompositeMaskPredicateToMaskData {
 				.smallestContainingInterval(minus));
 
 		assertIsEqual(rai, md);
-		assertEquals(RoiConverters.UNSPECIFIED_BOUNDARY_TEXT, md.getText());
+		assertEquals(ROIConverters.UNSPECIFIED_BOUNDARY_TEXT, md.getText());
 	}
 
 	@Test
@@ -147,7 +147,7 @@ public class CompositeMaskPredicateToMaskData {
 		final MaskData md = c2.convert(rai, MaskData.class);
 
 		assertIsEqual(rai, md);
-		assertEquals(RoiConverters.UNSPECIFIED_BOUNDARY_TEXT, md.getText());
+		assertEquals(ROIConverters.UNSPECIFIED_BOUNDARY_TEXT, md.getText());
 	}
 
 	@Test
@@ -171,7 +171,7 @@ public class CompositeMaskPredicateToMaskData {
 			.toRandomAccessibleInterval(or);
 
 		assertIsEqual(rai, md);
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, md.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, md.getText());
 	}
 
 	@Test
@@ -192,7 +192,7 @@ public class CompositeMaskPredicateToMaskData {
 				.smallestContainingInterval(xor));
 
 		assertIsEqual(rai, md);
-		assertEquals(RoiConverters.UNSPECIFIED_BOUNDARY_TEXT, md.getText());
+		assertEquals(ROIConverters.UNSPECIFIED_BOUNDARY_TEXT, md.getText());
 	}
 
 	@Test
@@ -220,7 +220,7 @@ public class CompositeMaskPredicateToMaskData {
 		assertIsEqual(rai, md);
 		// NB: transform is only preserved if it is the only operation
 		assertNull(md.getTransform());
-		assertEquals(RoiConverters.UNSPECIFIED_BOUNDARY_TEXT, md.getText());
+		assertEquals(ROIConverters.UNSPECIFIED_BOUNDARY_TEXT, md.getText());
 	}
 
 	// -- Helper methods --

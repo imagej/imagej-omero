@@ -28,7 +28,7 @@ package net.imagej.omero.rois.transform;
 import java.lang.reflect.Type;
 import java.util.function.Predicate;
 
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.roi.Operators.RealTransformMaskOperator;
 import net.imglib2.roi.composite.CompositeMaskPredicate;
@@ -123,7 +123,7 @@ public class RealTransformUnaryCompositeRealMaskRealIntervalToShapeData extends
 
 		final ShapeData s = convert.convert(getBase(
 			(UnaryCompositeMaskPredicate<?>) src), ShapeData.class);
-		s.setTransform(RoiConverters.createAffine(transformToSource));
+		s.setTransform(ROIConverters.createAffine(transformToSource));
 
 		return (T) s;
 	}

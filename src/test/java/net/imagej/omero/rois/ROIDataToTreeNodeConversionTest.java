@@ -82,7 +82,7 @@ public class ROIDataToTreeNodeConversionTest {
 		omeroRoi.addShapeData(new PointData(1, 1));
 
 		final Converter<?, ?> match = convert.getHandler(omeroRoi, TreeNode.class);
-		assertTrue(match instanceof ROIDataToOMERORoiCollection);
+		assertTrue(match instanceof ROIDataToOMEROROICollection);
 	}
 
 	@Test
@@ -95,18 +95,18 @@ public class ROIDataToTreeNodeConversionTest {
 		omeroRoi.addShapeData(e);
 		final TreeNode<?> ijDN = convert.convert(omeroRoi, TreeNode.class);
 
-		assertTrue(ijDN instanceof OMERORoiCollection);
+		assertTrue(ijDN instanceof OMEROROICollection);
 		assertNull(ijDN.parent());
 
-		final OMERORoiCollection ijORC = (OMERORoiCollection) ijDN;
+		final OMEROROICollection ijORC = (OMEROROICollection) ijDN;
 		assertEquals(98, ijORC.data().getId());
 
 		final List<TreeNode<?>> children = ijORC.children();
 		assertTrue(children.size() == 1);
-		assertTrue(children.get(0) instanceof OMERORoiElement);
+		assertTrue(children.get(0) instanceof OMEROROIElement);
 
-		final OMERORoiElement ijORE = (OMERORoiElement) children.get(0);
-		assertTrue(ijORE.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE = (OMEROROIElement) children.get(0);
+		assertTrue(ijORE.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE.children().isEmpty());
 		assertTrue(ijORE.data() instanceof OMEROEllipse);
 	}
@@ -130,29 +130,29 @@ public class ROIDataToTreeNodeConversionTest {
 
 		final TreeNode<?> ijDN = convert.convert(omeroRoi, TreeNode.class);
 
-		assertTrue(ijDN instanceof OMERORoiCollection);
+		assertTrue(ijDN instanceof OMEROROICollection);
 		assertNull(ijDN.parent());
 
-		final OMERORoiCollection ijORC = (OMERORoiCollection) ijDN;
+		final OMEROROICollection ijORC = (OMEROROICollection) ijDN;
 		assertEquals(92, ijORC.data().getId());
 
 		final List<TreeNode<?>> children = ijORC.children();
 		assertTrue(children.size() == 3);
 		for (final TreeNode<?> child : children)
-			assertTrue(child instanceof OMERORoiElement);
+			assertTrue(child instanceof OMEROROIElement);
 
-		final OMERORoiElement ijORE1 = (OMERORoiElement) children.get(0);
-		assertTrue(ijORE1.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE1 = (OMEROROIElement) children.get(0);
+		assertTrue(ijORE1.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE1.children().isEmpty());
 		assertTrue(ijORE1.data() instanceof OMEROPoint);
 
-		final OMERORoiElement ijORE2 = (OMERORoiElement) children.get(1);
-		assertTrue(ijORE2.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE2 = (OMEROROIElement) children.get(1);
+		assertTrue(ijORE2.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE2.children().isEmpty());
 		assertTrue(ijORE2.data() instanceof OMEROPoint);
 
-		final OMERORoiElement ijORE3 = (OMERORoiElement) children.get(2);
-		assertTrue(ijORE3.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE3 = (OMEROROIElement) children.get(2);
+		assertTrue(ijORE3.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE3.children().isEmpty());
 		assertTrue(ijORE3.data() instanceof OMERORectangle);
 	}
@@ -180,34 +180,34 @@ public class ROIDataToTreeNodeConversionTest {
 
 		final TreeNode<?> ijDN = convert.convert(omeroRoi, TreeNode.class);
 
-		assertTrue(ijDN instanceof OMERORoiCollection);
+		assertTrue(ijDN instanceof OMEROROICollection);
 		assertNull(ijDN.parent());
 
-		final OMERORoiCollection ijORC = (OMERORoiCollection) ijDN;
+		final OMEROROICollection ijORC = (OMEROROICollection) ijDN;
 		assertEquals(2, ijORC.data().getId());
 
 		final List<TreeNode<?>> children = ijORC.children();
 		assertTrue(children.size() == 4);
 		for (final TreeNode<?> child : children)
-			assertTrue(child instanceof OMERORoiElement);
+			assertTrue(child instanceof OMEROROIElement);
 
-		final OMERORoiElement ijORE1 = (OMERORoiElement) children.get(0);
-		assertTrue(ijORE1.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE1 = (OMEROROIElement) children.get(0);
+		assertTrue(ijORE1.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE1.children().isEmpty());
 		assertTrue(ijORE1.data() instanceof OMERORectangle);
 
-		final OMERORoiElement ijORE2 = (OMERORoiElement) children.get(1);
-		assertTrue(ijORE2.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE2 = (OMEROROIElement) children.get(1);
+		assertTrue(ijORE2.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE2.children().isEmpty());
 		assertTrue(ijORE2.data() instanceof OMERORectangle);
 
-		final OMERORoiElement ijORE3 = (OMERORoiElement) children.get(2);
-		assertTrue(ijORE3.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE3 = (OMEROROIElement) children.get(2);
+		assertTrue(ijORE3.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE3.children().isEmpty());
 		assertTrue(ijORE3.data() instanceof OMERORectangle);
 
-		final OMERORoiElement ijORE4 = (OMERORoiElement) children.get(3);
-		assertTrue(ijORE4.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE4 = (OMEROROIElement) children.get(3);
+		assertTrue(ijORE4.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE4.children().isEmpty());
 		assertTrue(ijORE4.data() instanceof OMERORectangle);
 	}
@@ -218,25 +218,25 @@ public class ROIDataToTreeNodeConversionTest {
 		omeroRoi.setId(98);
 		final EllipseData e = new EllipseData(10, 10, 2, 2);
 		e.setId(798);
-		e.setText(RoiConverters.OPEN_BOUNDARY_TEXT);
+		e.setText(ROIConverters.OPEN_BOUNDARY_TEXT);
 		e.setZ(0);
 		e.setT(0);
 		omeroRoi.addShapeData(e);
 
 		final TreeNode<?> ijDN = convert.convert(omeroRoi, TreeNode.class);
 
-		assertTrue(ijDN instanceof OMERORoiCollection);
+		assertTrue(ijDN instanceof OMEROROICollection);
 		assertNull(ijDN.parent());
 
-		final OMERORoiCollection ijORC = (OMERORoiCollection) ijDN;
+		final OMEROROICollection ijORC = (OMEROROICollection) ijDN;
 		assertEquals(98, ijORC.data().getId());
 
 		final List<TreeNode<?>> children = ijORC.children();
 		assertTrue(children.size() == 1);
-		assertTrue(children.get(0) instanceof OMERORoiElement);
+		assertTrue(children.get(0) instanceof OMEROROIElement);
 
-		final OMERORoiElement ijORE = (OMERORoiElement) children.get(0);
-		assertTrue(ijORE.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE = (OMEROROIElement) children.get(0);
+		assertTrue(ijORE.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE.children().isEmpty());
 		assertTrue(ijORE.data() instanceof OpenOMEROEllipse);
 	}
@@ -260,18 +260,18 @@ public class ROIDataToTreeNodeConversionTest {
 
 		final TreeNode<?> ijDN = convert.convert(omeroRoi, TreeNode.class);
 
-		assertTrue(ijDN instanceof OMERORoiCollection);
+		assertTrue(ijDN instanceof OMEROROICollection);
 		assertNull(ijDN.parent());
 
-		final OMERORoiCollection ijORC = (OMERORoiCollection) ijDN;
+		final OMEROROICollection ijORC = (OMEROROICollection) ijDN;
 		assertEquals(34, ijORC.data().getId());
 
 		final List<TreeNode<?>> children = ijORC.children();
 		assertTrue(children.size() == 1);
-		assertTrue(children.get(0) instanceof OMERORoiElement);
+		assertTrue(children.get(0) instanceof OMEROROIElement);
 
-		final OMERORoiElement ijORE = (OMERORoiElement) children.get(0);
-		assertTrue(ijORE.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE = (OMEROROIElement) children.get(0);
+		assertTrue(ijORE.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE.children().isEmpty());
 		assertTrue(ijORE.data() instanceof TransformedOMERORealMaskRealInterval);
 
@@ -309,19 +309,19 @@ public class ROIDataToTreeNodeConversionTest {
 
 		final TreeNode<?> ijDN = convert.convert(omeroRoi, TreeNode.class);
 
-		assertTrue(ijDN instanceof OMERORoiCollection);
+		assertTrue(ijDN instanceof OMEROROICollection);
 		assertNull(ijDN.parent());
 
-		final OMERORoiCollection ijORC = (OMERORoiCollection) ijDN;
+		final OMEROROICollection ijORC = (OMEROROICollection) ijDN;
 		assertEquals(34, ijORC.data().getId());
 
 		final List<TreeNode<?>> children = ijORC.children();
 		assertTrue(children.size() == 3);
 		for (final TreeNode<?> child : children)
-			assertTrue(child instanceof OMERORoiElement);
+			assertTrue(child instanceof OMEROROIElement);
 
-		final OMERORoiElement ijORE = (OMERORoiElement) children.get(0);
-		assertTrue(ijORE.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE = (OMEROROIElement) children.get(0);
+		assertTrue(ijORE.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE.children().isEmpty());
 		assertTrue(ijORE.data() instanceof TransformedOMERORealMaskRealInterval);
 
@@ -331,13 +331,13 @@ public class ROIDataToTreeNodeConversionTest {
 		// NB: Don't call getSource(), this returns the transformed interval only!
 		assertTrue(ijTransformed.arg0() instanceof OMERORectangle);
 
-		final OMERORoiElement ijORE2 = (OMERORoiElement) children.get(1);
-		assertTrue(ijORE2.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE2 = (OMEROROIElement) children.get(1);
+		assertTrue(ijORE2.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE2.children().isEmpty());
 		assertTrue(ijORE2.data() instanceof OMEROEllipse);
 
-		final OMERORoiElement ijORE3 = (OMERORoiElement) children.get(2);
-		assertTrue(ijORE3.parent() instanceof OMERORoiCollection);
+		final OMEROROIElement ijORE3 = (OMEROROIElement) children.get(2);
+		assertTrue(ijORE3.parent() instanceof OMEROROICollection);
 		assertTrue(ijORE3.children().isEmpty());
 		assertTrue(ijORE3.data() instanceof OMEROEllipse);
 	}

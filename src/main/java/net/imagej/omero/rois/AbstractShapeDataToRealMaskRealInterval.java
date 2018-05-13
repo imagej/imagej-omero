@@ -68,9 +68,9 @@ public abstract class AbstractShapeDataToRealMaskRealInterval<S extends ShapeDat
 	// -- Helper methods --
 
 	private BoundaryType boundaryType(final String omeroTextValue) {
-		if (omeroTextValue.contains(RoiConverters.OPEN_BOUNDARY_TEXT))
+		if (omeroTextValue.contains(ROIConverters.OPEN_BOUNDARY_TEXT))
 			return BoundaryType.OPEN;
-		if (omeroTextValue.contains(RoiConverters.UNSPECIFIED_BOUNDARY_TEXT))
+		if (omeroTextValue.contains(ROIConverters.UNSPECIFIED_BOUNDARY_TEXT))
 			return BoundaryType.UNSPECIFIED;
 		return BoundaryType.CLOSED;
 	}

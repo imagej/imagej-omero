@@ -29,31 +29,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.imagej.axis.TypedAxis;
-import net.imagej.omero.rois.project.DefaultOMERORoiProjector;
+import net.imagej.omero.rois.project.DefaultOMEROROIProjector;
 import net.imagej.space.TypedSpace;
 
 import org.scijava.util.TreeNode;
 
 /**
- * Default implementation of {@link OMERORoiElement}.
+ * Default implementation of {@link OMEROROIElement}.
  *
  * @author Alison Walter
  */
-public class DefaultOMERORoiElement implements OMERORoiElement {
+public class DefaultOMEROROIElement implements OMEROROIElement {
 
 	private final OMERORealMask<?> source;
 	private TreeNode<?> parent;
 	private final List<TreeNode<?>> children;
-	private final DefaultOMERORoiProjector projector;
+	private final DefaultOMEROROIProjector projector;
 
-	public DefaultOMERORoiElement(final OMERORealMask<?> source,
+	public DefaultOMEROROIElement(final OMERORealMask<?> source,
 		final TreeNode<?> parent, final List<TreeNode<?>> children)
 	{
 		this.source = source;
 		this.parent = parent;
 		if (children == null) this.children = new ArrayList<>();
 		else this.children = children;
-		this.projector = new DefaultOMERORoiProjector();
+		this.projector = new DefaultOMEROROIProjector();
 	}
 
 	@Override

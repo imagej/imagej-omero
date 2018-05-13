@@ -46,13 +46,13 @@ import omero.model.Roi;
 import omero.model.TagAnnotationI;
 
 /**
- * Converts an {@link OMERORoiElement} to {@link ROIData}.
+ * Converts an {@link OMEROROIElement} to {@link ROIData}.
  *
  * @author Alison Walter
  */
 @Plugin(type = Converter.class, priority = Priority.HIGH)
-public class OMERORoiElementToROIData extends
-	AbstractConverter<OMERORoiElement, ROIData>
+public class OMEROROIElementToROIData extends
+	AbstractConverter<OMEROROIElement, ROIData>
 {
 
 	@Parameter
@@ -77,22 +77,22 @@ public class OMERORoiElementToROIData extends
 				.getSimpleName() + " Received: " + dest.getSimpleName());
 		}
 
-		final OMERORoiElement ore = (OMERORoiElement) src;
+		final OMEROROIElement ore = (OMEROROIElement) src;
 		final ROIData r = new ROIData();
-		if (ore.parent() instanceof OMERORoiCollection) {
+		if (ore.parent() instanceof OMEROROICollection) {
 			final Roi parent = (Roi) ((ROIData) ore.parent().data())
 				.asIObject();
 			((Roi) r.asIObject()).setDescription(parent.getDescription());
 			((Roi) r.asIObject()).setName(parent.getName());
 		}
 
-		final ShapeData s = convert.convert(((OMERORoiElement) src).data(),
+		final ShapeData s = convert.convert(((OMEROROIElement) src).data(),
 			ShapeData.class);
 		r.addShapeData(s);
 
 		try {
 			final TagAnnotationI tag = omero.getAnnotation(
-				RoiConverters.IJO_VERSION_DESC, omero.getVersion());
+				ROIConverters.IJO_VERSION_DESC, omero.getVersion());
 
 			// created new ROIData so its already loaded, and annotation can just be
 			// attached
@@ -113,8 +113,8 @@ public class OMERORoiElementToROIData extends
 	}
 
 	@Override
-	public Class<OMERORoiElement> getInputType() {
-		return OMERORoiElement.class;
+	public Class<OMEROROIElement> getInputType() {
+		return OMEROROIElement.class;
 	}
 
 }

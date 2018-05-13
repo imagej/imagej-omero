@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.geom.real.ClosedWritableEllipsoid;
@@ -121,7 +121,7 @@ public class EllipseConversionTest {
 			0);
 		assertEquals(ijEllipse.semiAxisLength(0), omeroEllipse.getRadiusX(), 0);
 		assertEquals(ijEllipse.semiAxisLength(1), omeroEllipse.getRadiusY(), 0);
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, omeroEllipse.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, omeroEllipse.getText());
 		assertEquals(-1, omeroEllipse.getZ());
 		assertEquals(-1, omeroEllipse.getT());
 		assertEquals(-1, omeroEllipse.getC());
@@ -140,7 +140,7 @@ public class EllipseConversionTest {
 			0);
 		assertEquals(ijEllipse.semiAxisLength(0), omeroEllipse.getRadiusX(), 0);
 		assertEquals(ijEllipse.semiAxisLength(1), omeroEllipse.getRadiusY(), 0);
-		assertEquals(RoiConverters.OPEN_BOUNDARY_TEXT, omeroEllipse.getText());
+		assertEquals(ROIConverters.OPEN_BOUNDARY_TEXT, omeroEllipse.getText());
 		assertEquals(-1, omeroEllipse.getZ());
 		assertEquals(-1, omeroEllipse.getT());
 		assertEquals(-1, omeroEllipse.getC());
@@ -158,7 +158,7 @@ public class EllipseConversionTest {
 		assertEquals(omeroEllipse.getY(), unwrapped.getY(), 0);
 		assertEquals(omeroEllipse.getRadiusX(), unwrapped.getRadiusX(), 0);
 		assertEquals(omeroEllipse.getRadiusY(), unwrapped.getRadiusY(), 0);
-		assertEquals("ellipse " + RoiConverters.CLOSED_BOUNDARY_TEXT, unwrapped
+		assertEquals("ellipse " + ROIConverters.CLOSED_BOUNDARY_TEXT, unwrapped
 			.getText());
 		assertEquals(-1, unwrapped.getId());
 	}
@@ -166,14 +166,14 @@ public class EllipseConversionTest {
 	@Test
 	public void testEllipseDataWithTextValue() {
 		final EllipseData omeroEllipse = new EllipseData(13, 6, 2.5, 0.25);
-		omeroEllipse.setText("ellipse" + RoiConverters.OPEN_BOUNDARY_TEXT +
+		omeroEllipse.setText("ellipse" + ROIConverters.OPEN_BOUNDARY_TEXT +
 			" stuff");
 		final Ellipsoid ijEllipse = convert.convert(omeroEllipse, Ellipsoid.class);
 
 		assertEquals(ijEllipse.boundaryType(), BoundaryType.OPEN);
 
 		final EllipseData unwrapped = convert.convert(ijEllipse, EllipseData.class);
-		assertEquals("ellipse" + RoiConverters.OPEN_BOUNDARY_TEXT + " stuff",
+		assertEquals("ellipse" + ROIConverters.OPEN_BOUNDARY_TEXT + " stuff",
 			unwrapped.getText());
 	}
 }

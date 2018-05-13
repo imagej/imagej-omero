@@ -92,7 +92,7 @@ public abstract class AbstractMaskPredicateToShapeData<L, M extends MaskPredicat
 			throw new IllegalArgumentException("Expected: " + getOutputType()
 				.getSimpleName() + " Received: " + dest.getSimpleName());
 		}
-		return (T) convert((M) src, RoiConverters.createBoundaryTypeString(((M) src)
+		return (T) convert((M) src, ROIConverters.createBoundaryTypeString(((M) src)
 			.boundaryType()));
 	}
 

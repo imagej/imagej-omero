@@ -37,17 +37,17 @@ import omero.gateway.model.ROIData;
 import omero.gateway.model.ShapeData;
 
 /**
- * Default implementation of {@link OMERORoiCollection}.
+ * Default implementation of {@link OMEROROICollection}.
  *
  * @author Alison Walter
  */
-public class DefaultOMERORoiCollection implements OMERORoiCollection {
+public class DefaultOMEROROICollection implements OMEROROICollection {
 
 	private final ConvertService convert;
 	private final ROIData roi;
 	private TreeNode<?> parent;
 
-	public DefaultOMERORoiCollection(final TreeNode<?> parent,
+	public DefaultOMEROROICollection(final TreeNode<?> parent,
 		final ROIData omeroRoi, final ConvertService convert)
 	{
 		roi = omeroRoi;
@@ -55,7 +55,7 @@ public class DefaultOMERORoiCollection implements OMERORoiCollection {
 		this.convert = convert;
 	}
 
-	public DefaultOMERORoiCollection(final ROIData omeroRoi,
+	public DefaultOMEROROICollection(final ROIData omeroRoi,
 		final ConvertService convert)
 	{
 		roi = omeroRoi;
@@ -82,7 +82,7 @@ public class DefaultOMERORoiCollection implements OMERORoiCollection {
 			for (final ShapeData shape : shapes) {
 				final OMERORealMask<?> orm = convert.convert(shape,
 					OMERORealMask.class);
-				children.add(new DefaultOMERORoiElement(orm, this, null));
+				children.add(new DefaultOMEROROIElement(orm, this, null));
 			}
 		}
 		return Collections.unmodifiableList(children);

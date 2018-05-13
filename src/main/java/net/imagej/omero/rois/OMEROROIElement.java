@@ -11,54 +11,32 @@
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
  */
 
-package net.imagej.omero.rois.project;
-
-import java.util.Arrays;
+package net.imagej.omero.rois;
 
 import net.imagej.axis.TypedAxis;
-import net.imagej.omero.rois.OMERORealMask;
 import net.imagej.space.TypedSpace;
 
-import omero.gateway.model.ShapeData;
+import org.scijava.util.TreeNode;
 
 /**
- * Default implementation of {@link OMERORoiProjector}.
+ * Wraps an {@link OMERORealMask} which can be projected into a given space.
  *
  * @author Alison Walter
  */
-public class DefaultOMERORoiProjector implements
-	OMERORoiProjector<OMERORealMask<? extends ShapeData>, OMERORealMask<? extends ShapeData>>
-{
+public interface OMEROROIElement extends TreeNode<OMERORealMask<?>> {
 
-	@Override
-	public OMERORealMask<?> project(final OMERORealMask<?> source,
-		final TypedSpace<? extends TypedAxis> space)
-	{
-		if (space.numDimensions() < 2 || !hasRequiredAxes(source, space))
-			throw new IllegalArgumentException(
-				"Space must have an X and Y dimension");
-
-		return new ProjectedOMERORealMask<>(source, space);
-	}
-
-	// -- Helper methods --
-
-	private <A extends TypedAxis> boolean hasRequiredAxes(
-		final OMERORealMask<?> source, final TypedSpace<A> space)
-	{
-		return !Arrays.stream(source.requiredAxisTypes()).anyMatch(required -> space
-			.dimensionIndex(required) < 0);
-	}
+	OMERORealMask<?> projectIntoSpace(
+		final TypedSpace<? extends TypedAxis> space);
 }

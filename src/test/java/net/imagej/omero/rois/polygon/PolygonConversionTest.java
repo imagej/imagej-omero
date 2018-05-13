@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.geom.real.ClosedWritablePolygon2D;
@@ -128,7 +128,7 @@ public class PolygonConversionTest {
 		final PolygonData omeroPolygon = convert.convert(ijPolygon,
 			PolygonData.class);
 
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, omeroPolygon.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, omeroPolygon.getText());
 
 		final List<Point2D.Double> omeroPolyPts = omeroPolygon.getPoints();
 		assertEquals(ijPolygon.numVertices(), omeroPolyPts.size());
@@ -148,7 +148,7 @@ public class PolygonConversionTest {
 		final PolygonData omeroPolygon = convert.convert(ijPolygon,
 			PolygonData.class);
 
-		assertEquals(RoiConverters.OPEN_BOUNDARY_TEXT, omeroPolygon.getText());
+		assertEquals(ROIConverters.OPEN_BOUNDARY_TEXT, omeroPolygon.getText());
 
 		final List<Point2D.Double> omeroPolyPts = omeroPolygon.getPoints();
 		assertEquals(ijPolygon.numVertices(), omeroPolyPts.size());
@@ -168,7 +168,7 @@ public class PolygonConversionTest {
 		final PolygonData omeroPolygon = convert.convert(ijPolygon,
 			PolygonData.class);
 
-		assertEquals(RoiConverters.UNSPECIFIED_BOUNDARY_TEXT, omeroPolygon
+		assertEquals(ROIConverters.UNSPECIFIED_BOUNDARY_TEXT, omeroPolygon
 			.getText());
 
 		final List<Point2D.Double> omeroPolyPts = omeroPolygon.getPoints();
@@ -204,7 +204,7 @@ public class PolygonConversionTest {
 				0);
 		}
 		assertEquals(-1, unwrapped.getId());
-		assertEquals("Polygon " + RoiConverters.OPEN_BOUNDARY_TEXT, unwrapped
+		assertEquals("Polygon " + ROIConverters.OPEN_BOUNDARY_TEXT, unwrapped
 			.getText());
 	}
 
@@ -212,13 +212,13 @@ public class PolygonConversionTest {
 	public void testPolygonDataWithTextValue() {
 		final PolygonData omeroPolygon = new PolygonData();
 		omeroPolygon.setText("ij-bt[C]polygon " +
-			RoiConverters.UNSPECIFIED_BOUNDARY_TEXT + " stuff");
+			ROIConverters.UNSPECIFIED_BOUNDARY_TEXT + " stuff");
 		final Polygon2D ijPolygon = convert.convert(omeroPolygon, Polygon2D.class);
 
 		assertEquals(ijPolygon.boundaryType(), BoundaryType.UNSPECIFIED);
 
 		final PolygonData unwrapped = convert.convert(ijPolygon, PolygonData.class);
-		assertEquals("ij-bt[C]polygon " + RoiConverters.UNSPECIFIED_BOUNDARY_TEXT +
+		assertEquals("ij-bt[C]polygon " + ROIConverters.UNSPECIFIED_BOUNDARY_TEXT +
 			" stuff", unwrapped.getText());
 	}
 }

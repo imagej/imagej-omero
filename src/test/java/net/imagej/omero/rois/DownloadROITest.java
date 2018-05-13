@@ -126,14 +126,14 @@ public class DownloadROITest {
 		final List<TreeNode<?>> dn = service.downloadROIs(location, 1);
 
 		assertEquals(1, dn.size());
-		assertTrue(dn.get(0) instanceof OMERORoiCollection);
+		assertTrue(dn.get(0) instanceof OMEROROICollection);
 
-		final OMERORoiCollection orc = (OMERORoiCollection) dn.get(0);
+		final OMEROROICollection orc = (OMEROROICollection) dn.get(0);
 		final List<TreeNode<?>> children = orc.children();
 		assertEquals(1, children.size());
-		assertTrue(children.get(0) instanceof OMERORoiElement);
+		assertTrue(children.get(0) instanceof OMEROROIElement);
 
-		final OMERORoiElement ore = (OMERORoiElement) children.get(0);
+		final OMEROROIElement ore = (OMEROROIElement) children.get(0);
 		assertTrue(ore.data() instanceof Ellipsoid);
 	}
 
@@ -153,9 +153,9 @@ public class DownloadROITest {
 
 		assertEquals(3, dn.size());
 		for (int i = 0; i < dn.size(); i++) {
-			assertTrue(dn.get(i) instanceof OMERORoiCollection);
+			assertTrue(dn.get(i) instanceof OMEROROICollection);
 			assertEquals(1, dn.get(i).children().size());
-			assertTrue(dn.get(i).children().get(0) instanceof OMERORoiElement);
+			assertTrue(dn.get(i).children().get(0) instanceof OMEROROIElement);
 		}
 
 		assertTrue(dn.get(0).children().get(0).data() instanceof Ellipsoid);
@@ -180,13 +180,13 @@ public class DownloadROITest {
 		final List<TreeNode<?>> dn = service.downloadROIs(location, 1);
 
 		assertEquals(1, dn.size());
-		assertTrue(dn.get(0) instanceof OMERORoiCollection);
+		assertTrue(dn.get(0) instanceof OMEROROICollection);
 
 		final List<TreeNode<?>> children = dn.get(0).children();
 		assertEquals(5, children.size());
 
 		for (final TreeNode<?> child : children) {
-			assertTrue(child instanceof OMERORoiElement);
+			assertTrue(child instanceof OMEROROIElement);
 			assertTrue(child.data() instanceof Box);
 		}
 	}
@@ -214,9 +214,9 @@ public class DownloadROITest {
 		assertEquals(5, dn.size());
 
 		for (final TreeNode<?> node : dn) {
-			assertTrue(node instanceof OMERORoiCollection);
+			assertTrue(node instanceof OMEROROICollection);
 			for (final TreeNode<?> child : node.children())
-				assertTrue(child instanceof OMERORoiElement);
+				assertTrue(child instanceof OMEROROIElement);
 		}
 
 		assertEquals(3, dn.get(0).children().size());
@@ -256,14 +256,14 @@ public class DownloadROITest {
 		final List<TreeNode<?>> dn = service.downloadROIs(location, 1);
 
 		assertEquals(1, dn.size());
-		assertTrue(dn.get(0) instanceof OMERORoiCollection);
+		assertTrue(dn.get(0) instanceof OMEROROICollection);
 
-		final OMERORoiCollection orc = (OMERORoiCollection) dn.get(0);
+		final OMEROROICollection orc = (OMEROROICollection) dn.get(0);
 		final List<TreeNode<?>> children = orc.children();
 		assertEquals(1, children.size());
-		assertTrue(children.get(0) instanceof OMERORoiElement);
+		assertTrue(children.get(0) instanceof OMEROROIElement);
 
-		final OMERORoiElement ore = (OMERORoiElement) children.get(0);
+		final OMEROROIElement ore = (OMEROROIElement) children.get(0);
 		assertTrue(ore.data() instanceof TransformedOMERORealMaskRealInterval);
 	}
 
@@ -294,14 +294,14 @@ public class DownloadROITest {
 
 		final TreeNode<?> dn = service.downloadROI(location, 1);
 
-		assertTrue(dn instanceof OMERORoiCollection);
+		assertTrue(dn instanceof OMEROROICollection);
 
-		final OMERORoiCollection orc = (OMERORoiCollection) dn;
+		final OMEROROICollection orc = (OMEROROICollection) dn;
 		final List<TreeNode<?>> children = orc.children();
 		assertEquals(1, children.size());
-		assertTrue(children.get(0) instanceof OMERORoiElement);
+		assertTrue(children.get(0) instanceof OMEROROIElement);
 
-		final OMERORoiElement ore = (OMERORoiElement) children.get(0);
+		final OMEROROIElement ore = (OMEROROIElement) children.get(0);
 		assertTrue(ore.data() instanceof Ellipsoid);
 	}
 
@@ -321,13 +321,13 @@ public class DownloadROITest {
 
 		final TreeNode<?> dn = service.downloadROI(location, 1);
 
-		assertTrue(dn instanceof OMERORoiCollection);
+		assertTrue(dn instanceof OMEROROICollection);
 
 		final List<TreeNode<?>> children = dn.children();
 		assertEquals(5, children.size());
 
 		for (final TreeNode<?> child : children) {
-			assertTrue(child instanceof OMERORoiElement);
+			assertTrue(child instanceof OMEROROIElement);
 			assertTrue(child.data() instanceof Box);
 		}
 	}

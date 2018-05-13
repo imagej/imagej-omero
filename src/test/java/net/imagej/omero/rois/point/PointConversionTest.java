@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.geom.real.DefaultWritablePointMask;
 import net.imglib2.roi.geom.real.PointMask;
@@ -109,7 +109,7 @@ public class PointConversionTest {
 
 		assertEquals(ijPoint.getDoublePosition(0), omeroPoint.getX(), 0);
 		assertEquals(ijPoint.getDoublePosition(1), omeroPoint.getY(), 0);
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, omeroPoint.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, omeroPoint.getText());
 	}
 
 	@Test
@@ -120,7 +120,7 @@ public class PointConversionTest {
 		final PointData unwrap = convert.convert(wrap, PointData.class);
 
 		assertEquals(-1, unwrap.getId());
-		assertEquals(RoiConverters.CLOSED_BOUNDARY_TEXT, unwrap.getText());
+		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, unwrap.getText());
 	}
 
 	@Test
@@ -133,7 +133,7 @@ public class PointConversionTest {
 		assertEquals(BoundaryType.CLOSED, ijPoint.boundaryType());
 
 		final PointData unwrap = convert.convert(ijPoint, PointData.class);
-		assertEquals("Point " + RoiConverters.CLOSED_BOUNDARY_TEXT, unwrap
+		assertEquals("Point " + ROIConverters.CLOSED_BOUNDARY_TEXT, unwrap
 			.getText());
 	}
 }

@@ -25,18 +25,16 @@
 
 package net.imagej.omero.rois;
 
-import net.imagej.axis.TypedAxis;
-import net.imagej.space.TypedSpace;
-
 import org.scijava.util.TreeNode;
 
+import omero.gateway.model.ROIData;
+
 /**
- * Wraps an {@link OMERORealMask} which can be projected into a given space.
+ * Wraps an OMERO {@link ROIData} object. The children should be
+ * {@link OMEROROIElement}s.
  *
  * @author Alison Walter
  */
-public interface OMERORoiElement extends TreeNode<OMERORealMask<?>> {
-
-	OMERORealMask<?> projectIntoSpace(
-		final TypedSpace<? extends TypedAxis> space);
+public interface OMEROROICollection extends TreeNode<ROIData> {
+	// NB: Marker interface
 }

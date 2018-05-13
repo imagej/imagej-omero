@@ -136,9 +136,9 @@ public class TreeNodeToROIDataConversionTest {
 			new RealTransformMaskOperator(new AffineTransform2D()));
 		final ROIData rd = new ROIData();
 		rd.addShapeData(rect);
-		final OMERORoiCollection orc = new DefaultOMERORoiCollection(null, rd,
+		final OMEROROICollection orc = new DefaultOMEROROICollection(null, rd,
 			convert);
-		final OMERORoiElement ore = (OMERORoiElement) orc.children().get(0);
+		final OMEROROIElement ore = (OMEROROIElement) orc.children().get(0);
 		final TypedSpace<TypedAxis> omeroSpace = new DefaultTypedSpace(
 			new DefaultTypedAxis(Axes.X), new DefaultTypedAxis(Axes.Y),
 			new DefaultTypedAxis(Axes.Z), new DefaultTypedAxis(Axes.TIME),
@@ -154,9 +154,9 @@ public class TreeNodeToROIDataConversionTest {
 
 		// check TreeNode matching
 		assertTrue(convert.getHandler(orc,
-			ROIData.class) instanceof OMERORoiCollectionToROIData);
+			ROIData.class) instanceof OMEROROICollectionToROIData);
 		assertTrue(convert.getHandler(ore,
-			ROIData.class) instanceof OMERORoiElementToROIData);
+			ROIData.class) instanceof OMEROROIElementToROIData);
 		assertTrue(convert.getHandler(new DefaultTreeNode<>(b, null),
 			ROIData.class) instanceof TreeNodeMaskPredicateToROIData);
 
@@ -188,7 +188,7 @@ public class TreeNodeToROIDataConversionTest {
 		assertTrue(omeroRoi.getIterator().next().get(0) instanceof RectangleData);
 
 		assertShapeDataConversionCorrect((RectangleData) omeroRoi.getIterator()
-			.next().get(0), -1, -1, -1, RoiConverters.OPEN_BOUNDARY_TEXT);
+			.next().get(0), -1, -1, -1, ROIConverters.OPEN_BOUNDARY_TEXT);
 
 		assertROIDataConversionCorrect(omeroRoi);
 	}
@@ -219,7 +219,7 @@ public class TreeNodeToROIDataConversionTest {
 		r.addShape((Shape) rdThree.asIObject());
 		final ROIData rd = new ROIData(r);
 
-		final OMERORoiCollection orc = new DefaultOMERORoiCollection(null, rd,
+		final OMEROROICollection orc = new DefaultOMEROROICollection(null, rd,
 			convert);
 
 		final ROIData crd = convert.convert(orc, ROIData.class);
@@ -233,13 +233,13 @@ public class TreeNodeToROIDataConversionTest {
 
 		assertShapeDataConversionCorrect((RectangleData) crd.getShapes(0, 0).get(0),
 			rdOne.getZ(), rdOne.getT(), rdOne.getC(),
-			RoiConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT);
 		assertShapeDataConversionCorrect((RectangleData) crd.getShapes(0, 1).get(0),
 			rdTwo.getZ(), rdTwo.getT(), rdTwo.getC(),
-			RoiConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT);
 		assertShapeDataConversionCorrect((RectangleData) crd.getShapes(0, 2).get(0),
 			rdThree.getZ(), rdThree.getT(), rdThree.getC(),
-			RoiConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT);
 	}
 
 	@Test
@@ -268,7 +268,7 @@ public class TreeNodeToROIDataConversionTest {
 		r.addShape((Shape) rdThree.asIObject());
 		final ROIData rd = new ROIData(r);
 
-		final OMERORoiCollection orc = new DefaultOMERORoiCollection(null, rd,
+		final OMEROROICollection orc = new DefaultOMEROROICollection(null, rd,
 			convert);
 		final List<TreeNode<?>> children = orc.children();
 
@@ -280,7 +280,7 @@ public class TreeNodeToROIDataConversionTest {
 
 		assertShapeDataConversionCorrect((RectangleData) crd.getIterator().next()
 			.get(0), rdOne.getZ(), rdOne.getT(), rdOne.getC(),
-			RoiConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT);
 	}
 
 	@Test
@@ -299,13 +299,13 @@ public class TreeNodeToROIDataConversionTest {
 		r.addShape((Shape) rect.asIObject());
 		final ROIData rd = new ROIData(r);
 
-		final OMERORoiCollection orc = new DefaultOMERORoiCollection(null, rd,
+		final OMEROROICollection orc = new DefaultOMEROROICollection(null, rd,
 			convert);
 		final TypedSpace<TypedAxis> omeroSpace = new DefaultTypedSpace(
 			new DefaultTypedAxis(Axes.X), new DefaultTypedAxis(Axes.Y),
 			new DefaultTypedAxis(Axes.Z), new DefaultTypedAxis(Axes.TIME),
 			new DefaultTypedAxis(Axes.CHANNEL));
-		final OMERORealMask<?> projected = ((OMERORoiElement) orc.children().get(0))
+		final OMERORealMask<?> projected = ((OMEROROIElement) orc.children().get(0))
 			.projectIntoSpace(omeroSpace);
 
 		final ROIData crd = convert.convert(new DefaultTreeNode<>(projected, null),
@@ -317,7 +317,7 @@ public class TreeNodeToROIDataConversionTest {
 
 		assertShapeDataConversionCorrect((RectangleData) crd.getIterator().next()
 			.get(0), rect.getZ(), rect.getT(), rect.getC(),
-			RoiConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT);
 	}
 
 	@Test
@@ -338,7 +338,7 @@ public class TreeNodeToROIDataConversionTest {
 
 		assertShapeDataConversionCorrect((EllipseData) crd.getIterator().next().get(
 			0), projected.getZPosition(), projected.getTimePosition(), projected
-				.getChannelPosition(), RoiConverters.OPEN_BOUNDARY_TEXT);
+				.getChannelPosition(), ROIConverters.OPEN_BOUNDARY_TEXT);
 	}
 
 	@Test
@@ -367,7 +367,7 @@ public class TreeNodeToROIDataConversionTest {
 
 		final EllipseData ced = (EllipseData) crd.getIterator().next().get(0);
 		assertShapeDataConversionCorrect(ced, -1, -1, -1,
-			RoiConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT);
 
 		// NB: OMERO transforms are fromSource and ImageJ transforms are toSource.
 		// And we transformed the original ellipsoid with the inverse of rot.
@@ -405,7 +405,7 @@ public class TreeNodeToROIDataConversionTest {
 		r.addShape((Shape) rect.asIObject());
 		final ROIData rd = new ROIData(r);
 
-		final OMERORoiCollection orc = new DefaultOMERORoiCollection(null, rd,
+		final OMEROROICollection orc = new DefaultOMEROROICollection(null, rd,
 			convert);
 		final ROIData crd = convert.convert(orc, ROIData.class);
 
@@ -415,7 +415,7 @@ public class TreeNodeToROIDataConversionTest {
 
 		final RectangleData cRect = (RectangleData) crd.getIterator().next().get(0);
 		assertShapeDataConversionCorrect(cRect, rect.getZ(), rect.getT(), rect
-			.getC(), RoiConverters.CLOSED_BOUNDARY_TEXT);
+			.getC(), ROIConverters.CLOSED_BOUNDARY_TEXT);
 
 		assertEquals(transform.getA00().getValue(), cRect.getTransform().getA00()
 			.getValue(), 0);
@@ -456,7 +456,7 @@ public class TreeNodeToROIDataConversionTest {
 		r.addShape((Shape) ed.asIObject());
 		final ROIData rd = new ROIData(r);
 
-		final OMERORoiCollection orc = new DefaultOMERORoiCollection(null, rd,
+		final OMEROROICollection orc = new DefaultOMEROROICollection(null, rd,
 			convert);
 
 		// Now pretend you want to transform this OMERO Roi again
@@ -477,9 +477,9 @@ public class TreeNodeToROIDataConversionTest {
 
 		final EllipseData ced = (EllipseData) crd.getIterator().next().get(0);
 		assertShapeDataConversionCorrect((EllipseData) crd.getIterator().next().get(
-			0), ed.getZ(), ed.getT(), ed.getC(), RoiConverters.CLOSED_BOUNDARY_TEXT);
+			0), ed.getZ(), ed.getT(), ed.getC(), ROIConverters.CLOSED_BOUNDARY_TEXT);
 
-		final AffineTransform2D targetTransform = ((AffineTransform2D) RoiConverters
+		final AffineTransform2D targetTransform = ((AffineTransform2D) ROIConverters
 			.createAffine(transform)).concatenate(rotate.inverse()).inverse();
 
 		assertEquals(targetTransform.get(0, 0), ced.getTransform().getA00()
@@ -508,7 +508,7 @@ public class TreeNodeToROIDataConversionTest {
 		assertEquals(1, anno.size());
 		assertTrue(anno.get(0).getChild() instanceof TagAnnotation);
 		final TagAnnotation tag = (TagAnnotation) anno.get(0).getChild();
-		assertEquals(RoiConverters.IJO_VERSION_DESC, tag.getDescription()
+		assertEquals(ROIConverters.IJO_VERSION_DESC, tag.getDescription()
 			.getValue());
 		assertEquals(imagejOmeroVersion, tag.getTextValue().getValue());
 	}
@@ -653,7 +653,7 @@ public class TreeNodeToROIDataConversionTest {
 			final String value) throws ExecutionException, ServerError,
 			DSOutOfServiceException, DSAccessException
 		{
-			if (description == RoiConverters.IJO_VERSION_DESC) {
+			if (description == ROIConverters.IJO_VERSION_DESC) {
 				final TagAnnotationI tag = new TagAnnotationI();
 				tag.setDescription(omero.rtypes.rstring(description));
 				tag.setTextValue(omero.rtypes.rstring(value));

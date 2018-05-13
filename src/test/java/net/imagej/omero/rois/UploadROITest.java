@@ -124,7 +124,7 @@ public class UploadROITest {
 
 		tags = new ArrayList<>();
 		final TagAnnotationData t = new TagAnnotationData(service.getVersion());
-		t.setDescription(RoiConverters.IJO_VERSION_DESC);
+		t.setDescription(ROIConverters.IJO_VERSION_DESC);
 		tags.add(t.asIObject());
 	}
 
@@ -207,7 +207,7 @@ public class UploadROITest {
 		r.addShape((Shape) rdOne.asIObject());
 		r.addShape((Shape) rdTwo.asIObject());
 		final ROIData data = new ROIData(r);
-		final OMERORoiCollection orc = new DefaultOMERORoiCollection(null, data,
+		final OMEROROICollection orc = new DefaultOMEROROICollection(null, data,
 			service.getContext().getService(ConvertService.class));
 		setUpMethodCalls(false, 1);
 
@@ -250,7 +250,7 @@ public class UploadROITest {
 		r.addShape((Shape) rdOne.asIObject());
 		r.addShape((Shape) rdTwo.asIObject());
 		final ROIData data = new ROIData(r);
-		final OMERORoiCollection orc = new DefaultOMERORoiCollection(null, data,
+		final OMEROROICollection orc = new DefaultOMEROROICollection(null, data,
 			service.getContext().getService(ConvertService.class));
 		final TreeNode<?> ore = orc.children().get(1);
 		setUpMethodCalls(false, 1);

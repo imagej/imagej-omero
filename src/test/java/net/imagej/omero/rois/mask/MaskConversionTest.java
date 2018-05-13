@@ -31,7 +31,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.FinalInterval;
 import net.imglib2.Point;
 import net.imglib2.RealPoint;
@@ -135,7 +135,7 @@ public class MaskConversionTest {
 			KnownConstant.UNKNOWN);
 		final MaskData omeroMask = convert.convert(ijMask, MaskData.class);
 
-		assertEquals(RoiConverters.UNSPECIFIED_BOUNDARY_TEXT, omeroMask.getText());
+		assertEquals(ROIConverters.UNSPECIFIED_BOUNDARY_TEXT, omeroMask.getText());
 		assertEquals(ijMask.min(0), omeroMask.getX(), 0);
 		assertEquals(ijMask.min(1), omeroMask.getY(), 0);
 		assertEquals(ijMask.max(0), omeroMask.getX() + omeroMask.getWidth(), 0);
@@ -168,7 +168,7 @@ public class MaskConversionTest {
 			KnownConstant.UNKNOWN);
 		final MaskData omeroMask = convert.convert(ijMask, MaskData.class);
 
-		assertEquals(RoiConverters.UNSPECIFIED_BOUNDARY_TEXT, omeroMask.getText());
+		assertEquals(ROIConverters.UNSPECIFIED_BOUNDARY_TEXT, omeroMask.getText());
 		assertEquals(ijMask.min(0), omeroMask.getX(), 0);
 		assertEquals(ijMask.min(1), omeroMask.getY(), 0);
 		assertEquals(ijMask.max(0), omeroMask.getX() + omeroMask.getWidth(), 0);
@@ -198,7 +198,7 @@ public class MaskConversionTest {
 
 		assertArrayEquals(omeroMask.getMask(), unwrap.getMask());
 		assertEquals(-1, unwrap.getId());
-		assertEquals("text " + RoiConverters.UNSPECIFIED_BOUNDARY_TEXT, unwrap
+		assertEquals("text " + ROIConverters.UNSPECIFIED_BOUNDARY_TEXT, unwrap
 			.getText());
 	}
 
@@ -207,14 +207,14 @@ public class MaskConversionTest {
 		final MaskData omeroMask = new MaskData(0, 0, 20, 4, new byte[] { -10, 8, 0,
 			100, 36, 92, 12, -126, -7, 9 });
 		omeroMask.setId(89);
-		omeroMask.setText("text " + RoiConverters.CLOSED_BOUNDARY_TEXT);
+		omeroMask.setText("text " + ROIConverters.CLOSED_BOUNDARY_TEXT);
 
 		final RealMaskRealInterval ijMask = convert.convert(omeroMask,
 			RealMaskRealInterval.class);
 		assertEquals(BoundaryType.UNSPECIFIED, ijMask.boundaryType());
 
 		final MaskData unwrap = convert.convert(ijMask, MaskData.class);
-		assertEquals("text " + RoiConverters.UNSPECIFIED_BOUNDARY_TEXT, unwrap
+		assertEquals("text " + ROIConverters.UNSPECIFIED_BOUNDARY_TEXT, unwrap
 			.getText());
 	}
 }

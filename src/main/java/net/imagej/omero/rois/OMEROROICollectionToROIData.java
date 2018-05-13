@@ -57,13 +57,13 @@ import omero.model.Shape;
 import omero.model.TagAnnotationI;
 
 /**
- * Converts an {@link OMERORoiCollection} to {@link ROIData}.
+ * Converts an {@link OMEROROICollection} to {@link ROIData}.
  *
  * @author Alison Walter
  */
 @Plugin(type = Converter.class, priority = Priority.HIGH)
-public class OMERORoiCollectionToROIData extends
-	AbstractConverter<OMERORoiCollection, ROIData>
+public class OMEROROICollectionToROIData extends
+	AbstractConverter<OMEROROICollection, ROIData>
 {
 
 	@Parameter
@@ -85,7 +85,7 @@ public class OMERORoiCollectionToROIData extends
 				.getSimpleName() + " Received: " + dest.getSimpleName());
 		}
 
-		final ROIData r = ((OMERORoiCollection) src).data();
+		final ROIData r = ((OMEROROICollection) src).data();
 		final Iterator<List<ShapeData>> itr = r.getIterator();
 
 		while (itr.hasNext()) {
@@ -111,8 +111,8 @@ public class OMERORoiCollectionToROIData extends
 	}
 
 	@Override
-	public Class<OMERORoiCollection> getInputType() {
-		return OMERORoiCollection.class;
+	public Class<OMEROROICollection> getInputType() {
+		return OMEROROICollection.class;
 	}
 
 	// -- Helper methods --
@@ -128,10 +128,10 @@ public class OMERORoiCollectionToROIData extends
 	 */
 	private String generateBoundaryTypeString(final ShapeData shape) {
 		final String currentText = getTextValue(shape);
-		if (currentText.contains(RoiConverters.CLOSED_BOUNDARY_TEXT) || currentText
-			.contains(RoiConverters.OPEN_BOUNDARY_TEXT) || currentText.contains(
-				RoiConverters.UNSPECIFIED_BOUNDARY_TEXT)) return currentText;
-		return currentText + RoiConverters.CLOSED_BOUNDARY_TEXT;
+		if (currentText.contains(ROIConverters.CLOSED_BOUNDARY_TEXT) || currentText
+			.contains(ROIConverters.OPEN_BOUNDARY_TEXT) || currentText.contains(
+				ROIConverters.UNSPECIFIED_BOUNDARY_TEXT)) return currentText;
+		return currentText + ROIConverters.CLOSED_BOUNDARY_TEXT;
 	}
 
 	/**
@@ -187,7 +187,7 @@ public class OMERORoiCollectionToROIData extends
 	private void linkAnnotation(final RoiI iObject) {
 		try {
 			final TagAnnotationI tag = omero.getAnnotation(
-				RoiConverters.IJO_VERSION_DESC, omero.getVersion());
+				ROIConverters.IJO_VERSION_DESC, omero.getVersion());
 
 			if (!iObject.isAnnotationLinksLoaded()) {
 				final RoiI loadedCopy = new RoiI(iObject.getId(), true);

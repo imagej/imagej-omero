@@ -28,7 +28,7 @@ package net.imagej.omero.rois.transform;
 import java.lang.reflect.Type;
 
 import net.imagej.omero.rois.OMERORealMaskRealInterval;
-import net.imagej.omero.rois.RoiConverters;
+import net.imagej.omero.rois.ROIConverters;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.roi.Bounds;
 import net.imglib2.roi.Operators.RealTransformMaskOperator;
@@ -107,7 +107,7 @@ public class ShapeDataToTransformedOMERORealMaskRealInterval extends
 		// Reset transform back to original
 		rmri.getShape().setTransform(copy);
 
-		final AffineGet transformToSource = RoiConverters.createAffine(copy);
+		final AffineGet transformToSource = ROIConverters.createAffine(copy);
 		return (T) new TransformedOMERORealMaskRealInterval<>(rmri,
 			new Bounds.RealTransformRealInterval(rmri, transformToSource),
 			new RealTransformMaskOperator(transformToSource));

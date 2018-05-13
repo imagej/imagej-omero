@@ -48,7 +48,7 @@ import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
-import net.imagej.omero.rois.OMERORoiCollection;
+import net.imagej.omero.rois.OMEROROICollection;
 import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
@@ -308,7 +308,7 @@ public class DefaultOMEROService extends AbstractService implements
 
 		// -- ROI cases --
 
-		if (value instanceof OMERORoiCollection) return convertService.convert(
+		if (value instanceof OMEROROICollection) return convertService.convert(
 			value, ROIData.class);
 		if ((value instanceof TreeNode && ((TreeNode<?>) value)
 			.data() instanceof MaskPredicate))
@@ -940,7 +940,7 @@ public class DefaultOMEROService extends AbstractService implements
 	private boolean checkROIList(final List<?> rois) {
 		if (rois.isEmpty()) return false;
 		for (Object o : rois) {
-			if (o instanceof OMERORoiCollection) continue;
+			if (o instanceof OMEROROICollection) continue;
 			else if (o instanceof TreeNode && ((TreeNode<?>) o)
 				.data() instanceof MaskPredicate) continue;
 			else if (o instanceof MaskPredicate) continue;

@@ -99,7 +99,7 @@ public abstract class AbstractTreeNodeToROIData<D extends TreeNode<?>> extends
 
 		try {
 			final TagAnnotationI tag = omero.getAnnotation(
-				RoiConverters.IJO_VERSION_DESC, omero.getVersion());
+				ROIConverters.IJO_VERSION_DESC, omero.getVersion());
 
 			// created new ROIData so its already loaded, and annotation can just be
 			// attached

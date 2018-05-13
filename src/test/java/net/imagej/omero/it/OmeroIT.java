@@ -44,7 +44,7 @@ import net.imagej.omero.DefaultOMEROSession;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
-import net.imagej.omero.rois.OMERORoiCollection;
+import net.imagej.omero.rois.OMEROROICollection;
 import net.imagej.table.ByteTable;
 import net.imagej.table.DefaultByteTable;
 import net.imagej.table.Table;
@@ -225,7 +225,7 @@ public class OmeroIT {
 		assertEquals(10, dns.size());
 
 		for (final TreeNode<?> dn : dns) {
-			assertTrue(dn instanceof OMERORoiCollection);
+			assertTrue(dn instanceof OMEROROICollection);
 			final List<TreeNode<?>> children = dn.children();
 			assertEquals(1, children.size());
 			assertTrue(children.get(0).data() instanceof PointMask);
@@ -238,7 +238,7 @@ public class OmeroIT {
 	{
 		final TreeNode<?> dn = omero.downloadROI(cred, 1);
 
-		assertTrue(dn instanceof OMERORoiCollection);
+		assertTrue(dn instanceof OMEROROICollection);
 		final List<TreeNode<?>> children = dn.children();
 		assertEquals(1, children.size());
 		assertTrue(children.get(0).data() instanceof PointMask);
