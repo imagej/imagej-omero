@@ -42,7 +42,7 @@ import org.scijava.convert.ConvertService;
 import org.scijava.convert.Converter;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.util.GenericUtils;
+import org.scijava.util.Types;
 
 import omero.gateway.model.ShapeData;
 
@@ -78,7 +78,7 @@ public class RealTransformUnaryCompositeRealMaskRealIntervalToShapeData extends
 		if (src instanceof RealTransformUnaryCompositeRealMaskRealInterval)
 			return canConvert(
 				(RealTransformUnaryCompositeRealMaskRealInterval) src) && canConvert(
-					srcClass, GenericUtils.getClass(dest));
+					srcClass, Types.raw(dest));
 		return false;
 	}
 
@@ -89,7 +89,7 @@ public class RealTransformUnaryCompositeRealMaskRealIntervalToShapeData extends
 		if (src instanceof RealTransformUnaryCompositeRealMaskRealInterval)
 			return canConvert(
 				(RealTransformUnaryCompositeRealMaskRealInterval) src) && canConvert(
-					srcClass, GenericUtils.getClass(dest));
+					srcClass, Types.raw(dest));
 		return false;
 	}
 

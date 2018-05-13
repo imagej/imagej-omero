@@ -74,10 +74,9 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
-import org.scijava.util.ClassUtils;
-import org.scijava.util.ConversionUtils;
 import org.scijava.util.DefaultTreeNode;
 import org.scijava.util.TreeNode;
+import org.scijava.util.Types;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
@@ -176,7 +175,7 @@ public class DefaultOMEROService extends AbstractService implements
 			.isAssignableFrom(type)) return omero.rtypes.rlong(0);
 
 		// primitive types
-		final Class<?> saneType = ConversionUtils.getNonprimitiveType(type);
+		final Class<?> saneType = Types.box(type);
 		if (Boolean.class.isAssignableFrom(saneType)) {
 			return omero.rtypes.rbool(false);
 		}
@@ -746,7 +745,7 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 
 		// special case for converting an OMERO image ID to an ImageJ image type
-		if (ClassUtils.isNumber(value.getClass())) {
+		if (Types.isNumber(value.getClass())) {
 			if (Dataset.class.isAssignableFrom(type)) {
 				final long imageID = ((Number) value).longValue();
 				// TODO: Consider consequences of this cast more carefully.

@@ -31,7 +31,7 @@ import net.imglib2.roi.MaskPredicate;
 
 import org.scijava.convert.AbstractConverter;
 import org.scijava.convert.ConversionRequest;
-import org.scijava.util.GenericUtils;
+import org.scijava.util.Types;
 
 import omero.gateway.model.ShapeData;
 
@@ -62,8 +62,7 @@ public abstract class AbstractMaskPredicateToShapeData<L, M extends MaskPredicat
 		final Class<?> srcClass = src.getClass();
 		if (src instanceof MaskPredicate) {
 			final MaskPredicate<L> m = (MaskPredicate<L>) src;
-			if (m.numDimensions() == 2) return canConvert(srcClass, GenericUtils
-				.getClass(dest));
+			if (m.numDimensions() == 2) return canConvert(srcClass, Types.raw(dest));
 		}
 		return false;
 	}
