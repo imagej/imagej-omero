@@ -122,6 +122,7 @@
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
+		<imagej-common.version>0.26.1</imagej-common.version>
 		<scijava-common.version>2.73.1</scijava-common.version>
 		<!-- Test configuration -->
 		<skipITs>true</skipITs>
