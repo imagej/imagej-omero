@@ -44,7 +44,7 @@ import net.imagej.omero.DefaultOMEROSession;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
-import net.imagej.omero.rois.OMEROROICollection;
+import net.imagej.omero.roi.OMEROROICollection;
 import net.imagej.table.ByteTable;
 import net.imagej.table.DefaultByteTable;
 import net.imagej.table.Table;
