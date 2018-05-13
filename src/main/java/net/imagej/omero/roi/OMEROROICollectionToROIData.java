@@ -93,14 +93,11 @@ public class OMEROROICollectionToROIData extends
 			for (final ShapeData shape : shapes) {
 				// Set boundary type, if not already specified
 				setTextValue(shape, generateBoundaryTypeString(shape));
-				// set ID to null, to ensure uploaded as new shape
-				((Shape) shape.asIObject()).setId(null);
 			}
 		}
 
 		final RoiI iObject = (RoiI) r.asIObject();
 		linkAnnotation(iObject);
-		iObject.setId(null); // ensure new copy uploaded to server
 
 		return (T) r;
 	}

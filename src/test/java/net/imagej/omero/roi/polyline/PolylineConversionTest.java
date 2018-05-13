@@ -162,7 +162,7 @@ public class PolylineConversionTest {
 		final OMEROPolyline wrap = new DefaultOMEROPolyline(omeroPolyline);
 		final PolylineData unwrap = convert.convert(wrap, PolylineData.class);
 
-		assertEquals(-1, unwrap.getId());
+		assertEquals(omeroPolyline.getId(), unwrap.getId());
 		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, unwrap.getText());
 
 		final List<Point2D.Double> omeroPolyPts = omeroPolyline.getPoints();

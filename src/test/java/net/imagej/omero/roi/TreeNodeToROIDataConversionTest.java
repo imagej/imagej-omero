@@ -196,9 +196,9 @@ public class TreeNodeToROIDataConversionTest {
 		assertTrue(omeroRoi.getIterator().next().get(0) instanceof RectangleData);
 
 		assertShapeDataConversionCorrect((RectangleData) omeroRoi.getIterator()
-			.next().get(0), -1, -1, -1, ROIConverters.OPEN_BOUNDARY_TEXT);
+			.next().get(0), -1, -1, -1, ROIConverters.OPEN_BOUNDARY_TEXT, -1);
 
-		assertROIDataConversionCorrect(omeroRoi);
+		assertROIDataConversionCorrect(omeroRoi, -1);
 	}
 
 	@Test
@@ -232,7 +232,7 @@ public class TreeNodeToROIDataConversionTest {
 
 		final ROIData crd = convert.convert(orc, ROIData.class);
 
-		assertROIDataConversionCorrect(crd);
+		assertROIDataConversionCorrect(crd, rd.getId());
 
 		assertEquals(3, crd.getShapeCount());
 		assertTrue(crd.getShapes(0, 0).get(0) instanceof RectangleData);
@@ -241,13 +241,13 @@ public class TreeNodeToROIDataConversionTest {
 
 		assertShapeDataConversionCorrect((RectangleData) crd.getShapes(0, 0).get(0),
 			rdOne.getZ(), rdOne.getT(), rdOne.getC(),
-			ROIConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT, rdOne.getId());
 		assertShapeDataConversionCorrect((RectangleData) crd.getShapes(0, 1).get(0),
 			rdTwo.getZ(), rdTwo.getT(), rdTwo.getC(),
-			ROIConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT, rdTwo.getId());
 		assertShapeDataConversionCorrect((RectangleData) crd.getShapes(0, 2).get(0),
 			rdThree.getZ(), rdThree.getT(), rdThree.getC(),
-			ROIConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT, rdThree.getId());
 	}
 
 	@Test
@@ -282,13 +282,13 @@ public class TreeNodeToROIDataConversionTest {
 
 		final ROIData crd = convert.convert(children.get(0), ROIData.class);
 
-		assertROIDataConversionCorrect(crd);
+		assertROIDataConversionCorrect(crd, -1);
 		assertEquals(1, crd.getShapeCount());
 		assertTrue(crd.getIterator().next().get(0) instanceof RectangleData);
 
 		assertShapeDataConversionCorrect((RectangleData) crd.getIterator().next()
 			.get(0), rdOne.getZ(), rdOne.getT(), rdOne.getC(),
-			ROIConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT, rdOne.getId());
 	}
 
 	@Test
@@ -319,13 +319,13 @@ public class TreeNodeToROIDataConversionTest {
 		final ROIData crd = convert.convert(new DefaultTreeNode<>(projected, null),
 			ROIData.class);
 
-		assertROIDataConversionCorrect(crd);
+		assertROIDataConversionCorrect(crd, -1);
 		assertEquals(1, crd.getShapeCount());
 		assertTrue(crd.getIterator().next().get(0) instanceof RectangleData);
 
 		assertShapeDataConversionCorrect((RectangleData) crd.getIterator().next()
 			.get(0), rect.getZ(), rect.getT(), rect.getC(),
-			ROIConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT, rect.getId());
 	}
 
 	@Test
@@ -340,13 +340,13 @@ public class TreeNodeToROIDataConversionTest {
 
 		// NB: count hack not needed since it was put into ROIData with non-null
 		// ROICoordinate
-		assertROIDataConversionCorrect(crd);
+		assertROIDataConversionCorrect(crd, -1);
 		assertEquals(1, crd.getShapeCount());
 		assertTrue(crd.getIterator().next().get(0) instanceof EllipseData);
 
 		assertShapeDataConversionCorrect((EllipseData) crd.getIterator().next().get(
 			0), projected.getZPosition(), projected.getTimePosition(), projected
-				.getChannelPosition(), ROIConverters.OPEN_BOUNDARY_TEXT);
+				.getChannelPosition(), ROIConverters.OPEN_BOUNDARY_TEXT, -1);
 	}
 
 	@Test
@@ -369,13 +369,13 @@ public class TreeNodeToROIDataConversionTest {
 		while (itr.hasNext())
 			count += itr.next().size();
 
-		assertROIDataConversionCorrect(crd);
+		assertROIDataConversionCorrect(crd, -1);
 		assertEquals(1, count);
 		assertTrue(crd.getIterator().next().get(0) instanceof EllipseData);
 
 		final EllipseData ced = (EllipseData) crd.getIterator().next().get(0);
 		assertShapeDataConversionCorrect(ced, -1, -1, -1,
-			ROIConverters.CLOSED_BOUNDARY_TEXT);
+			ROIConverters.CLOSED_BOUNDARY_TEXT, -1);
 
 		// NB: OMERO transforms are fromSource and ImageJ transforms are toSource.
 		// And we transformed the original ellipsoid with the inverse of rot.
@@ -417,13 +417,13 @@ public class TreeNodeToROIDataConversionTest {
 			convert);
 		final ROIData crd = convert.convert(orc, ROIData.class);
 
-		assertROIDataConversionCorrect(crd);
+		assertROIDataConversionCorrect(crd, rd.getId());
 		assertEquals(1, crd.getShapeCount());
 		assertTrue(crd.getIterator().next().get(0) instanceof RectangleData);
 
 		final RectangleData cRect = (RectangleData) crd.getIterator().next().get(0);
 		assertShapeDataConversionCorrect(cRect, rect.getZ(), rect.getT(), rect
-			.getC(), ROIConverters.CLOSED_BOUNDARY_TEXT);
+			.getC(), ROIConverters.CLOSED_BOUNDARY_TEXT, rect.getId());
 
 		assertEquals(transform.getA00().getValue(), cRect.getTransform().getA00()
 			.getValue(), 0);
@@ -479,13 +479,14 @@ public class TreeNodeToROIDataConversionTest {
 		final ROIData crd = convert.convert(new DefaultTreeNode<>(rmi, null),
 			ROIData.class);
 
-		assertROIDataConversionCorrect(crd);
+		assertROIDataConversionCorrect(crd, -1);
 		assertEquals(1, crd.getShapeCount());
 		assertTrue(crd.getIterator().next().get(0) instanceof EllipseData);
 
 		final EllipseData ced = (EllipseData) crd.getIterator().next().get(0);
 		assertShapeDataConversionCorrect((EllipseData) crd.getIterator().next().get(
-			0), ed.getZ(), ed.getT(), ed.getC(), ROIConverters.CLOSED_BOUNDARY_TEXT);
+			0), ed.getZ(), ed.getT(), ed.getC(), ROIConverters.CLOSED_BOUNDARY_TEXT,
+			ed.getId());
 
 		final AffineTransform2D targetTransform = ((AffineTransform2D) ROIConverters
 			.createAffine(transform)).concatenate(rotate.inverse()).inverse();
@@ -506,9 +507,10 @@ public class TreeNodeToROIDataConversionTest {
 
 	// -- Helper methods --
 
-	private void assertROIDataConversionCorrect(final ROIData converted) {
-		// ensure ID set to -1, so not over-written on server
-		assertEquals(-1, converted.getId());
+	private void assertROIDataConversionCorrect(final ROIData converted,
+		final long originalId)
+	{
+		assertEquals(originalId, converted.getId());
 
 		// check that the annotation is there and correct
 		final List<RoiAnnotationLink> anno = ((Roi) converted.asIObject())
@@ -522,28 +524,29 @@ public class TreeNodeToROIDataConversionTest {
 	}
 
 	private void assertShapeDataConversionCorrect(final RectangleData converted,
-		final int z, final int t, final int c, final String boundaryType)
+		final int z, final int t, final int c, final String boundaryType,
+		final long originalId)
 	{
-		checkIdZTC(converted, z, t, c);
+		checkIdZTC(converted, z, t, c, originalId);
 
 		// check boundary type
 		assertEquals(boundaryType, converted.getText());
 	}
 
 	private void assertShapeDataConversionCorrect(final EllipseData converted,
-		final int z, final int t, final int c, final String boundaryType)
+		final int z, final int t, final int c, final String boundaryType,
+		final long originalId)
 	{
-		checkIdZTC(converted, z, t, c);
+		checkIdZTC(converted, z, t, c, originalId);
 
 		// check boundary type
 		assertEquals(boundaryType, converted.getText());
 	}
 
 	private void checkIdZTC(final ShapeData converted, final int z, final int t,
-		final int c)
+		final int c, final long originalId)
 	{
-		// ensure ID set to -1, so not over-written on server
-		assertEquals(-1, converted.getId());
+		assertEquals(originalId, converted.getId());
 
 		// check ZTC
 		assertEquals(z, converted.getZ());

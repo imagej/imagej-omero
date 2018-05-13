@@ -165,7 +165,7 @@ public class EllipseConversionTest {
 		assertEquals(omeroEllipse.getRadiusY(), unwrapped.getRadiusY(), 0);
 		assertEquals("ellipse " + ROIConverters.CLOSED_BOUNDARY_TEXT, unwrapped
 			.getText());
-		assertEquals(-1, unwrapped.getId());
+		assertEquals(omeroEllipse.getId(), unwrapped.getId());
 	}
 
 	@Test

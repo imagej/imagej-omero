@@ -32,11 +32,6 @@ import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.ROIConverters;
-import net.imagej.omero.roi.mask.DefaultOMEROMask;
-import net.imagej.omero.roi.mask.MaskIntervalToMaskData;
-import net.imagej.omero.roi.mask.OMEROMask;
-import net.imagej.omero.roi.mask.OMEROMaskUnwrapper;
-import net.imagej.omero.roi.mask.OMEROToImageJMask;
 import net.imglib2.FinalInterval;
 import net.imglib2.Point;
 import net.imglib2.RealPoint;
@@ -202,7 +197,7 @@ public class MaskConversionTest {
 		final MaskData unwrap = convert.convert(wrap, MaskData.class);
 
 		assertArrayEquals(omeroMask.getMask(), unwrap.getMask());
-		assertEquals(-1, unwrap.getId());
+		assertEquals(omeroMask.getId(), unwrap.getId());
 		assertEquals("text " + ROIConverters.UNSPECIFIED_BOUNDARY_TEXT, unwrap
 			.getText());
 	}

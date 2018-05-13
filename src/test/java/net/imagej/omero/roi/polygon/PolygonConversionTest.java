@@ -208,7 +208,7 @@ public class PolygonConversionTest {
 			assertEquals(omeroPolyPts.get(i).getY(), unwrappedPolyPts.get(i).getY(),
 				0);
 		}
-		assertEquals(-1, unwrapped.getId());
+		assertEquals(omeroPolygon.getId(), unwrapped.getId());
 		assertEquals("Polygon " + ROIConverters.OPEN_BOUNDARY_TEXT, unwrapped
 			.getText());
 	}

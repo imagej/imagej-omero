@@ -28,7 +28,6 @@ package net.imagej.omero.roi;
 import org.scijava.convert.AbstractConverter;
 
 import omero.gateway.model.ShapeData;
-import omero.model.Shape;
 
 /**
  * Unwraps {@link OMERORealMask} objects.
@@ -60,7 +59,6 @@ public abstract class AbstractOMERORealMaskUnwrapper<S extends ShapeData, O exte
 			.createBoundaryTypeString(((O) src).boundaryType()));
 
 		setBoundaryType(shape, bt);
-		((Shape) shape.asIObject()).setId(null);
 		return (T) shape;
 	}
 

@@ -124,7 +124,7 @@ public class PointConversionTest {
 		final OMEROPoint wrap = new DefaultOMEROPoint(omeroPoint);
 		final PointData unwrap = convert.convert(wrap, PointData.class);
 
-		assertEquals(-1, unwrap.getId());
+		assertEquals(omeroPoint.getId(), unwrap.getId());
 		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, unwrap.getText());
 	}
 

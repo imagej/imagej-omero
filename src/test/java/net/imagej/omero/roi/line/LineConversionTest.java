@@ -31,11 +31,6 @@ import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.ROIConverters;
-import net.imagej.omero.roi.line.DefaultOMEROLine;
-import net.imagej.omero.roi.line.ImageJToOMEROLine;
-import net.imagej.omero.roi.line.OMEROLine;
-import net.imagej.omero.roi.line.OMEROLineUnwrapper;
-import net.imagej.omero.roi.line.OMEROToImageJLine;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.geom.real.DefaultWritableLine;
 import net.imglib2.roi.geom.real.Line;
@@ -135,7 +130,7 @@ public class LineConversionTest {
 		final OMEROLine wrap = new DefaultOMEROLine(omeroLine);
 		final LineData unwrap = convert.convert(wrap, LineData.class);
 
-		assertEquals(-1, unwrap.getId());
+		assertEquals(omeroLine.getId(), unwrap.getId());
 		assertEquals(ROIConverters.CLOSED_BOUNDARY_TEXT, unwrap.getText());
 	}
 

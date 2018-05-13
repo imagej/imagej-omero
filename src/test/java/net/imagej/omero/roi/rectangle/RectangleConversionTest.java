@@ -167,7 +167,7 @@ public class RectangleConversionTest {
 
 		assertEquals("Rectangle " + ROIConverters.CLOSED_BOUNDARY_TEXT, unwrapped
 			.getText());
-		assertEquals(-1, unwrapped.getId());
+		assertEquals(omeroRectangle.getId(), unwrapped.getId());
 
 		assertEquals(omeroRectangle.getX(), unwrapped.getX(), 0);
 		assertEquals(omeroRectangle.getY(), unwrapped.getY(), 0);
