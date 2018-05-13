@@ -28,26 +28,15 @@ package net.imagej.omero.roi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.Dataset;
 import net.imagej.axis.Axes;
 import net.imagej.axis.DefaultTypedAxis;
 import net.imagej.axis.TypedAxis;
-import net.imagej.omero.OMEROLocation;
+import net.imagej.omero.DefaultOMEROService;
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.OMEROSession;
-import net.imagej.omero.roi.DefaultOMEROROICollection;
-import net.imagej.omero.roi.OMEROROICollection;
-import net.imagej.omero.roi.OMEROROICollectionToROIData;
-import net.imagej.omero.roi.OMEROROIElement;
-import net.imagej.omero.roi.OMEROROIElementToROIData;
-import net.imagej.omero.roi.OMERORealMask;
-import net.imagej.omero.roi.ROIConverters;
-import net.imagej.omero.roi.TreeNodeMaskPredicateToROIData;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMaskRealInterval;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMaskToShapeData;
 import net.imagej.omero.roi.project.ProjectedOMERORealMaskToShapeData;
@@ -57,7 +46,6 @@ import net.imagej.omero.roi.transform.TransformedOMERORealMaskRealInterval;
 import net.imagej.omero.roi.transform.TransformedOMERORealMaskRealIntervalToShapeData;
 import net.imagej.space.DefaultTypedSpace;
 import net.imagej.space.TypedSpace;
-import net.imagej.table.Table;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.roi.Bounds;
 import net.imglib2.roi.Operators.RealTransformMaskOperator;
@@ -74,29 +62,20 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.scijava.Context;
-import org.scijava.Optional;
 import org.scijava.convert.ConvertService;
 import org.scijava.log.LogService;
-import org.scijava.module.ModuleItem;
 import org.scijava.plugin.Plugin;
-import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.util.DefaultTreeNode;
 import org.scijava.util.TreeNode;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-import omero.RType;
 import omero.ServerError;
-import omero.client;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.EllipseData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.RectangleData;
 import omero.gateway.model.ShapeData;
-import omero.gateway.model.TableData;
-import omero.grid.Param;
 import omero.model.Event;
 import omero.model.EventI;
 import omero.model.Roi;
@@ -557,107 +536,7 @@ public class TreeNodeToROIDataConversionTest {
 	// -- Mock classes --
 
 	@Plugin(type = Service.class)
-	public static final class MockOMEROService extends AbstractService implements
-		OMEROService, Optional
-	{
-
-		@Override
-		public Param getJobParam(final ModuleItem<?> item) {
-			return null;
-		}
-
-		@Override
-		public RType prototype(final Class<?> type) {
-			return null;
-		}
-
-		@Override
-		public RType toOMERO(final Object value) {
-			return null;
-		}
-
-		@Override
-		public Object toOMERO(final client client, final Object value)
-			throws ServerError, IOException, PermissionDeniedException,
-			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-			DSAccessException
-		{
-			return null;
-		}
-
-		@Override
-		public Object toImageJ(final client client, final RType value,
-			final Class<?> type) throws ServerError, IOException,
-			PermissionDeniedException, CannotCreateSessionException,
-			SecurityException, DSOutOfServiceException, ExecutionException,
-			DSAccessException
-		{
-			return null;
-		}
-
-		@Override
-		public Dataset downloadImage(final client client, final long imageID)
-			throws ServerError, IOException
-		{
-			return null;
-		}
-
-		@Override
-		public long uploadImage(final client client, final Dataset dataset)
-			throws ServerError, IOException
-		{
-			return 0;
-		}
-
-		@Override
-		public long uploadTable(final OMEROLocation credentials, final String name,
-			final Table<?, ?> imageJTable, final long imageID) throws ServerError,
-			PermissionDeniedException, CannotCreateSessionException,
-			ExecutionException, DSOutOfServiceException, DSAccessException
-		{
-			return 0;
-		}
-
-		@Override
-		public TableData convertOMEROTable(final Table<?, ?> imageJTable) {
-			return null;
-		}
-
-		@Override
-		public Table<?, ?> downloadTable(final OMEROLocation credentials,
-			final long tableID) throws ServerError, PermissionDeniedException,
-			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-			DSAccessException
-		{
-			return null;
-		}
-
-		@Override
-		public OMEROSession session(final OMEROLocation location) {
-			return null;
-		}
-
-		@Override
-		public OMEROSession session() {
-			return null;
-		}
-
-		@Override
-		public OMEROSession createSession(final OMEROLocation location) {
-			return null;
-		}
-
-		@Override
-		public void removeSession(final OMEROSession session) {}
-
-		@Override
-		public TagAnnotationI getAnnotation(final String description,
-			final String value, final OMEROLocation location)
-			throws ExecutionException, ServerError, DSOutOfServiceException,
-			DSAccessException
-		{
-			return null;
-		}
+	public static final class MockOMEROService extends DefaultOMEROService {
 
 		@Override
 		public TagAnnotationI getAnnotation(final String description,
@@ -672,33 +551,5 @@ public class TreeNodeToROIDataConversionTest {
 			}
 			throw new IllegalArgumentException("Invalid description: " + description);
 		}
-
-		@Override
-		public List<TreeNode<?>> downloadROIs(final OMEROLocation credentials,
-			final long imageID) throws ServerError, PermissionDeniedException,
-			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-			DSAccessException
-		{
-			return null;
-		}
-
-		@Override
-		public TreeNode<?> downloadROI(final OMEROLocation credentials,
-			final long roiID) throws DSOutOfServiceException, DSAccessException,
-			ExecutionException
-		{
-			return null;
-		}
-
-		@Override
-		public <D extends TreeNode<?>> long[] uploadROIs(
-			final OMEROLocation credentials, final List<D> ijROIs, final long imageID)
-			throws ServerError, PermissionDeniedException,
-			CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-			DSAccessException
-		{
-			return null;
-		}
-
 	}
 }
