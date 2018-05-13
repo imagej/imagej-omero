@@ -137,7 +137,7 @@ public class UploadROITest {
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
 	{
-		final Box b = GeomMasks.closedWritableBox(new double[] { 12.5, 16 },
+		final Box b = GeomMasks.closedBox(new double[] { 12.5, 16 },
 			new double[] { 83, 92 });
 		final DataNode<Box> dn = new DefaultDataNode<>(b, null, null);
 		setUpMethodCalls(false, 1);
@@ -158,9 +158,9 @@ public class UploadROITest {
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
 	{
-		final Box b = GeomMasks.openWritableBox(new double[] { 10, 11.25 },
+		final Box b = GeomMasks.openBox(new double[] { 10, 11.25 },
 			new double[] { 66, 92.5 });
-		final Ellipsoid e = GeomMasks.closedWritableEllipsoid(new double[] { 83,
+		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 83,
 			74.5 }, new double[] { 11, 7.5 });
 		final RealMaskRealInterval or = b.or(e);
 		final DataNode<RealMaskRealInterval> dn = new DefaultDataNode<>(or, null,
@@ -270,7 +270,7 @@ public class UploadROITest {
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
 	{
-		final Ellipsoid e = GeomMasks.closedWritableEllipsoid(new double[] { 14,
+		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 14,
 			15.5 }, new double[] { 2, 3 });
 		final RealMask rm = e.negate();
 		final DataNode<RealMask> dn = new DefaultDataNode<>(rm, null, null);
@@ -291,15 +291,15 @@ public class UploadROITest {
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
 	{
-		final Ellipsoid e = GeomMasks.closedWritableEllipsoid(new double[] { 33,
+		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 33,
 			27 }, new double[] { 8, 3.5 });
-		final Box b = GeomMasks.closedWritableBox(new double[] { 100, 101 },
+		final Box b = GeomMasks.closedBox(new double[] { 100, 101 },
 			new double[] { 120, 130.5 });
-		final Box b2 = GeomMasks.closedWritableBox(new double[] { 50, 64 },
+		final Box b2 = GeomMasks.closedBox(new double[] { 50, 64 },
 			new double[] { 242, 136 });
-		final Box b3 = GeomMasks.closedWritableBox(new double[] { 1, 1 },
+		final Box b3 = GeomMasks.closedBox(new double[] { 1, 1 },
 			new double[] { 33, 56 });
-		final Sphere s = GeomMasks.openWritableSphere(new double[] { 22, 36 }, 5.5);
+		final Sphere s = GeomMasks.openSphere(new double[] { 22, 36 }, 5.5);
 		final OMEROZTCProjectedRealMask proj =
 			new OMEROZTCProjectedRealMaskRealInterval(s, 2, 2, 0);
 		final List<DataNode<?>> rois = new ArrayList<>(5);

@@ -86,9 +86,9 @@ public class CompositeMaskPredicateToMaskData {
 
 	@Test
 	public void testAnd() {
-		final Box b = GeomMasks.closedWritableBox(new double[] { 0, 0 },
+		final Box b = GeomMasks.closedBox(new double[] { 0, 0 },
 			new double[] { 20, 20 });
-		final Box b2 = GeomMasks.closedWritableBox(new double[] { 10, 10 },
+		final Box b2 = GeomMasks.closedBox(new double[] { 10, 10 },
 			new double[] { 30, 30 });
 
 		final RealMaskRealInterval and = b.and(b2);
@@ -107,8 +107,8 @@ public class CompositeMaskPredicateToMaskData {
 
 	@Test
 	public void testMinus() {
-		final Sphere s = GeomMasks.closedWritableSphere(new double[] { 30, 30 }, 5);
-		final Sphere s2 = GeomMasks.closedWritableSphere(new double[] { 30, 30 },
+		final Sphere s = GeomMasks.closedSphere(new double[] { 30, 30 }, 5);
+		final Sphere s2 = GeomMasks.closedSphere(new double[] { 30, 30 },
 			2);
 
 		final RealMaskRealInterval minus = s.minus(s2);
@@ -127,7 +127,7 @@ public class CompositeMaskPredicateToMaskData {
 
 	@Test
 	public void testNegate() {
-		final Box b = GeomMasks.closedWritableBox(new double[] { 0, 0 },
+		final Box b = GeomMasks.closedBox(new double[] { 0, 0 },
 			new double[] { 5, 6 });
 		final RealMask negate = b.negate();
 
@@ -176,9 +176,9 @@ public class CompositeMaskPredicateToMaskData {
 
 	@Test
 	public void testXor() {
-		final Ellipsoid e = GeomMasks.closedWritableEllipsoid(new double[] { 30,
+		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 30,
 			25 }, new double[] { 15, 20 });
-		final Sphere s = GeomMasks.closedWritableSphere(new double[] { 14, 14 },
+		final Sphere s = GeomMasks.closedSphere(new double[] { 14, 14 },
 			13);
 		final RealMaskRealInterval xor = e.xor(s);
 
@@ -197,11 +197,11 @@ public class CompositeMaskPredicateToMaskData {
 
 	@Test
 	public void testMultipleOperands() {
-		final Ellipsoid e = GeomMasks.closedWritableEllipsoid(new double[] { 30,
+		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 30,
 			25 }, new double[] { 15, 20 });
-		final Sphere s = GeomMasks.closedWritableSphere(new double[] { 14, 14 },
+		final Sphere s = GeomMasks.closedSphere(new double[] { 14, 14 },
 			13);
-		final Box b = GeomMasks.closedWritableBox(new double[] { 0, 0 },
+		final Box b = GeomMasks.closedBox(new double[] { 0, 0 },
 			new double[] { 5, 6 });
 		final AffineTransform2D transform = new AffineTransform2D();
 		transform.rotate(Math.PI / 3);

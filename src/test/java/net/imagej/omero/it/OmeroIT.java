@@ -249,13 +249,13 @@ public class OmeroIT {
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
-		final Box b = GeomMasks.closedWritableBox(new double[] { 10, 10 },
+		final Box b = GeomMasks.closedBox(new double[] { 10, 10 },
 			new double[] { 22, 46.5 });
 		final DataNode<Box> dnb = new DefaultDataNode<>(b, null, null);
-		final Ellipsoid e = GeomMasks.openWritableEllipsoid(new double[] { 120,
+		final Ellipsoid e = GeomMasks.openEllipsoid(new double[] { 120,
 			121.25 }, new double[] { 4, 9 });
 		final DataNode<Ellipsoid> dne = new DefaultDataNode<>(e, null, null);
-		final Polygon2D p = GeomMasks.writablePolygon2D(new double[] { 30, 40, 50 },
+		final Polygon2D p = GeomMasks.polygon2D(new double[] { 30, 40, 50 },
 			new double[] { 50, 80, 50 });
 		final DataNode<Polygon2D> dnp = new DefaultDataNode<>(p, null, null);
 
@@ -279,7 +279,7 @@ public class OmeroIT {
 		final DataNode<?> dn = omero.downloadROI(cred, originalRoiId);
 
 		final List<DataNode<?>> children = dn.children();
-		assertTrue(children.get(0).getData() instanceof WritablePointMask);
+		assertTrue(children.get(0).getData() instanceof PointMask);
 		final WritablePointMask pm = (WritablePointMask) children.get(0).getData();
 
 		pm.setPosition(new double[] { 0, 0 });
