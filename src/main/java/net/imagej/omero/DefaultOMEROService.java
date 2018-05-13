@@ -50,6 +50,8 @@ import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
 import net.imagej.omero.roi.OMEROROICollection;
+import net.imagej.roi.DefaultROITree;
+import net.imagej.roi.ROITree;
 import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import net.imagej.table.Table;
@@ -549,12 +551,12 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
-	public List<TreeNode<?>> downloadROIs(final OMEROLocation credentials,
+	public ROITree downloadROIs(final OMEROLocation credentials,
 		final long imageID) throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
-		final List<TreeNode<?>> dn = new ArrayList<>();
+		final ROITree roiTree = new DefaultROITree();
 		final OMEROSession session = session(credentials);
 		final ROIFacility roifac = session.getGateway().getFacility(
 			ROIFacility.class);
@@ -568,14 +570,14 @@ public class DefaultOMEROService extends AbstractService implements
 				final TreeNode<?> ijRoi = convertService.convert(roi, TreeNode.class);
 				if (ijRoi == null) throw new IllegalArgumentException(
 					"ROIData cannot be converted to ImageJ ROI");
-				dn.add(ijRoi);
+				roiTree.children().add(ijRoi);
 			}
 		}
-		return dn;
+		return roiTree;
 	}
 
 	@Override
-	public TreeNode<?> downloadROI(final OMEROLocation credentials,
+	public ROITree downloadROI(final OMEROLocation credentials,
 		final long roiID) throws DSOutOfServiceException, DSAccessException,
 		ExecutionException
 	{
@@ -584,14 +586,16 @@ public class DefaultOMEROService extends AbstractService implements
 			ROIFacility.class);
 		final ROIResult roi = roifac.loadROI(session.getSecurityContext(), roiID);
 		final ROIData rd = roi.getROIs().iterator().next();
-		return convertService.convert(rd, TreeNode.class);
+		final TreeNode<?> treeNode = convertService.convert(rd, TreeNode.class);
+		final ROITree tree = new DefaultROITree();
+		tree.children().add(treeNode);
+		return tree;
 	}
 
 	@Override
-	public <D extends TreeNode<?>> long[] uploadROIs(
-		final OMEROLocation credentials, final List<D> ijROIs, final long imageID)
-		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
-		ExecutionException, DSOutOfServiceException, DSAccessException
+	public long[] uploadROIs(final OMEROLocation credentials,
+		final TreeNode<?> ijROIs, final long imageID) throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
 	{
 		final OMEROSession session = session(credentials);
 		final ROIFacility roifac = session.getGateway().getFacility(
@@ -599,13 +603,13 @@ public class DefaultOMEROService extends AbstractService implements
 		final Interval interval = null;
 
 		final List<ROIData> omeroROIs = new ArrayList<>();
-		for (final TreeNode<?> dn : ijROIs) {
+		final List<TreeNode<?>> roiTreeNodes = collectROITreeNodes(ijROIs);
+		for (final TreeNode<?> dn : roiTreeNodes) {
 			ROIData oR;
 			if (!(dn.data() instanceof Interval) && !(dn
-				.data() instanceof RealInterval) && dn
-					.data() instanceof MaskPredicate) oR = convertService.convert(
-						interval((MaskPredicate<?>) dn.data(), interval, imageID,
-							session), ROIData.class);
+				.data() instanceof RealInterval) && dn.data() instanceof MaskPredicate)
+				oR = convertService.convert(interval((MaskPredicate<?>) dn.data(),
+					interval, imageID, session), ROIData.class);
 			else oR = convertService.convert(dn, ROIData.class);
 			if (oR == null) throw new IllegalArgumentException("Unsupported type: " +
 				dn.data().getClass());
@@ -964,6 +968,46 @@ public class DefaultOMEROService extends AbstractService implements
 			imageID);
 		return new FinalInterval(new long[] { 0, 0 }, new long[] { image
 			.getDefaultPixels().getSizeX(), image.getDefaultPixels().getSizeY() });
+	}
+
+	/**
+	 * Collects all {@link TreeNode}s in the given "tree" whose data is a Roi.
+	 *
+	 * @param dn TreeNode whose data and children are check for ROIs
+	 * @return a list of TreeNodes whose data is a ROI type.
+	 */
+	private List<TreeNode<?>> collectROITreeNodes(final TreeNode<?> dn) {
+		if (dn == null) return Collections.emptyList();
+
+		if (dn.children() == null || dn.children().isEmpty()) {
+			if (dn.data() instanceof MaskPredicate) return Collections
+				.singletonList(dn);
+			return Collections.emptyList();
+		}
+		if (dn.data() instanceof ROIData) return Collections.singletonList(dn);
+
+		final List<TreeNode<?>> rois = new ArrayList<>();
+		for (final TreeNode<?> child : dn.children()) {
+			if (child.data() instanceof ROIData) rois.add(child);
+			else if ((child.children() == null || child.children().isEmpty()) && child
+				.data() instanceof MaskPredicate) rois.add(child);
+			else collectROITreeNodes(child, rois);
+		}
+
+		return rois;
+	}
+
+	private void collectROITreeNodes(final TreeNode<?> dn,
+		final List<TreeNode<?>> rois)
+	{
+		if (dn.children() == null || dn.children().isEmpty()) return;
+
+		for (final TreeNode<?> child : dn.children()) {
+			if (child.data() instanceof ROIData) rois.add(child);
+			else if (child.children() == null && child
+				.data() instanceof MaskPredicate) rois.add(child);
+			else collectROITreeNodes(child, rois);
+		}
 	}
 
 	private Collection<Class<?>> getToConvert(final Class<?> convertToClass) {

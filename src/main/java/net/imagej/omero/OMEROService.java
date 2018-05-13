@@ -26,13 +26,13 @@
 package net.imagej.omero;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+import net.imagej.roi.ROITree;
 import net.imagej.table.Table;
 
 import org.scijava.module.ModuleItem;
@@ -144,28 +144,26 @@ public interface OMEROService extends ImageJService {
 
 	/**
 	 * Downloads the ROIs associated with the given {@code imageID} from OMERO,
-	 * and returns them as a {@code List} of {@link TreeNode}s.
+	 * and returns them as a {@link ROITree}.
 	 */
-	List<TreeNode<?>> downloadROIs(OMEROLocation credentials, long imageID)
+	ROITree downloadROIs(OMEROLocation credentials, long imageID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
 		ExecutionException, DSOutOfServiceException, DSAccessException;
 
 	/**
 	 * Downloads the {@link ROIData} with the given {@code roiID} from OMERO, and
-	 * returns it as a {@link TreeNode}.
+	 * returns it as a {@link ROITree}.
 	 */
-	TreeNode<?> downloadROI(final OMEROLocation credentials,
-		final long roiID) throws DSOutOfServiceException, DSAccessException,
-		ExecutionException;
+	ROITree downloadROI(final OMEROLocation credentials, final long roiID)
+		throws DSOutOfServiceException, DSAccessException, ExecutionException;
 
 	/**
-	 * Converts the given {@link TreeNode}s to OMERO ROIs, uploads them to the
-	 * OMEROServer, and attaches them to the image with the specified ID.
+	 * Converts the given {@link TreeNode} to OMERO ROI(s), uploads them to the
+	 * OMEROServer, and attaches them to the image with the specified ID. All ROIs
+	 * are uploaded as new Objects, regardless of their origin.
 	 */
-	<D extends TreeNode<?>> long[] uploadROIs(OMEROLocation credentials,
-		List<D> ijROIs, long imageID) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException;
+	long[] uploadROIs(OMEROLocation credentials, TreeNode<?> ijROIs, long imageID)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException;
 
 	/**
 	 * Returns an {@link OMEROSession} using the given {@link OMEROLocation}. If a

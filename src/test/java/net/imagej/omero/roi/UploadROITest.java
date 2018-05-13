@@ -37,11 +37,9 @@ import java.util.concurrent.ExecutionException;
 import net.imagej.omero.DefaultOMEROSession;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.roi.DefaultOMEROROICollection;
-import net.imagej.omero.roi.OMEROROICollection;
-import net.imagej.omero.roi.ROIConverters;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMask;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMaskRealInterval;
+import net.imagej.roi.DefaultROITree;
 import net.imglib2.roi.RealMask;
 import net.imglib2.roi.RealMaskRealInterval;
 import net.imglib2.roi.geom.GeomMasks;
@@ -59,7 +57,6 @@ import org.scijava.util.TreeNode;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
-import edu.emory.mathcs.backport.java.util.Collections;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
@@ -85,10 +82,9 @@ import omero.model.Shape;
 import omero.sys.Filter;
 
 /**
- * Tests
- * {@link OMEROService#uploadROIs(net.imagej.omero.OMEROLocation, java.util.List, long)}.
- * Note, that the actual data structure conversions are not tested here as they
- * are tested elsewhere.
+ * Tests {@link OMEROService#uploadROIs(OMEROLocation, TreeNode, long)}. Note,
+ * that the actual data structure conversions are not tested here as they are
+ * tested elsewhere.
  *
  * @author Alison Walter
  */
@@ -137,7 +133,6 @@ public class UploadROITest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testUploadSingleRMRI() throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
@@ -147,8 +142,7 @@ public class UploadROITest {
 		final TreeNode<Box> dn = new DefaultTreeNode<>(b, null);
 		setUpMethodCalls(false, 1);
 
-		final long[] ids = service.uploadROIs(location, Collections.singletonList(
-			dn), 12);
+		final long[] ids = service.uploadROIs(location, dn, 12);
 
 		assertEquals(1, ids.length);
 		assertEquals(50, ids[0]);
@@ -158,7 +152,6 @@ public class UploadROITest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testUploadCompositeMaskPredicate() throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
@@ -171,8 +164,7 @@ public class UploadROITest {
 		final TreeNode<RealMaskRealInterval> dn = new DefaultTreeNode<>(or, null);
 		setUpMethodCalls(false, 1);
 
-		final long[] ids = service.uploadROIs(location, Collections.singletonList(
-			dn), 22);
+		final long[] ids = service.uploadROIs(location, dn, 22);
 
 		assertEquals(1, ids.length);
 		assertEquals(50, ids[0]);
@@ -182,7 +174,6 @@ public class UploadROITest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testUploadOMERORoiCollecton() throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
@@ -214,8 +205,7 @@ public class UploadROITest {
 			service.getContext().getService(ConvertService.class));
 		setUpMethodCalls(false, 1);
 
-		final long[] ids = service.uploadROIs(location, Collections.singletonList(
-			orc), 13);
+		final long[] ids = service.uploadROIs(location, orc, 13);
 
 		assertEquals(1, ids.length);
 		assertEquals(50, ids[0]);
@@ -225,7 +215,6 @@ public class UploadROITest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testUploadOMERORoiElement() throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
@@ -258,8 +247,7 @@ public class UploadROITest {
 		final TreeNode<?> ore = orc.children().get(1);
 		setUpMethodCalls(false, 1);
 
-		final long[] ids = service.uploadROIs(location, Collections.singletonList(
-			ore), 13);
+		final long[] ids = service.uploadROIs(location, ore, 13);
 
 		assertEquals(1, ids.length);
 		assertEquals(50, ids[0]);
@@ -269,7 +257,6 @@ public class UploadROITest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testUploadUnboundedMaskPredicate() throws ServerError,
 		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
 		DSOutOfServiceException, DSAccessException
@@ -280,8 +267,7 @@ public class UploadROITest {
 		final TreeNode<RealMask> dn = new DefaultTreeNode<>(rm, null);
 		setUpMethodCalls(true, 1);
 
-		final long[] ids = service.uploadROIs(location, Collections.singletonList(
-			dn), 22);
+		final long[] ids = service.uploadROIs(location, dn, 22);
 
 		assertEquals(1, ids.length);
 		assertEquals(50, ids[0]);
@@ -312,9 +298,11 @@ public class UploadROITest {
 		rois.add(new DefaultTreeNode<>(b2, null));
 		rois.add(new DefaultTreeNode<>(b3, null));
 		rois.add(new DefaultTreeNode<>(proj, null));
+		final TreeNode<?> parent = new DefaultROITree();
+		parent.addChildren(rois);
 		setUpMethodCalls(false, 5);
 
-		final long[] ids = service.uploadROIs(location, rois, 300);
+		final long[] ids = service.uploadROIs(location, parent, 300);
 
 		assertEquals(5, ids.length);
 		assertEquals(50, ids[0]);
