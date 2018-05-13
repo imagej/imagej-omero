@@ -35,6 +35,7 @@ import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -133,6 +134,9 @@ public class DefaultOMEROService extends AbstractService implements
 
 	private final ThreadLocal<OMEROSession> activeSessions = new ThreadLocal<>();
 
+	private Map<Class<?>, Collection<Class<?>>> convertTo;
+	private Map<Class<?>, Collection<Class<?>>> convertFrom;
+
 	// -- OMEROService methods --
 
 	@Override
@@ -156,7 +160,9 @@ public class DefaultOMEROService extends AbstractService implements
 	public omero.RType prototype(final Class<?> type) {
 		// image types
 		if (Dataset.class.isAssignableFrom(type) || DatasetView.class
-			.isAssignableFrom(type) || ImageDisplay.class.isAssignableFrom(type))
+			.isAssignableFrom(type) || ImageDisplay.class.isAssignableFrom(type) ||
+			(getFromConvert(Dataset.class).contains(type) && getToConvert(
+				Dataset.class).contains(type)))
 		{
 			// use an image ID
 			return omero.rtypes.rlong(0);
@@ -164,15 +170,21 @@ public class DefaultOMEROService extends AbstractService implements
 
 		// table
 		if (Table.class.isAssignableFrom(type) || TableDisplay.class
-			.isAssignableFrom(type))
+			.isAssignableFrom(type) || (getFromConvert(Table.class).contains(type) &&
+				getToConvert(Table.class).contains(type)))
 		{
 			// table file ID
 			return omero.rtypes.rlong(0);
 		}
 
 		// ROI
-		if (TreeNode.class.isAssignableFrom(type) || MaskPredicate.class
-			.isAssignableFrom(type)) return omero.rtypes.rlong(0);
+		if (TreeNode.class.isAssignableFrom(type) || (getFromConvert(TreeNode.class)
+			.contains(type) && getToConvert(TreeNode.class).contains(type)))
+			return omero.rtypes.rlist();
+
+		if (MaskPredicate.class.isAssignableFrom(type) || (getFromConvert(
+			MaskPredicate.class).contains(type) && getToConvert(MaskPredicate.class)
+				.contains(type))) return omero.rtypes.rlong(0);
 
 		// primitive types
 		final Class<?> saneType = Types.box(type);
@@ -284,6 +296,8 @@ public class DefaultOMEROService extends AbstractService implements
 			final long imageID = uploadImage(client, (Dataset) value);
 			return toOMERO(client, imageID);
 		}
+		if (getToConvert(Dataset.class).contains(value.getClass())) return toOMERO(
+			client, convertService.convert(value, Dataset.class));
 		if (value instanceof DatasetView) {
 			final DatasetView datasetView = (DatasetView) value;
 			// TODO: Verify whether any view-specific metadata can be preserved.
@@ -298,12 +312,11 @@ public class DefaultOMEROService extends AbstractService implements
 
 		// -- Table cases --
 
-		if (value instanceof Table) {
-			return convertOMEROTable((Table<?, ?>) value);
-		}
-		if (value instanceof TableDisplay) {
-			return toOMERO(client, ((TableDisplay) value).get(0));
-		}
+		if (value instanceof Table) return convertOMEROTable((Table<?, ?>) value);
+		if (value instanceof TableDisplay) return toOMERO(client,
+			((TableDisplay) value).get(0));
+		if (getToConvert(Table.class).contains(value.getClass())) return toOMERO(
+			client, convertService.convert(value, Table.class));
 
 		// -- ROI cases --
 
@@ -327,6 +340,15 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 		if (value instanceof MaskPredicate) return toOMERO(client,
 			new DefaultTreeNode<>(value, null));
+		if (value instanceof MaskPredicate) {
+			final Object o = toOMERO(client, new DefaultTreeNode<>(value, null));
+			return ((List<?>) o).get(0);
+		}
+		if (getToConvert(TreeNode.class).contains(value.getClass())) return toOMERO(
+			client, convertService.convert(value, TreeNode.class));
+		if (getToConvert(MaskPredicate.class).contains(value.getClass()))
+			return toOMERO(client, convertService.convert(value,
+				MaskPredicate.class));
 
 		return toOMERO(value);
 	}
@@ -790,6 +812,22 @@ public class DefaultOMEROService extends AbstractService implements
 					"one ShapeData. Only one shape will be returned.");
 				return omeroMP;
 			}
+			if (getFromConvert(Dataset.class).contains(type)) {
+				final Dataset d = convert(client, value, Dataset.class);
+				return convertService.convert(d, type);
+			}
+			if (getFromConvert(TreeNode.class).contains(type)) {
+				final TreeNode<?> dn = convert(client, value, TreeNode.class);
+				return convertService.convert(dn, type);
+			}
+			if (getFromConvert(MaskPredicate.class).contains(type)) {
+				final MaskPredicate<?> mp = convert(client, value, MaskPredicate.class);
+				return convertService.convert(mp, type);
+			}
+			if (getFromConvert(Table.class).contains(type)) {
+				final Table<?, ?> t = convert(client, value, Table.class);
+				return convertService.convert(t, type);
+			}
 		}
 
 		// use SciJava Common's automagical conversion routine
@@ -926,6 +964,44 @@ public class DefaultOMEROService extends AbstractService implements
 			imageID);
 		return new FinalInterval(new long[] { 0, 0 }, new long[] { image
 			.getDefaultPixels().getSizeX(), image.getDefaultPixels().getSizeY() });
+	}
+
+	private Collection<Class<?>> getToConvert(final Class<?> convertToClass) {
+		if (convertTo == null) initConvertTo();
+		return convertTo.get(convertToClass);
+	}
+
+	private Collection<Class<?>> getFromConvert(final Class<?> convertFromClass) {
+		if (convertFrom == null) initConvertFrom();
+		return convertFrom.get(convertFromClass);
+	}
+
+	private synchronized void initConvertTo() {
+		if (convertTo != null) return;
+		final Map<Class<?>, Collection<Class<?>>> map = new HashMap<>();
+		map.put(Dataset.class, Collections.unmodifiableCollection(convertService
+			.getCompatibleInputClasses(Dataset.class)));
+		map.put(TreeNode.class, Collections.unmodifiableCollection(convertService
+			.getCompatibleInputClasses(TreeNode.class)));
+		map.put(MaskPredicate.class, Collections.unmodifiableCollection(
+			convertService.getCompatibleInputClasses(MaskPredicate.class)));
+		map.put(Table.class, Collections.unmodifiableCollection(convertService
+			.getCompatibleInputClasses(Table.class)));
+		convertTo = Collections.unmodifiableMap(map);
+	}
+
+	private synchronized void initConvertFrom() {
+		if (convertFrom != null) return;
+		final Map<Class<?>, Collection<Class<?>>> map = new HashMap<>();
+		map.put(Dataset.class, Collections.unmodifiableCollection(convertService
+			.getCompatibleOutputClasses(Dataset.class)));
+		map.put(TreeNode.class, Collections.unmodifiableCollection(convertService
+			.getCompatibleOutputClasses(TreeNode.class)));
+		map.put(MaskPredicate.class, Collections.unmodifiableCollection(
+			convertService.getCompatibleOutputClasses(MaskPredicate.class)));
+		map.put(Table.class, Collections.unmodifiableCollection(convertService
+			.getCompatibleOutputClasses(Table.class)));
+		convertFrom = Collections.unmodifiableMap(map);
 	}
 
 	/**
