@@ -649,6 +649,10 @@ public class DefaultOMEROService extends AbstractService implements
 		final OMEROSession session = session(credentials);
 		final ROIFacility roifac = session.getGateway().getFacility(
 			ROIFacility.class);
+
+		if (roifac.getROICount(session.getSecurityContext(), imageID) == 0)
+			return roiTree;
+
 		final List<ROIResult> roiresults = roifac.loadROIs(session
 			.getSecurityContext(), imageID);
 		final Iterator<ROIResult> r = roiresults.iterator();

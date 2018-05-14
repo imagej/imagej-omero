@@ -121,7 +121,7 @@ public class DownloadROITest {
 	{
 		final EllipseData ed = new EllipseData(22, 22, 3, 5);
 		final ROIResult rr = createROIResult(createROIData(ed));
-		setUpMethodCalls(rr);
+		setUpMethodCalls(1, rr);
 
 		final TreeNode<?> dn = service.downloadROIs(location, 1);
 		assertTrue(dn.children().get(0) instanceof OMEROROICollection);
@@ -145,7 +145,7 @@ public class DownloadROITest {
 		final PointData pd = new PointData(14, 6);
 		final ROIResult rr = createROIResult(createROIData(ed), createROIData(rd),
 			createROIData(pd));
-		setUpMethodCalls(rr);
+		setUpMethodCalls(4, rr);
 
 		final TreeNode<?> dn = service.downloadROIs(location, 1);
 
@@ -175,7 +175,7 @@ public class DownloadROITest {
 		final RectangleData rdFour = new RectangleData(10, 22.25, 67, 94);
 		final ROIResult rr = createROIResult(createROIData(rdZero, rdOne, rdTwo,
 			rdThree, rdFour));
-		setUpMethodCalls(rr);
+		setUpMethodCalls(5, rr);
 
 		final TreeNode<?> dn = service.downloadROIs(location, 1);
 
@@ -208,7 +208,7 @@ public class DownloadROITest {
 		final ROIResult rrOne = createROIResult(createROIData(pdZero));
 		final ROIResult rrTwo = createROIResult(createROIData(pdOne), createROIData(
 			pdTwo));
-		setUpMethodCalls(rrZero, rrOne, rrTwo);
+		setUpMethodCalls(10, rrZero, rrOne, rrTwo);
 
 		final TreeNode<?> dn = service.downloadROIs(location, 1);
 		assertEquals(5, dn.children().size());
@@ -252,7 +252,7 @@ public class DownloadROITest {
 		transform.setA12(omero.rtypes.rdouble(55));
 		rd.setTransform(transform);
 		final ROIResult rr = createROIResult(createROIData(rd));
-		setUpMethodCalls(rr);
+		setUpMethodCalls(1, rr);
 
 		final TreeNode<?> dn = service.downloadROIs(location, 1);
 
@@ -276,7 +276,7 @@ public class DownloadROITest {
 		// NB: Currently this test should fail, as TextData is not supported
 		final TextData td = new TextData("Hello", 121, 68.5);
 		final ROIResult rr = createROIResult(createROIData(td));
-		setUpMethodCalls(rr);
+		setUpMethodCalls(1, rr);
 
 		exception.expect(IllegalArgumentException.class);
 		service.downloadROIs(location, 1);
@@ -336,9 +336,9 @@ public class DownloadROITest {
 
 	// -- Helper methods --
 
-	private void setUpMethodCalls(final ROIResult... results) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	private void setUpMethodCalls(final int numROIs, final ROIResult... results)
+		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
+		ExecutionException, DSOutOfServiceException, DSAccessException
 	{
 		final List<ROIResult> rr = Arrays.asList(results);
 		new Expectations() {
@@ -348,6 +348,9 @@ public class DownloadROITest {
 
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;
+
+				roiFac.getROICount((SecurityContext) any, anyLong);
+				result = numROIs;
 
 				roiFac.loadROIs((SecurityContext) any, anyLong);
 				result = rr;
