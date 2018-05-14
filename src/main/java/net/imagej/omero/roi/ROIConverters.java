@@ -25,12 +25,12 @@
 
 package net.imagej.omero.roi;
 
+import java.awt.Point;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
-import net.imglib2.Interval;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.roi.BoundaryType;
@@ -38,14 +38,26 @@ import net.imglib2.roi.MaskPredicate;
 
 import org.scijava.log.LogService;
 
+import ome.formats.model.UnitsFactory;
+import ome.model.units.BigResult;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.MetadataFacility;
 import omero.gateway.model.AnnotationData;
+import omero.gateway.model.EllipseData;
+import omero.gateway.model.LineData;
+import omero.gateway.model.MaskData;
+import omero.gateway.model.PointData;
+import omero.gateway.model.PolygonData;
+import omero.gateway.model.PolylineData;
+import omero.gateway.model.RectangleData;
 import omero.gateway.model.ShapeData;
+import omero.gateway.model.ShapeSettingsData;
 import omero.gateway.model.TagAnnotationData;
+import omero.gateway.model.TextData;
 import omero.model.AffineTransformI;
+import omero.model.Shape;
 import omero.model.TagAnnotation;
 import omero.model.TagAnnotationI;
 
@@ -184,4 +196,127 @@ public class ROIConverters {
 		else if (bt == BoundaryType.UNSPECIFIED) return UNSPECIFIED_BOUNDARY_TEXT;
 		else return CLOSED_BOUNDARY_TEXT;
 	}
+
+	/**
+	 * Checks if the two given {@link ShapeData} objects are equivalent. This
+	 * means they are the same shape, have the same shape characteristics, have
+	 * the same text, and are one the same ZTC plane.
+	 *
+	 * @param shapeOne first shape to compare with
+	 * @param shapeTwo second shape to compare with
+	 * @return true if shapes are equivalent, false otherwise
+	 */
+	public static boolean shapeDataEquals(final ShapeData shapeOne,
+		final ShapeData shapeTwo)
+	{
+		if (!shapeOne.getClass().isInstance(shapeTwo)) return false;
+		if (shapeOne.getC() != shapeTwo.getC() || shapeOne.getT() != shapeTwo
+			.getT() || shapeOne.getZ() != shapeTwo.getZ()) return false;
+		if (shapeOne instanceof EllipseData) return ellipseDataEquals(
+			(EllipseData) shapeOne, (EllipseData) shapeTwo);
+		if (shapeOne instanceof LineData) return lineDataEquals((LineData) shapeOne,
+			(LineData) shapeTwo);
+		if (shapeOne instanceof MaskData) return maskDataEquals((MaskData) shapeOne,
+			(MaskData) shapeTwo);
+		if (shapeOne instanceof PointData) return pointDataEquals(
+			(PointData) shapeOne, (PointData) shapeTwo);
+		if (shapeOne instanceof PolygonData) return polygonDataEquals(
+			(PolygonData) shapeOne, (PolygonData) shapeTwo);
+		if (shapeOne instanceof PolylineData) return polylineDataEquals(
+			(PolylineData) shapeOne, (PolylineData) shapeTwo);
+		if (shapeOne instanceof RectangleData) return rectangleDataEquals(
+			(RectangleData) shapeOne, (RectangleData) shapeTwo);
+		if (shapeOne instanceof TextData) return textDataEquals((TextData) shapeOne,
+			(TextData) shapeTwo);
+		return false;
+	}
+
+	// -- Helper methods --
+
+	private static boolean ellipseDataEquals(final EllipseData one,
+		final EllipseData two)
+	{
+		return one.getText().equals(two.getText()) && one.getX() == two.getX() &&
+			one.getY() == two.getY() && one.getRadiusX() == two.getRadiusX() && one
+				.getRadiusY() == two.getRadiusY();
+	}
+
+	private static boolean lineDataEquals(final LineData one,
+		final LineData two)
+	{
+		return one.getText().equals(two.getText()) && one.getX1() == two.getX1() &&
+			one.getX2() == two.getX2() && one.getY1() == two.getY1() && one
+				.getY2() == two.getY2();
+	}
+
+	private static boolean maskDataEquals(final MaskData one,
+		final MaskData two)
+	{
+		if (!one.getText().equals(two.getText()) || one.getX() != two.getX() || one
+			.getY() != two.getY() || one.getHeight() != two.getHeight() || one
+				.getWidth() != two.getWidth()) return false;
+
+		final byte[] oneValues = one.getMask();
+		final byte[] twoValues = two.getMask();
+		if (oneValues.length != twoValues.length) return false;
+
+		for (int i = 0; i < oneValues.length; i++) {
+			if (oneValues[i] != twoValues[i]) return false;
+		}
+
+		return true;
+	}
+
+	private static boolean pointDataEquals(final PointData one,
+		final PointData two)
+	{
+		return one.getText().equals(two.getText()) && one.getX() == two.getX() &&
+			one.getY() == two.getY();
+	}
+
+	private static boolean polygonDataEquals(final PolygonData one,
+		final PolygonData two)
+	{
+		final List<Point.Double> onePoints = one.getPoints();
+		final List<Point.Double> twoPoints = two.getPoints();
+		if (onePoints.size() != twoPoints.size() || !one.getText().equals(two
+			.getText())) return false;
+
+		for (int i = 0; i < onePoints.size(); i++) {
+			if (onePoints.get(i).getX() != twoPoints.get(i).getX() || onePoints.get(i)
+				.getY() != twoPoints.get(i).getY()) return false;
+		}
+		return true;
+	}
+
+	private static boolean polylineDataEquals(final PolylineData one,
+		final PolylineData two)
+	{
+		final List<Point.Double> onePoints = one.getPoints();
+		final List<Point.Double> twoPoints = two.getPoints();
+		if (onePoints.size() != twoPoints.size() || !one.getText().equals(two
+			.getText())) return false;
+
+		for (int i = 0; i < onePoints.size(); i++) {
+			if (onePoints.get(i).getX() != twoPoints.get(i).getX() || onePoints.get(i)
+				.getY() != twoPoints.get(i).getY()) return false;
+		}
+		return true;
+	}
+
+	private static boolean rectangleDataEquals(final RectangleData one,
+		final RectangleData two)
+	{
+		return one.getText().equals(two.getText()) && one.getX() == two.getX() &&
+			one.getY() == two.getY() && one.getHeight() == two.getHeight() && one
+				.getWidth() == two.getWidth();
+	}
+
+	private static boolean textDataEquals(final TextData one,
+		final TextData two)
+	{
+		return one.getText().equals(two.getText()) && one.getX() == two.getX() &&
+			one.getY() == two.getY();
+	}
+
 }
