@@ -231,6 +231,90 @@ public class ROIConverters {
 		return false;
 	}
 
+	/**
+	 * Updates the {@code oldSettings} to be equivalent to
+	 * {@code updatedSettings}.
+	 *
+	 * @param updatedSettings {@link ShapeSettingsData} to transfer
+	 * @param oldSettings {@link ShapeSettingsData} to update
+	 */
+	public static void synchronizeShapeSettings(
+		final ShapeSettingsData updatedSettings,
+		final ShapeSettingsData oldSettings)
+	{
+		oldSettings.setFillRule(updatedSettings.getFillRule());
+		oldSettings.setFill(updatedSettings.getFill());
+		oldSettings.setStroke(updatedSettings.getStroke());
+		oldSettings.setStrokeDashArray(updatedSettings.getStrokeDashArray());
+		oldSettings.setFontFamily(updatedSettings.getFontFamily());
+		oldSettings.setFontStyle(updatedSettings.getFontStyle());
+		oldSettings.setMarkerStart(updatedSettings.getMarkerStart());
+		oldSettings.setMarkerEnd(updatedSettings.getMarkerEnd());
+
+		try {
+			oldSettings.setStrokeWidth(updatedSettings.getStrokeWidth(
+				UnitsFactory.Shape_StrokeWidth));
+		}
+		catch (final BigResult exc) {
+			// Do nothing
+		}
+
+		try {
+			oldSettings.setFontSize(updatedSettings.getFontSize(
+				UnitsFactory.Shape_FontSize));
+		}
+		catch (final BigResult exc) {
+			// Do nothing
+		}
+	}
+
+	/**
+	 * Synchronizes {@code oldShape} to be equivalent to {@code updatedShape},
+	 * with the exception of ID. If the {@link ShapeData} are not the same type an
+	 * exception is thrown.
+	 *
+	 * @param updatedShape the {@link ShapeData} whose state will be copied
+	 * @param oldShape the {@link ShapeData} who will be updated
+	 */
+	public static void synchronizeShapeData(final ShapeData updatedShape,
+		final ShapeData oldShape)
+	{
+		if (oldShape == null || !updatedShape.getClass().isInstance(oldShape))
+			throw new IllegalArgumentException("Cannot synchronize shapes!");
+
+		synchronizeShapeSettings(updatedShape.getShapeSettings(), oldShape
+			.getShapeSettings());
+
+		// Set position on Ice objects
+		final Shape oldIceShape = (Shape) oldShape.asIObject();
+		final Shape updatedIceShape = (Shape) updatedShape.asIObject();
+		oldIceShape.setTheZ(updatedIceShape.getTheZ());
+		oldIceShape.setTheT(updatedIceShape.getTheT());
+		oldIceShape.setTheC(updatedIceShape.getTheC());
+
+		// Set transform
+		oldShape.setTransform(updatedShape.getTransform());
+
+		if (updatedShape instanceof EllipseData) synchronizeEllipseData(
+			(EllipseData) updatedShape, (EllipseData) oldShape);
+		else if (updatedShape instanceof LineData) synchronizeLineData(
+			(LineData) updatedShape, (LineData) oldShape);
+		else if (updatedShape instanceof MaskData) synchronizeMaskData(
+			(MaskData) updatedShape, (MaskData) oldShape);
+		else if (updatedShape instanceof PointData) synchronizePointData(
+			(PointData) updatedShape, (PointData) oldShape);
+		else if (updatedShape instanceof PolygonData) synchronizePolygonData(
+			(PolygonData) updatedShape, (PolygonData) oldShape);
+		else if (updatedShape instanceof PolylineData) synchronizePolylineData(
+			(PolylineData) updatedShape, (PolylineData) oldShape);
+		else if (updatedShape instanceof RectangleData) synchronizeRectangleData(
+			(RectangleData) updatedShape, (RectangleData) oldShape);
+		else if (updatedShape instanceof TextData) synchronizeTextData(
+			(TextData) updatedShape, (TextData) oldShape);
+		else throw new IllegalArgumentException("Unsupported type: " + updatedShape
+			.getClass());
+	}
+
 	// -- Helper methods --
 
 	private static boolean ellipseDataEquals(final EllipseData one,
@@ -319,4 +403,74 @@ public class ROIConverters {
 			one.getY() == two.getY();
 	}
 
+	private static void synchronizeEllipseData(final EllipseData current,
+		final EllipseData old)
+	{
+		old.setX(current.getX());
+		old.setY(current.getY());
+		old.setRadiusX(current.getRadiusX());
+		old.setRadiusY(current.getRadiusY());
+		old.setText(current.getText());
+	}
+
+	private static void synchronizeLineData(final LineData current,
+		final LineData old)
+	{
+		old.setX1(current.getX1());
+		old.setY1(current.getY1());
+		old.setX2(current.getX2());
+		old.setY2(current.getY2());
+		old.setText(current.getText());
+	}
+
+	private static void synchronizeMaskData(final MaskData current,
+		final MaskData old)
+	{
+		old.setX(current.getX());
+		old.setY(current.getY());
+		old.setWidth(current.getWidth());
+		old.setHeight(current.getHeight());
+		old.setMask(current.getMask());
+		old.setText(current.getText());
+	}
+
+	private static void synchronizePointData(final PointData current,
+		final PointData old)
+	{
+		old.setX(current.getX());
+		old.setY(current.getY());
+		old.setText(current.getText());
+	}
+
+	private static void synchronizePolygonData(final PolygonData current,
+		final PolygonData old)
+	{
+		old.setPoints(current.getPoints());
+		old.setText(current.getText());
+	}
+
+	private static void synchronizePolylineData(final PolylineData current,
+		final PolylineData old)
+	{
+		old.setPoints(current.getPoints());
+		old.setText(current.getText());
+	}
+
+	private static void synchronizeRectangleData(final RectangleData current,
+		final RectangleData old)
+	{
+		old.setX(current.getX());
+		old.setY(current.getY());
+		old.setWidth(current.getWidth());
+		old.setHeight(current.getHeight());
+		old.setText(current.getText());
+	}
+
+	private static void synchronizeTextData(final TextData current,
+		final TextData old)
+	{
+		old.setX(current.getX());
+		old.setY(current.getY());
+		old.setText(current.getText());
+	}
 }
