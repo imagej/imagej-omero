@@ -567,6 +567,27 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
+	public List<Table<?, ?>> downloadTables(final OMEROLocation credentials,
+		final long imageID) throws ExecutionException, DSOutOfServiceException,
+		DSAccessException, ServerError, PermissionDeniedException,
+		CannotCreateSessionException
+	{
+		final OMEROSession session = session(credentials);
+		final TablesFacility tableService = session.getGateway().getFacility(
+			TablesFacility.class);
+
+		final Collection<FileAnnotationData> files = tableService
+			.getAvailableTables(session.getSecurityContext(), new ImageData(
+				new ImageI(imageID, false)));
+
+		final List<Table<?, ?>> tables = new ArrayList<>(files.size());
+		for (final FileAnnotationData file : files)
+			tables.add(downloadTable(credentials, file.getFileID()));
+
+		return tables;
+	}
+
+	@Override
 	public ROITree downloadROIs(final OMEROLocation credentials,
 		final long imageID) throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,

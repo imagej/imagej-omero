@@ -150,6 +150,13 @@ public interface OMEROService extends ImageJService {
 		ExecutionException, DSOutOfServiceException, DSAccessException;
 
 	/**
+	 * Downloads all tables associated with the given image ID in OMERO.
+	 */
+	List<Table<?, ?>> downloadTables(OMEROLocation credentials, long imageID)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException,
+		ServerError, PermissionDeniedException, CannotCreateSessionException;
+
+	/**
 	 * Downloads the ROIs associated with the given {@code imageID} from OMERO,
 	 * and returns them as a {@link ROITree}.
 	 */
