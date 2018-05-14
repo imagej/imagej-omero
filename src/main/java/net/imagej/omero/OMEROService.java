@@ -173,6 +173,32 @@ public interface OMEROService extends ImageJService {
 		throws ExecutionException, DSOutOfServiceException, DSAccessException;
 
 	/**
+	 * Converts the given {@link TreeNode} to OMERO ROIs(s). ROIs which originated
+	 * from OMERO are updated on the server, and new ROIs are uploaded. The ids of
+	 * the new ROI objects is returned.
+	 */
+	long[] updateROIs(OMEROLocation credentials, TreeNode<?> ijROIs, long imageID)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Converts the given {@link TreeNode} to OMERO ROI(s), and uploads them all
+	 * as new Objects to the server. The new OMERO objects are then returned.
+	 */
+	Collection<ROIData> uploadAndReturnROIs(OMEROLocation credentials,
+		TreeNode<?> ijROIs, long imageID) throws ExecutionException,
+		DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Converts the given {@link TreeNode} to OMERO ROI(s), creating new Objects
+	 * on the server only for ROIs which didn't previously exist. ROIs which
+	 * originated from OMERO are updated on the server. A collection of the new
+	 * ROI objects is returned.
+	 */
+	Collection<ROIData> updateAndReturnROIs(OMEROLocation credentials,
+		TreeNode<?> ijROIs, long imageID) throws ExecutionException,
+		DSOutOfServiceException, DSAccessException;
+
+	/**
 	 * Converts the given {@link TreeNode} to {@link ROIData}. If an interval is
 	 * provided it will be used to convert unbounded {@link MaskPredicate}s to
 	 * {@link ROIData}. If the interval is null, then unbounded

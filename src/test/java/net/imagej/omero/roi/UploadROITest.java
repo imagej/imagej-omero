@@ -30,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -140,7 +141,7 @@ public class UploadROITest {
 		final Box b = GeomMasks.closedBox(new double[] { 12.5, 16 }, new double[] {
 			83, 92 });
 		final TreeNode<Box> dn = new DefaultTreeNode<>(b, null);
-		setUpMethodCalls(false, 1);
+		setUpMethodCalls(false, 1, null);
 
 		final long[] ids = service.uploadROIs(location, dn, 12);
 
@@ -162,7 +163,7 @@ public class UploadROITest {
 			new double[] { 11, 7.5 });
 		final RealMaskRealInterval or = b.or(e);
 		final TreeNode<RealMaskRealInterval> dn = new DefaultTreeNode<>(or, null);
-		setUpMethodCalls(false, 1);
+		setUpMethodCalls(false, 1, null);
 
 		final long[] ids = service.uploadROIs(location, dn, 22);
 
@@ -203,7 +204,7 @@ public class UploadROITest {
 		final ROIData data = new ROIData(r);
 		final OMEROROICollection orc = new DefaultOMEROROICollection(null, data,
 			service.getContext().getService(ConvertService.class));
-		setUpMethodCalls(false, 1);
+		setUpMethodCalls(false, 1, Collections.singletonList(data));
 
 		final long[] ids = service.uploadROIs(location, orc, 13);
 
@@ -245,7 +246,7 @@ public class UploadROITest {
 		final OMEROROICollection orc = new DefaultOMEROROICollection(null, data,
 			service.getContext().getService(ConvertService.class));
 		final TreeNode<?> ore = orc.children().get(1);
-		setUpMethodCalls(false, 1);
+		setUpMethodCalls(false, 1, null);
 
 		final long[] ids = service.uploadROIs(location, ore, 13);
 
@@ -265,7 +266,7 @@ public class UploadROITest {
 			new double[] { 2, 3 });
 		final RealMask rm = e.negate();
 		final TreeNode<RealMask> dn = new DefaultTreeNode<>(rm, null);
-		setUpMethodCalls(true, 1);
+		setUpMethodCalls(true, 1, null);
 
 		final long[] ids = service.uploadROIs(location, dn, 22);
 
@@ -292,6 +293,7 @@ public class UploadROITest {
 		final Sphere s = GeomMasks.openSphere(new double[] { 22, 36 }, 5.5);
 		final OMEROZTCProjectedRealMask proj =
 			new OMEROZTCProjectedRealMaskRealInterval(s, 2, 2, 0);
+
 		final List<TreeNode<?>> rois = new ArrayList<>(5);
 		rois.add(new DefaultTreeNode<>(e, null));
 		rois.add(new DefaultTreeNode<>(b, null));
@@ -299,17 +301,22 @@ public class UploadROITest {
 		rois.add(new DefaultTreeNode<>(b3, null));
 		rois.add(new DefaultTreeNode<>(proj, null));
 		final TreeNode<?> parent = new DefaultROITree();
+
+		final List<ROIData> test = new ArrayList<>(5);
+		for (TreeNode<?> t : rois) {
+			final ShapeData r = service.getContext().getService(ConvertService.class)
+				.convert(t.data(), ShapeData.class);
+			final ROIData roi = new ROIData();
+			roi.addShapeData(r);
+			test.add(roi);
+		}
+
 		parent.addChildren(rois);
-		setUpMethodCalls(false, 5);
+		setUpMethodCalls(false, 5, test);
 
 		final long[] ids = service.uploadROIs(location, parent, 300);
 
 		assertEquals(5, ids.length);
-		assertEquals(50, ids[0]);
-		assertEquals(51, ids[1]);
-		assertEquals(52, ids[2]);
-		assertEquals(53, ids[3]);
-		assertEquals(54, ids[4]);
 
 		// NB: run verification to capture ROIData
 		checkROIData(ids.length, 1, 1, 1, 1, 1);
@@ -319,7 +326,7 @@ public class UploadROITest {
 
 	@SuppressWarnings({ "unchecked", "resource" })
 	private void setUpMethodCalls(final boolean needInterval,
-		final int numROIData) throws ServerError, PermissionDeniedException,
+		final int numROIData, final List<ROIData> rois) throws ServerError, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
@@ -361,14 +368,32 @@ public class UploadROITest {
 				result = tags;
 
 				final List<ROIData> rd = new ArrayList<>(numROIData);
-				for (int i = 0; i < numROIData; i++) {
-					final ROIData temp = new ROIData();
-					temp.setId(i + 50);
-					rd.add(temp);
+				if (rois != null) {
+					for (int i = 0; i < numROIData; i++) {
+						final ROIData roi = rois.get(i);
+						final ROIData temp = new ROIData();
+						temp.setId(i + 50);
+						final Iterator<List<ShapeData>> itr = roi.getIterator();
+						while (itr.hasNext()) {
+							final List<ShapeData> shapes = itr.next();
+							for (final ShapeData shape : shapes)
+								temp.addShapeData(shape);
+						}
+						rd.add(temp);
+					}
 				}
-				roiFac.saveROIs((SecurityContext) any, anyLong,
-					(Collection<ROIData>) any);
-				result = rd;
+				else {
+					for (int i = 0; i < numROIData; i++) {
+						final ROIData temp = new ROIData();
+						temp.setId(50 + i);
+						rd.add(temp);
+					}
+				}
+				for (int i = 0; i < numROIData; i++) {
+					roiFac.saveROIs((SecurityContext) any, anyLong,
+						(Collection<ROIData>) any);
+					result = rd;
+				}
 			}
 		};
 	}
@@ -379,14 +404,18 @@ public class UploadROITest {
 		new Verifications() {
 
 			{
-				Collection<ROIData> rd;
-				roiFac.saveROIs((SecurityContext) any, anyLong, rd = withCapture());
+				Collection<ROIData> rois = new ArrayList<>(numROIData);
+				for (int i = 0; i < numROIData; i++) {
+					Collection<ROIData> rd;
+					roiFac.saveROIs((SecurityContext) any, anyLong, rd = withCapture());
+					rois.addAll(rd);
+				}
 
-				assertEquals(numROIData, rd.size());
+				assertEquals(numROIData, rois.size());
 
 				// HACK: Since this ROIData wasn't actually saved to the server, it has
 				// shapes in a TreeMap with null keys
-				final Iterator<ROIData> itrRD = rd.iterator();
+				final Iterator<ROIData> itrRD = rois.iterator();
 				int countRD = 0;
 				while (itrRD.hasNext()) {
 					final Iterator<List<ShapeData>> itrShape = itrRD.next().getIterator();

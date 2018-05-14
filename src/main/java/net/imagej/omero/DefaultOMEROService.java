@@ -51,6 +51,7 @@ import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
 import net.imagej.omero.roi.OMEROROICollection;
+import net.imagej.omero.roi.ROIConverters;
 import net.imagej.roi.DefaultROITree;
 import net.imagej.roi.ROITree;
 import net.imagej.table.Column;
@@ -66,6 +67,8 @@ import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.Masks;
 import net.imglib2.roi.RealMask;
 import net.imglib2.type.logic.BoolType;
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 
 import org.scijava.Optional;
@@ -92,12 +95,17 @@ import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.DataManagerFacility;
 import omero.gateway.facility.ROIFacility;
 import omero.gateway.facility.TablesFacility;
+import omero.gateway.model.DatasetData;
+import omero.gateway.model.FileAnnotationData;
 import omero.gateway.model.ImageData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.ROIResult;
+import omero.gateway.model.ShapeData;
 import omero.gateway.model.TableData;
 import omero.gateway.model.TableDataColumn;
 import omero.gateway.model.TagAnnotationData;
+import omero.model.DatasetI;
+import omero.model.ImageI;
 import omero.model.TagAnnotationI;
 import omero.sys.Filter;
 
@@ -605,36 +613,134 @@ public class DefaultOMEROService extends AbstractService implements
 		final TreeNode<?> ijROIs, final long imageID) throws ExecutionException,
 		DSOutOfServiceException, DSAccessException
 	{
+		final Collection<ROIData> uploadedROIs = uploadAndReturnROIs(credentials,
+			ijROIs, imageID);
+		return getROIIds(uploadedROIs);
+	}
+
+	@Override
+	public long[] updateROIs(final OMEROLocation credentials,
+		final TreeNode<?> ijROIs, final long imageID) throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
+	{
+		final Collection<ROIData> uploadedROIs = updateAndReturnROIs(credentials,
+			ijROIs, imageID);
+		return getROIIds(uploadedROIs);
+	}
+
+	@Override
+	public Collection<ROIData> uploadAndReturnROIs(
+		final OMEROLocation credentials, final TreeNode<?> ijROIs,
+		final long imageID) throws ExecutionException, DSOutOfServiceException,
+		DSAccessException
+	{
 		final OMEROSession session = session(credentials);
+		final Interval interval = getImageInterval(session, imageID);
+		final Pair<List<OMEROROICollection>, List<TreeNode<?>>> splitROIs = split(
+			ijROIs);
+		final List<ROIData> savedOMERORois = new ArrayList<>();
 		final ROIFacility roifac = session.getGateway().getFacility(
 			ROIFacility.class);
+
+		// FIXME: This is a lot of server calls
+
+		// Handle ROIs which originated in ImageJ
+		for (final TreeNode<?> ijROI : splitROIs.getB()) {
+			final List<ROIData> roiData = convertOMEROROI(ijROI, interval);
+			clearROIs(roiData);
+			final Collection<ROIData> saved = roifac.saveROIs(session
+				.getSecurityContext(), imageID, roiData);
+			addROIMapping(ijROI.data(), saved.iterator().next());
+			savedOMERORois.add(saved.iterator().next());
+		}
+
+		// Handle ROIs which originated in OMERO
+		for (final OMEROROICollection orc : splitROIs.getA()) {
+			final List<ROIData> roiData = convertOMEROROI(orc, interval);
+			if (downloadedROIs.containsKey(roiData.get(0).getId())) downloadedROIs
+				.remove(roiData.get(0).getId());
+			clearROIs(roiData);
+			final Collection<ROIData> saved = roifac.saveROIs(session
+				.getSecurityContext(), imageID, roiData);
+			final ROIData savedRoi = saved.iterator().next();
+
+			// NB: If updated later, the id will match correctly
+			updateROIData(orc, savedRoi);
+			downloadedROIs.put(savedRoi.getId(), savedRoi);
+
+			savedOMERORois.add(savedRoi);
+		}
+
+		return savedOMERORois;
+	}
+
+	@Override
+	public Collection<ROIData> updateAndReturnROIs(
+		final OMEROLocation credentials, final TreeNode<?> ijROIs,
+		final long imageID) throws ExecutionException, DSOutOfServiceException,
+		DSAccessException
+	{
+		final OMEROSession session = session(credentials);
 		final Interval interval = getImageInterval(session, imageID);
+		final Pair<List<OMEROROICollection>, List<TreeNode<?>>> splitROIs = split(
+			ijROIs);
+		final List<ROIData> newROIs = new ArrayList<>();
+		final List<ROIData> cleaned = new ArrayList<>(splitROIs.getA().size());
+		final List<Long> ids = new ArrayList<>();
+		final ROIFacility roifac = session.getGateway().getFacility(
+			ROIFacility.class);
 
-		final List<ROIData> omeroROIs = new ArrayList<>();
-		final List<TreeNode<?>> roiTreeNodes = collectROITreeNodes(ijROIs);
-		for (final TreeNode<?> dn : roiTreeNodes) {
-			ROIData oR;
-			if (!(dn.data() instanceof Interval) && !(dn
-				.data() instanceof RealInterval) && dn.data() instanceof MaskPredicate)
-				oR = convertService.convert(interval((MaskPredicate<?>) dn.data(),
-					interval), ROIData.class);
-			else oR = convertService.convert(dn, ROIData.class);
-			if (oR == null) throw new IllegalArgumentException("Unsupported type: " +
-				dn.data().getClass());
-			omeroROIs.add(oR);
+		// Handle ROIs which originated in OMERO
+		for (final OMEROROICollection orc : splitROIs.getA()) {
+			final ROIData converted = convertOMEROROI(orc, interval).get(0);
+			if (downloadedROIs.containsKey(converted.getId())) cleaned.add(
+				downloadedROIs.get(converted.getId()));
+			else cleaned.add(converted);
+			ids.add(cleaned.get(cleaned.size() - 1).getId());
 		}
 
-		final Collection<ROIData> updatedOmeroROIs = roifac.saveROIs(session
-			.getSecurityContext(), imageID, omeroROIs);
+		final Collection<ROIData> savedOMERO = roifac.saveROIs(session
+			.getSecurityContext(), imageID, cleaned);
+		for (final ROIData r : savedOMERO)
+			downloadedROIs.put(r.getId(), r);
 
-		final long[] ids = new long[updatedOmeroROIs.size()];
-		int count = 0;
-		for (final ROIData roi : updatedOmeroROIs) {
-			ids[count] = roi.asIObject().getId().getValue();
-			count++;
+		// Update IDs, it is possible new Shapes were added
+		for (final OMEROROICollection orc : splitROIs.getA())
+			updateROIData(orc, downloadedROIs.get(orc.data().getId()));
+
+		// Handle ROIs which originated in ImageJ
+		for (final TreeNode<?> dn : splitROIs.getB()) {
+			final List<ROIData> converted = convertOMEROROI(dn, interval);
+			final Collection<ROIData> saved = roifac.saveROIs(session
+				.getSecurityContext(), imageID, converted);
+			if (getROIMapping(dn.data()) == null) newROIs.add(saved.iterator()
+				.next());
+			addROIMapping(dn.data(), saved.iterator().next());
+			ids.add(saved.iterator().next().getId());
 		}
 
-		return ids;
+		// Check if any ROIs must be deleted
+		final Collection<ROIResult> roisOnServer = roifac.loadROIs(session
+			.getSecurityContext(), imageID);
+		final DataManagerFacility dm = session.getGateway().getFacility(
+			DataManagerFacility.class);
+		for (final ROIResult result : roisOnServer) {
+			for (final ROIData roi : result.getROIs()) {
+				if (!ids.contains(roi.getId())) {
+					dm.delete(session.getSecurityContext(), roi.asIObject());
+
+					// check if deleted ROI was mapped, if so remove mapping
+					if (downloadedROIs.containsKey(roi.getId())) downloadedROIs.remove(roi
+						.getId());
+					for (final Object key : savedRois.keySet()) {
+						if (savedRois.get(key).getId() == roi.getId()) savedRois.remove(
+							key);
+					}
+				}
+			}
+		}
+
+		return newROIs;
 	}
 
 	@Override
@@ -1102,24 +1208,112 @@ public class DefaultOMEROService extends AbstractService implements
 		convertFrom = Collections.unmodifiableMap(map);
 	}
 
+	private long[] getROIIds(final Collection<ROIData> rois) {
+		final long[] ids = new long[rois.size()];
+		final Iterator<ROIData> itr = rois.iterator();
+		for (int i = 0; i < ids.length; i++)
+			ids[i] = itr.next().getId();
+		return ids;
+	}
+
 	/**
-	 * Check if the given list contains only {@link TreeNode}s which can be
-	 * converted to {@link ROIData}
+	 * Split the ROIs within the given {@link TreeNode} into a {@link Pair} of
+	 * ROIs which originated from OMERO and ROIs which originated from ImageJ.
 	 *
-	 * @param rois the {@code List} to check
-	 * @return {@code true} if all components can be converted to {@link ROIData},
-	 *         {@code false} otherwise
+	 * @param dn ROIs to separate
+	 * @return a {@link Pair} of list of roi {@link TreeNode}s
 	 */
-	private boolean checkROIList(final List<?> rois) {
-		if (rois.isEmpty()) return false;
-		for (Object o : rois) {
-			if (o instanceof OMEROROICollection) continue;
-			else if (o instanceof TreeNode && ((TreeNode<?>) o)
-				.data() instanceof MaskPredicate) continue;
-			else if (o instanceof MaskPredicate) continue;
-			else return false;
+	private Pair<List<OMEROROICollection>, List<TreeNode<?>>> split(
+		final TreeNode<?> dn)
+	{
+		final Pair<List<OMEROROICollection>, List<TreeNode<?>>> splitROIs =
+			new ValuePair<>(new ArrayList<>(), new ArrayList<>());
+
+		if (dn instanceof OMEROROICollection) {
+			splitROIs.getA().add((OMEROROICollection) dn);
+			return splitROIs;
 		}
-		return true;
+		if (dn.data() instanceof MaskPredicate) splitROIs.getB().add(dn);
+		if (dn.children() == null || dn.children().isEmpty()) return splitROIs;
+
+		for (final TreeNode<?> child : dn.children())
+			split(child, splitROIs);
+
+		return splitROIs;
+	}
+
+	/**
+	 * Split the ROIs within the given {@link TreeNode} into a {@link Pair} of
+	 * ROIs which originated from OMERO and ROIs which originated from ImageJ.
+	 *
+	 * @param dn ROIs to separate
+	 */
+	private void split(final TreeNode<?> dn,
+		final Pair<List<OMEROROICollection>, List<TreeNode<?>>> splitROIs)
+	{
+		if (dn instanceof OMEROROICollection) {
+			splitROIs.getA().add((OMEROROICollection) dn);
+			return;
+		}
+		if (dn.data() instanceof MaskPredicate) splitROIs.getB().add(dn);
+		if (dn.children() == null || dn.children().isEmpty()) return;
+		for (final TreeNode<?> child : dn.children())
+			split(child, splitROIs);
+	}
+
+	/**
+	 * Clears ids of the given {@link ROIData} objects, to ensure they are
+	 * uploaded to the server as a new object.
+	 *
+	 * @param rois {@link ROIData} objects whose ids must be cleared
+	 */
+	private void clearROIs(final List<ROIData> rois) {
+		for (final ROIData roi : rois) {
+			roi.asIObject().setId(null);
+			final Iterator<List<ShapeData>> itr = roi.getIterator();
+			while (itr.hasNext()) {
+				for (final ShapeData shape : itr.next())
+					shape.asIObject().setId(null);
+			}
+		}
+	}
+
+	/**
+	 * Sets the backing {@link ROIData} and {@link ShapeData} objects to have the
+	 * same IDs as the newly saved version on the server.
+	 *
+	 * @param orc {@link OMEROROICollection} whose backing ROIData will be updated
+	 * @param saved recently saved {@link ROIData} whose IDs will be copied
+	 */
+	private void updateROIData(final OMEROROICollection orc,
+		final ROIData saved)
+	{
+		final ROIData rd = orc.data();
+		rd.setId(saved.getId());
+
+		// Shapes may not be in the same order
+		final List<ShapeData> shapes = new ArrayList<>();
+		final List<ShapeData> savedShapes = new ArrayList<>();
+		final Iterator<List<ShapeData>> itr = rd.getIterator();
+		final Iterator<List<ShapeData>> savedItr = saved.getIterator();
+		while (itr.hasNext())
+			shapes.addAll(itr.next());
+		while (savedItr.hasNext())
+			savedShapes.addAll(savedItr.next());
+
+		for (final ShapeData shape : shapes) {
+			ShapeData match = null;
+			for (final ShapeData savedShape : savedShapes) {
+				if (ROIConverters.shapeDataEquals(shape, savedShape)) {
+					match = savedShape;
+					shape.setId(savedShape.getId());
+					break;
+				}
+			}
+			if (match == null) throw new IllegalArgumentException(
+				"Uploaded ROIData is missing a shape!");
+			savedShapes.remove(match);
+		}
 	}
 
 }
