@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -54,6 +55,9 @@ import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imagej.axis.LinearAxis;
+import net.imagej.omero.roi.LazyROITree;
+import net.imagej.roi.ROITree;
+import net.imagej.table.Table;
 
 import org.scijava.Priority;
 import org.scijava.log.LogService;
@@ -166,6 +170,12 @@ public class OMEROFormat extends AbstractFormat {
 		@Field
 		private String pixelType;
 
+		@Field
+		private ROITree rois;
+
+		@Field
+		private List<Table<?, ?>> tables;
+
 		/** Cached {@code Image} descriptor. */
 		private Image image;
 
@@ -240,6 +250,14 @@ public class OMEROFormat extends AbstractFormat {
 
 		public String getPixelType() {
 			return pixelType;
+		}
+
+		public ROITree getRois() {
+			return rois;
+		}
+
+		public List<Table<?, ?>> getTables() {
+			return tables;
 		}
 
 		public Image getImage() {
@@ -326,6 +344,14 @@ public class OMEROFormat extends AbstractFormat {
 			this.pixelType = pixelType;
 		}
 
+		public void setRois(final ROITree rois) {
+			this.rois = rois;
+		}
+
+		public void setTables(final List<Table<?, ?>> tables) {
+			this.tables = tables;
+		}
+
 		public void setImage(final Image image) {
 			this.image = image;
 			if (image == null) return;
@@ -385,6 +411,8 @@ public class OMEROFormat extends AbstractFormat {
 			imageMeta.setPixelType(pixType);
 			imageMeta.setMetadataComplete(true);
 			imageMeta.setOrderCertain(true);
+			imageMeta.setROIs(rois);
+			imageMeta.setTables(tables);
 		}
 	}
 
@@ -395,6 +423,9 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Parameter
 		private OMEROService omeroService;
+
+		@Parameter
+		private LogService logService;
 
 		@Override
 		public void typedParse(final RandomAccessInputStream stream,
@@ -418,6 +449,12 @@ public class OMEROFormat extends AbstractFormat {
 			catch (final Ice.LocalException exc) {
 				throw versionException(exc);
 			}
+
+			// Set table and rois to lazy loaders
+			meta.setRois(new LazyROITree(null, meta.getImageID(), meta
+				.getCredentials(), omeroService, logService));
+			meta.setTables(new LazyTableList(meta.getImageID(), meta.getCredentials(),
+				omeroService, logService));
 
 			// parse pixel sizes
 			meta.setSizeX(pix.getSizeX().getValue());
