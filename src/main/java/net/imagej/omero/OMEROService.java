@@ -26,6 +26,7 @@
 package net.imagej.omero;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
@@ -164,6 +165,43 @@ public interface OMEROService extends ImageJService {
 	 */
 	long[] uploadROIs(OMEROLocation credentials, TreeNode<?> ijROIs, long imageID)
 		throws ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Returns the most recently retrieved {@link ROIData} object with the given
+	 * ID. If no such mapping exists {@code null} is returned.
+	 * <p>
+	 * When a ROIData object is updated and the new version uploaded to the OMERO
+	 * server, previous ROIData objects become "locked" and subsequent attempts to
+	 * update and upload new versions of them to OMERO will result in
+	 * {@link ome.conditions.OptimisticLockException}. Therefore, pairings of the
+	 * id and the update OMERO server ROIData object must be stored.
+	 * </p>
+	 */
+	ROIData getUpdatedServerROIData(long roiDataId);
+
+	/**
+	 * Add a mapping between a ROIs originating from ImageJ and an OMERO
+	 * {@link ROIData}.
+	 */
+	void addROIMapping(Object roi, ROIData shape);
+
+	/**
+	 * Retrieve the {@link ROIData} associated with this key. Returns {@code null}
+	 * if there's no mapping.
+	 */
+	ROIData getROIMapping(Object key);
+
+	/** Returns all the keys for mapped ROIs. */
+	Set<Object> getROIMappingKeys();
+
+	/**
+	 * Removes the {@code Object} {@link ROIData} mapping associated with the
+	 * given key from the stored ROIs.
+	 */
+	void removeROIMapping(Object key);
+
+	/** Removes all {@code Object} {@link ROIData} mappings. */
+	void clearROIMappings();
 
 	/**
 	 * Returns an {@link OMEROSession} using the given {@link OMEROLocation}. If a

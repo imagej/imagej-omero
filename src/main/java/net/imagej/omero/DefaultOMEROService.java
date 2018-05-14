@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -135,6 +136,10 @@ public class DefaultOMEROService extends AbstractService implements
 	private final HashMap<OMEROLocation, OMEROSession> sessions = new HashMap<>();
 
 	private final ThreadLocal<OMEROSession> activeSessions = new ThreadLocal<>();
+
+	private final Map<Object, ROIData> savedRois =
+		new IdentityHashMap<>();
+	private final Map<Long, ROIData> downloadedROIs = new HashMap<>();
 
 	private Map<Class<?>, Collection<Class<?>>> convertTo;
 	private Map<Class<?>, Collection<Class<?>>> convertFrom;
@@ -627,6 +632,36 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 
 		return ids;
+	}
+
+	@Override
+	public ROIData getUpdatedServerROIData(final long roiDataId) {
+		return downloadedROIs.get(roiDataId);
+	}
+
+	@Override
+	public void addROIMapping(final Object roi, final ROIData shape) {
+		savedRois.put(roi, shape);
+	}
+
+	@Override
+	public ROIData getROIMapping(final Object key) {
+		return savedRois.get(key);
+	}
+
+	@Override
+	public Set<Object> getROIMappingKeys() {
+		return Collections.unmodifiableSet(savedRois.keySet());
+	}
+
+	@Override
+	public void removeROIMapping(final Object key) {
+		savedRois.remove(key);
+	}
+
+	@Override
+	public void clearROIMappings() {
+		savedRois.clear();
 	}
 
 	@Override
