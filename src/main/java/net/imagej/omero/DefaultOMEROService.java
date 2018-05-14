@@ -974,7 +974,14 @@ public class DefaultOMEROService extends AbstractService implements
 	 * <li>Many ImageJ types (such as {@link org.scijava.util.ColorRGB}) are
 	 * mapped to {@link String} for use with OMERO. We lean on the SciJava Common
 	 * {@link ConvertService#convert(Object, Class)} method to handle conversion
-	 * of such types back to ImageJ's expected type for the parameter.</li>
+	 * of such types back to ImageJ's expected type fo for (final TreeNode<?> dn :
+	 * ijROIs.children()) { ROIData oR; if (!(dn.data() instanceof Interval) &&
+	 * !(dn .data() instanceof RealInterval) && dn .data() instanceof
+	 * MaskPredicate) oR = convertService.convert( interval((MaskPredicate<?>)
+	 * dn.data(), interval, imageID, session), ROIData.class); else oR =
+	 * convertService.convert(dn, ROIData.class); if (oR == null) throw new
+	 * IllegalArgumentException("Unsupported type: " + dn.data().getClass());
+	 * omeroROIs.add(oR); } r the parameter.</li>
 	 * <li>ImageJ's image types (i.e., {@link Dataset}, {@link DatasetView} and
 	 * {@link ImageDisplay}) are mapped to {@code long} since OMERO communicates
 	 * about images using image IDs. Work must be done to download the image from
