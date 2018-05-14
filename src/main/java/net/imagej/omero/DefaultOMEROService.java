@@ -635,6 +635,31 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
+	public List<ROIData> convertOMEROROI(final TreeNode<?> dataNodeRois,
+		final Interval interval)
+	{
+		final List<ROIData> omeroROIs = new ArrayList<>();
+		final List<TreeNode<?>> roiTreeNodes = collectROITreeNodes(dataNodeRois);
+
+		for (final TreeNode<?> dn : roiTreeNodes) {
+			ROIData oR;
+			// If the data node has unbounded mask predicate data, apply the given
+			// interval if non-null
+			if (!(dn.data() instanceof Interval) && !(dn
+				.data() instanceof RealInterval) && dn
+					.data() instanceof MaskPredicate && interval != null) oR =
+						convertService.convert(interval((MaskPredicate<?>) dn.data(),
+							interval), ROIData.class);
+			// else convert directly
+			else oR = convertService.convert(dn, ROIData.class);
+			if (oR == null) throw new IllegalArgumentException("Unsupported type: " +
+				dn.data().getClass());
+			omeroROIs.add(oR);
+		}
+		return omeroROIs;
+	}
+
+	@Override
 	public ROIData getUpdatedServerROIData(final long roiDataId) {
 		return downloadedROIs.get(roiDataId);
 	}

@@ -26,6 +26,7 @@
 package net.imagej.omero;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -35,6 +36,8 @@ import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.roi.ROITree;
 import net.imagej.table.Table;
+import net.imglib2.Interval;
+import net.imglib2.roi.MaskPredicate;
 
 import org.scijava.module.ModuleItem;
 import org.scijava.util.TreeNode;
@@ -165,6 +168,15 @@ public interface OMEROService extends ImageJService {
 	 */
 	long[] uploadROIs(OMEROLocation credentials, TreeNode<?> ijROIs, long imageID)
 		throws ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Converts the given {@link TreeNode} to {@link ROIData}. If an interval is
+	 * provided it will be used to convert unbounded {@link MaskPredicate}s to
+	 * {@link ROIData}. If the interval is null, then unbounded
+	 * {@link MaskPredicate}s cannot be converted to {@link ROIData} and an
+	 * exception is thrown.
+	 */
+	List<ROIData> convertOMEROROI(TreeNode<?> dataNodeRois, Interval interval);
 
 	/**
 	 * Returns the most recently retrieved {@link ROIData} object with the given
