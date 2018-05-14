@@ -26,7 +26,9 @@
 package net.imagej.omero.roi.point;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROService;
@@ -48,6 +50,7 @@ import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.PointData;
 import omero.gateway.model.ROIData;
+import omero.gateway.model.ShapeData;
 import omero.model.Roi;
 import omero.model.TagAnnotationI;
 
@@ -113,19 +116,29 @@ public class TreeNodeRPCToROIData extends
 		while (pts.hasNext())
 			r.addShapeData(createPoint((RealLocalizable) pts.next(), bt));
 
-		try {
-			final TagAnnotationI tag = omero.getAnnotation(
-				ROIConverters.IJO_VERSION_DESC, omero.getVersion());
+		if (omero.getROIMapping(rpc) != null) {
+			final ROIData prev = omero.getROIMapping(rpc);
+			r.setId(prev.getId());
 
-			// created new ROIData so its already loaded, and annotation can just be
-			// attached
-			((Roi) r.asIObject()).linkAnnotation(tag);
-
+			// FIXME: The ID equivalence isn't maintained! If a point is moved, the ID
+			// is just assigned at "random"
+			updatePoints(r, prev);
 		}
-		catch (ServerError | ExecutionException | DSOutOfServiceException
-				| DSAccessException exc)
-		{
-			log.error("Cannot create/retrieve imagej-omero version tag", exc);
+		else {
+			try {
+				final TagAnnotationI tag = omero.getAnnotation(
+					ROIConverters.IJO_VERSION_DESC, omero.getVersion());
+
+				// created new ROIData so its already loaded, and annotation can just be
+				// attached
+				((Roi) r.asIObject()).linkAnnotation(tag);
+
+			}
+			catch (ServerError | ExecutionException | DSOutOfServiceException
+					| DSAccessException exc)
+			{
+				log.error("Cannot create/retrieve imagej-omero version tag", exc);
+			}
 		}
 		return (T) r;
 	}
@@ -150,6 +163,41 @@ public class TreeNodeRPCToROIData extends
 			.getDoublePosition(1));
 		pd.setText(boundaryType);
 		return pd;
+	}
+
+	private void updatePoints(final ROIData current, final ROIData prev) {
+		final List<ShapeData> currentPoints = new ArrayList<>();
+		final List<ShapeData> prevPoints = new ArrayList<>();
+		final Iterator<List<ShapeData>> currentItr = current.getIterator();
+		while (currentItr.hasNext())
+			currentPoints.addAll(currentItr.next());
+		final Iterator<List<ShapeData>> prevItr = prev.getIterator();
+		while (prevItr.hasNext())
+			prevPoints.addAll(prevItr.next());
+		final List<ShapeData> currentCopy = new ArrayList<>(currentPoints);
+		final List<ShapeData> prevCopy = new ArrayList<>(prevPoints);
+
+		// If there's an equivalent point, set the ID
+		for (final ShapeData point : currentPoints) {
+			for (final ShapeData prevPoint : prevPoints) {
+				if (ROIConverters.shapeDataEquals(point, prevPoint)) {
+					point.setId(prevPoint.getId());
+					currentCopy.remove(point);
+					prevCopy.remove(point);
+					break;
+				}
+			}
+		}
+
+		if (currentCopy.isEmpty()) return;
+
+		// If there's any remaining non-equivalent points, set the remaining IDs.
+		// If not leave them alone, and they'll be uploaded as new PointData
+		final Iterator<ShapeData> prevPointsItr = prevPoints.iterator();
+		for (final ShapeData point : currentCopy) {
+			if (!prevPointsItr.hasNext()) break;
+			point.setId(prevPointsItr.next().getId());
+		}
 	}
 
 }

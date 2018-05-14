@@ -25,6 +25,7 @@
 
 package net.imagej.omero.roi;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -53,7 +54,6 @@ import omero.gateway.model.RectangleData;
 import omero.gateway.model.ShapeData;
 import omero.model.EventI;
 import omero.model.RoiI;
-import omero.model.Shape;
 import omero.model.TagAnnotationI;
 
 /**
@@ -86,8 +86,9 @@ public class OMEROROICollectionToROIData extends
 		}
 
 		final ROIData r = ((OMEROROICollection) src).data();
-		final Iterator<List<ShapeData>> itr = r.getIterator();
+		final ROIData roiToUpdate = omero.getUpdatedServerROIData(r.getId());
 
+		final Iterator<List<ShapeData>> itr = r.getIterator();
 		while (itr.hasNext()) {
 			final List<ShapeData> shapes = itr.next();
 			for (final ShapeData shape : shapes) {
@@ -98,6 +99,12 @@ public class OMEROROICollectionToROIData extends
 
 		final RoiI iObject = (RoiI) r.asIObject();
 		linkAnnotation(iObject);
+
+		// Synchronize the server object, but don't return it. OMERORoiCollections
+		// do not get sync-ed to the server object, so updates to the server side
+		// object would be lost
+		if (roiToUpdate != null) synchronizeShapes(((OMEROROICollection) src)
+			.data(), roiToUpdate);
 
 		return (T) r;
 	}
@@ -200,6 +207,51 @@ public class OMEROROICollectionToROIData extends
 		{
 			log.error("Cannot create/retrieve imagej-omero version tag", exc);
 		}
+	}
+
+	/**
+	 * Synchronize the {@link ROIData} objects, such that the stored
+	 * {@link ROIData} has the same shapes as the {@link ROIData} backing the
+	 * {@link OMEROROICollection}.
+	 *
+	 * @param updatedRoi {@link ROIData} backing the {@link OMEROROICollection}
+	 * @param roiToUpdate {@link ROIData} which will be used to update the server
+	 */
+	private void synchronizeShapes(final ROIData updatedRoi,
+		final ROIData roiToUpdate)
+	{
+		final List<ShapeData> updateShapes = new ArrayList<>();
+		final List<ShapeData> shapesToUpdate = new ArrayList<>();
+
+		final Iterator<List<ShapeData>> updatedItr = updatedRoi.getIterator();
+		final Iterator<List<ShapeData>> toUpdateItr = roiToUpdate.getIterator();
+		while (updatedItr.hasNext())
+			updateShapes.addAll(updatedItr.next());
+		while (toUpdateItr.hasNext())
+			shapesToUpdate.addAll(toUpdateItr.next());
+
+		final List<ShapeData> updateCopy = new ArrayList<>(updateShapes);
+		final List<ShapeData> toUpdateCopy = new ArrayList<>(shapesToUpdate);
+
+		// Synchronize shapes
+		for (final ShapeData updated : updateShapes) {
+			for (final ShapeData toUpdate : shapesToUpdate) {
+				if (updated.getId() == toUpdate.getId()) {
+					ROIConverters.synchronizeShapeData(updated, toUpdate);
+					updateCopy.remove(updated);
+					toUpdateCopy.remove(toUpdate);
+					break;
+				}
+			}
+		}
+
+		// Remove shapes without equivalent
+		for (final ShapeData remove : toUpdateCopy)
+			roiToUpdate.removeShapeData(remove);
+
+		// Add new shapes
+		for (final ShapeData add : updateCopy)
+			roiToUpdate.addShapeData(add);
 	}
 
 }

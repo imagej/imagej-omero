@@ -29,6 +29,11 @@ import java.lang.reflect.Type;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROService;
+import net.imglib2.RandomAccessible;
+import net.imglib2.RealRandomAccessible;
+import net.imglib2.roi.MaskPredicate;
+import net.imglib2.view.IntervalView;
+import net.imglib2.view.RandomAccessibleOnRealRandomAccessible;
 
 import org.scijava.convert.AbstractConverter;
 import org.scijava.convert.ConvertService;
@@ -92,25 +97,48 @@ public abstract class AbstractTreeNodeToROIData<D extends TreeNode<?>> extends
 				.getSimpleName() + " Received: " + dest.getSimpleName());
 		}
 
+		MaskPredicate<?> mp = null;
 		final ROIData r = new ROIData();
 		final ShapeData s = convert.convert(((TreeNode<?>) src).data(),
 			ShapeData.class);
+
+		if (src instanceof IntervalView) {
+			final RandomAccessible<?> ra = ((IntervalView<?>) src).getSource();
+			if (ra instanceof RandomAccessibleOnRealRandomAccessible) {
+				final RealRandomAccessible<?> rra =
+					((RandomAccessibleOnRealRandomAccessible<?>) ra).getSource();
+				mp = convert.convert(rra, MaskPredicate.class);
+			}
+			else mp = convert.convert(ra, MaskPredicate.class);
+		}
+		if (((TreeNode<?>) src).data() instanceof MaskPredicate) mp =
+			(MaskPredicate<?>) ((TreeNode<?>) src).data();
+		if (omero.getROIMapping(mp) != null) {
+			final ROIData prev = omero.getROIMapping(mp);
+			r.setId(prev.getId());
+
+			// Assume there's only one shape, since only ROIData with one ShapeData is
+			// equivalent to MaskPredicate
+			s.setId(prev.getIterator().next().iterator().next().getId());
+		}
+		else {
+			try {
+				final TagAnnotationI tag = omero.getAnnotation(
+					ROIConverters.IJO_VERSION_DESC, omero.getVersion());
+
+				// created new ROIData so its already loaded, and annotation can just be
+				// attached
+				((Roi) r.asIObject()).linkAnnotation(tag);
+
+			}
+			catch (ServerError | ExecutionException | DSOutOfServiceException
+					| DSAccessException exc)
+			{
+				log.error("Cannot create/retrieve imagej-omero version tag", exc);
+			}
+		}
+
 		r.addShapeData(s);
-
-		try {
-			final TagAnnotationI tag = omero.getAnnotation(
-				ROIConverters.IJO_VERSION_DESC, omero.getVersion());
-
-			// created new ROIData so its already loaded, and annotation can just be
-			// attached
-			((Roi) r.asIObject()).linkAnnotation(tag);
-
-		}
-		catch (ServerError | ExecutionException | DSOutOfServiceException
-				| DSAccessException exc)
-		{
-			log.error("Cannot create/retrieve imagej-omero version tag", exc);
-		}
 		return (T) r;
 	}
 
