@@ -450,6 +450,58 @@ public class DefaultOMEROService extends AbstractService implements
 	}
 
 	@Override
+	public void uploadImage(final OMEROLocation credentials, final Dataset image,
+		final boolean uploadROIs, final TreeNode<?> rois, final boolean updateROIs,
+		final boolean uploadTables, final List<Table<?, ?>> tables,
+		final String[] tableNames, final long omeroDatasetID) throws ServerError,
+		IOException, ExecutionException, DSOutOfServiceException, DSAccessException,
+		PermissionDeniedException, CannotCreateSessionException
+	{
+		if (image == null) throw new IllegalArgumentException(
+			"Image cannot be null!");
+
+		final OMEROSession session = session(credentials);
+		long omeroImageID = -1;
+		final DataManagerFacility dm = session.getGateway().getFacility(
+			DataManagerFacility.class);
+
+		// Upload Image
+		omeroImageID = uploadImage(session.getClient(), image);
+
+		// Upload/update attachments
+		uploadImageAttachments(credentials, omeroImageID, uploadROIs, updateROIs,
+			uploadTables, rois, tables, tableNames);
+
+		// Attach image to Dataset
+		if (omeroDatasetID > 0) {
+			final ImageData imgData = new ImageData(new ImageI(omeroImageID, false));
+			final DatasetData dsData = new DatasetData(new DatasetI(omeroDatasetID,
+				false));
+			dm.addImageToDataset(session.getSecurityContext(), imgData, dsData);
+		}
+	}
+
+	@Override
+	public void uploadImageAttachments(final OMEROLocation credentials,
+		final long imageID, final boolean uploadROIs, final boolean updateROIs,
+		final boolean uploadTables, final TreeNode<?> rois,
+		final List<Table<?, ?>> tables, final String[] tableNames)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException,
+		ServerError, PermissionDeniedException, CannotCreateSessionException
+	{
+		if ((updateROIs || uploadROIs) && rois != null) {
+			if (updateROIs) updateAndReturnROIs(credentials, rois, imageID);
+			else uploadROIs(credentials, rois, imageID);
+		}
+
+		if (uploadTables && tables != null && !tables.isEmpty()) {
+			for (int i = 0; i < tables.size(); i++) {
+				uploadTable(credentials, tableNames[i], tables.get(i), imageID);
+			}
+		}
+	}
+
+	@Override
 	public Dataset downloadImage(final omero.client client, final long imageID)
 		throws omero.ServerError, IOException
 	{

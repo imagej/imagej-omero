@@ -112,6 +112,28 @@ public interface OMEROService extends ImageJService {
 		ExecutionException, DSAccessException;
 
 	/**
+	 * Uploads the given image to OMERO, and optionally uploads the given ROIs and
+	 * tables. The ROIs can also optionally be updated on the server.
+	 */
+	void uploadImage(OMEROLocation credentials, Dataset image, boolean uploadROIs,
+		TreeNode<?> rois, boolean updateROIs, boolean uploadTables,
+		List<Table<?, ?>> tables, String[] tableNames, long omeroDatasetID)
+		throws ServerError, IOException, ExecutionException,
+		DSOutOfServiceException, DSAccessException, PermissionDeniedException,
+		CannotCreateSessionException;
+
+	/**
+	 * Uploads the attachments to the OMERO server, and attaches them to the image
+	 * associated with the given id. In order to update ROIs these ROIs must exist
+	 * on the given image in OMERO.
+	 */
+	void uploadImageAttachments(OMEROLocation credentials, long imageID,
+		boolean uploadROIs, boolean updateROIs, boolean uploadTables,
+		TreeNode<?> rois, List<Table<?, ?>> tables, String[] tableNames)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException,
+		ServerError, PermissionDeniedException, CannotCreateSessionException;
+
+	/**
 	 * Downloads the image with the given image ID from OMERO, storing the result
 	 * into a new ImageJ {@link Dataset}.
 	 */
