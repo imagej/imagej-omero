@@ -605,7 +605,7 @@ public class DefaultOMEROService extends AbstractService implements
 		final OMEROSession session = session(credentials);
 		final ROIFacility roifac = session.getGateway().getFacility(
 			ROIFacility.class);
-		final Interval interval = null;
+		final Interval interval = getImageInterval(session, imageID);
 
 		final List<ROIData> omeroROIs = new ArrayList<>();
 		final List<TreeNode<?>> roiTreeNodes = collectROITreeNodes(ijROIs);
@@ -614,7 +614,7 @@ public class DefaultOMEROService extends AbstractService implements
 			if (!(dn.data() instanceof Interval) && !(dn
 				.data() instanceof RealInterval) && dn.data() instanceof MaskPredicate)
 				oR = convertService.convert(interval((MaskPredicate<?>) dn.data(),
-					interval, imageID, session), ROIData.class);
+					interval), ROIData.class);
 			else oR = convertService.convert(dn, ROIData.class);
 			if (oR == null) throw new IllegalArgumentException("Unsupported type: " +
 				dn.data().getClass());
@@ -957,22 +957,13 @@ public class DefaultOMEROService extends AbstractService implements
 	 * {@link RealMask}, it is also rasterized.
 	 *
 	 * @param m an unbounded {@link MaskPredicate}
-	 * @param interval the interval to apply, if null it is computed
-	 * @param imageID the ID of the OMERO image whose interval should be applied
-	 * @param session the current session
+	 * @param interval the interval to apply
 	 * @return a TreeNode whose data is a RandomAccessibleInterval representation
 	 *         of the original data
-	 * @throws ExecutionException
-	 * @throws DSOutOfServiceException
-	 * @throws DSAccessException
 	 */
 	private TreeNode<RandomAccessibleInterval<BoolType>> interval(
-		final MaskPredicate<?> m, Interval interval, final long imageID,
-		final OMEROSession session) throws ExecutionException,
-		DSOutOfServiceException, DSAccessException
+		final MaskPredicate<?> m, final Interval interval)
 	{
-		if (interval == null) interval = getImageInterval(session, imageID);
-
 		RandomAccessibleInterval<BoolType> rai;
 		if (m instanceof Mask) rai = Views.interval(Masks.toRandomAccessible(
 			(Mask) m), interval);
