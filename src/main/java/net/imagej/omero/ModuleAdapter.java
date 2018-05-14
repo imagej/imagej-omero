@@ -26,6 +26,7 @@
 package net.imagej.omero;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -172,11 +173,14 @@ public class ModuleAdapter extends AbstractContextual {
 	 * @throws PermissionDeniedException
 	 * @throws DSAccessException
 	 * @throws DSOutOfServiceException
+	 * @throws URISyntaxException 
+	 * @throws NumberFormatException 
 	 */
 	@SuppressWarnings("unchecked")
 	public void launch() throws ServerError, IOException, ExecutionException,
 		PermissionDeniedException, CannotCreateSessionException,
-		DSOutOfServiceException, DSAccessException
+		DSOutOfServiceException, DSAccessException, NumberFormatException,
+		URISyntaxException
 	{
 		// populate inputs
 		log.debug(info.getTitle() + ": populating inputs");

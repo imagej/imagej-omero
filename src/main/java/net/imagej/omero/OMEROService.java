@@ -26,6 +26,8 @@
 package net.imagej.omero;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -93,7 +95,8 @@ public interface OMEROService extends ImageJService {
 	 */
 	Object toOMERO(omero.client client, Object value) throws omero.ServerError,
 		IOException, PermissionDeniedException, CannotCreateSessionException,
-		ExecutionException, DSOutOfServiceException, DSAccessException;
+		ExecutionException, DSOutOfServiceException, DSAccessException,
+		NumberFormatException, URISyntaxException;
 
 	/**
 	 * Converts an OMERO parameter value to an ImageJ value of the given type.

@@ -294,13 +294,33 @@ public class DefaultOMEROService extends AbstractService implements
 	public Object toOMERO(final omero.client client, final Object value)
 		throws omero.ServerError, IOException, PermissionDeniedException,
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+		DSAccessException, NumberFormatException, URISyntaxException
 	{
+		if (value == null) return null;
+
 		// -- Image cases --
 
 		if (value instanceof Dataset) {
 			// upload image to OMERO, returning the resultant image ID
-			final long imageID = uploadImage(client, (Dataset) value);
+			final Dataset d = (Dataset) value;
+			final long imageID = uploadImage(client, d);
+
+			// upload any attached ROIs
+			// TODO: upload or update?
+			if (d.getProperties().get("rois") != null) uploadROIs(createCredentials(
+				client), (TreeNode<?>) d.getProperties().get("rois"), imageID);
+
+			// upload any attached tables
+			// TODO: Modify tables to implement Named??
+			if (d.getProperties().get("tables") != null) {
+				@SuppressWarnings("unchecked")
+				final List<Table<?, ?>> tables = (List<Table<?, ?>>) d.getProperties()
+					.get("tables");
+				final OMEROLocation cred = createCredentials(client);
+				for (final Table<?, ?> table : tables)
+					uploadTable(cred, d.getName() + "-table", table, imageID);
+			}
+
 			return toOMERO(client, imageID);
 		}
 		if (getToConvert(Dataset.class).contains(value.getClass())) return toOMERO(
@@ -327,26 +347,9 @@ public class DefaultOMEROService extends AbstractService implements
 
 		// -- ROI cases --
 
-		if (value instanceof OMEROROICollection) return convertService.convert(
-			value, ROIData.class);
-		if ((value instanceof TreeNode && ((TreeNode<?>) value)
-			.data() instanceof MaskPredicate))
-		{
-			final MaskPredicate<?> mp = (MaskPredicate<?>) ((TreeNode<?>) value)
-				.data();
-			if (mp instanceof Interval || mp instanceof RealInterval)
-				return convertService.convert(value, ROIData.class);
-			throw new IllegalArgumentException("MaskPredicate must be MaskInterval " +
-				"or RealMaskRealInterval to be converted to ROIData");
+		if (value instanceof TreeNode) {
+			return convertOMEROROI((TreeNode<?>) value, null);
 		}
-		if (value instanceof List && checkROIList((List<?>) value)) {
-			final List<Object> l = new ArrayList<>(((List<?>) value).size());
-			for (Object o : (List<?>) value)
-				l.add(toOMERO(client, o));
-			return l;
-		}
-		if (value instanceof MaskPredicate) return toOMERO(client,
-			new DefaultTreeNode<>(value, null));
 		if (value instanceof MaskPredicate) {
 			final Object o = toOMERO(client, new DefaultTreeNode<>(value, null));
 			return ((List<?>) o).get(0);
