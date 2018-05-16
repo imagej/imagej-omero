@@ -52,6 +52,7 @@ import omero.gateway.model.PolylineData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.RectangleData;
 import omero.gateway.model.ShapeData;
+import omero.gateway.model.TextData;
 import omero.model.EventI;
 import omero.model.RoiI;
 import omero.model.TagAnnotationI;
@@ -154,6 +155,7 @@ public class OMEROROICollectionToROIData extends
 		if (shape instanceof PolygonData) return ((PolygonData) shape).getText();
 		if (shape instanceof RectangleData) return ((RectangleData) shape)
 			.getText();
+		if (shape instanceof TextData) return ((TextData) shape).getText();
 		throw new IllegalArgumentException("Unsupport type: " + shape.getClass());
 	}
 
@@ -175,6 +177,7 @@ public class OMEROROICollectionToROIData extends
 		else if (shape instanceof PolygonData) ((PolygonData) shape).setText(value);
 		else if (shape instanceof RectangleData) ((RectangleData) shape).setText(
 			value);
+		else if (shape instanceof TextData) return;
 		else throw new IllegalArgumentException("Unsupport type: " + shape
 			.getClass());
 	}
