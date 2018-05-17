@@ -54,8 +54,15 @@ import net.imagej.omero.roi.OMEROROICollection;
 import net.imagej.omero.roi.ROIConverters;
 import net.imagej.roi.DefaultROITree;
 import net.imagej.roi.ROITree;
+import net.imagej.table.BoolTable;
+import net.imagej.table.ByteTable;
 import net.imagej.table.Column;
+import net.imagej.table.FloatTable;
 import net.imagej.table.GenericTable;
+import net.imagej.table.IntTable;
+import net.imagej.table.LongTable;
+import net.imagej.table.ResultsTable;
+import net.imagej.table.ShortTable;
 import net.imagej.table.Table;
 import net.imagej.table.TableDisplay;
 import net.imglib2.FinalInterval;
@@ -63,9 +70,27 @@ import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.roi.Mask;
+import net.imglib2.roi.MaskInterval;
 import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.Masks;
 import net.imglib2.roi.RealMask;
+import net.imglib2.roi.RealMaskRealInterval;
+import net.imglib2.roi.geom.real.Box;
+import net.imglib2.roi.geom.real.Ellipsoid;
+import net.imglib2.roi.geom.real.Line;
+import net.imglib2.roi.geom.real.PointMask;
+import net.imglib2.roi.geom.real.Polygon2D;
+import net.imglib2.roi.geom.real.Polyline;
+import net.imglib2.roi.geom.real.RealPointCollection;
+import net.imglib2.roi.geom.real.Sphere;
+import net.imglib2.roi.geom.real.WritableBox;
+import net.imglib2.roi.geom.real.WritableEllipsoid;
+import net.imglib2.roi.geom.real.WritableLine;
+import net.imglib2.roi.geom.real.WritablePointMask;
+import net.imglib2.roi.geom.real.WritablePolygon2D;
+import net.imglib2.roi.geom.real.WritablePolyline;
+import net.imglib2.roi.geom.real.WritableRealPointCollection;
+import net.imglib2.roi.geom.real.WritableSphere;
 import net.imglib2.type.logic.BoolType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
@@ -148,6 +173,22 @@ public class DefaultOMEROService extends AbstractService implements
 	private final Map<Object, ROIData> savedRois =
 		new IdentityHashMap<>();
 	private final Map<Long, ROIData> downloadedROIs = new HashMap<>();
+
+	private final Class<?>[] supportedTableClasses = new Class[] { Table.class,
+		BoolTable.class, ByteTable.class, ShortTable.class, IntTable.class,
+		LongTable.class, FloatTable.class, ResultsTable.class, GenericTable.class };
+
+	private final Class<?>[] supportedMaskPredicateClasses = new Class[] {
+		MaskPredicate.class, Mask.class, MaskInterval.class, RealMask.class,
+		RealMaskRealInterval.class, Box.class, Ellipsoid.class, Line.class,
+		PointMask.class, Polygon2D.class, Polyline.class, RealPointCollection.class,
+		Sphere.class, WritableBox.class, WritableEllipsoid.class,
+		WritableLine.class, WritablePointMask.class, WritablePolygon2D.class,
+		WritablePolyline.class, WritableRealPointCollection.class,
+		WritableSphere.class };
+
+	private final Class<?>[] supportedTreeNodeClasses = new Class[] {
+		TreeNode.class, ROITree.class };
 
 	private Map<Class<?>, Collection<Class<?>>> convertTo;
 	private Map<Class<?>, Collection<Class<?>>> convertFrom;
@@ -1267,28 +1308,50 @@ public class DefaultOMEROService extends AbstractService implements
 	private synchronized void initConvertTo() {
 		if (convertTo != null) return;
 		final Map<Class<?>, Collection<Class<?>>> map = new HashMap<>();
-		map.put(Dataset.class, Collections.unmodifiableCollection(convertService
-			.getCompatibleInputClasses(Dataset.class)));
-		map.put(TreeNode.class, Collections.unmodifiableCollection(convertService
-			.getCompatibleInputClasses(TreeNode.class)));
-		map.put(MaskPredicate.class, Collections.unmodifiableCollection(
-			convertService.getCompatibleInputClasses(MaskPredicate.class)));
-		map.put(Table.class, Collections.unmodifiableCollection(convertService
-			.getCompatibleInputClasses(Table.class)));
+
+		map.put(Dataset.class, convertService.getCompatibleInputClasses(
+			Dataset.class));
+
+		final List<Class<?>> treeNodeClasses = new ArrayList<>();
+		for (final Class<?> c : supportedTreeNodeClasses)
+			treeNodeClasses.addAll(convertService.getCompatibleInputClasses(c));
+		map.put(TreeNode.class, treeNodeClasses);
+
+		final List<Class<?>> maskPredicateClasses = new ArrayList<>();
+		for (final Class<?> c : supportedMaskPredicateClasses)
+			maskPredicateClasses.addAll(convertService.getCompatibleInputClasses(c));
+		map.put(MaskPredicate.class, maskPredicateClasses);
+
+		final List<Class<?>> tableClasses = new ArrayList<>();
+		for (final Class<?> c : supportedTableClasses)
+			tableClasses.addAll(convertService.getCompatibleInputClasses(c));
+		map.put(Table.class, tableClasses);
+
 		convertTo = Collections.unmodifiableMap(map);
 	}
 
 	private synchronized void initConvertFrom() {
 		if (convertFrom != null) return;
 		final Map<Class<?>, Collection<Class<?>>> map = new HashMap<>();
-		map.put(Dataset.class, Collections.unmodifiableCollection(convertService
-			.getCompatibleOutputClasses(Dataset.class)));
-		map.put(TreeNode.class, Collections.unmodifiableCollection(convertService
-			.getCompatibleOutputClasses(TreeNode.class)));
-		map.put(MaskPredicate.class, Collections.unmodifiableCollection(
-			convertService.getCompatibleOutputClasses(MaskPredicate.class)));
-		map.put(Table.class, Collections.unmodifiableCollection(convertService
-			.getCompatibleOutputClasses(Table.class)));
+
+		map.put(Dataset.class, convertService.getCompatibleOutputClasses(
+			Dataset.class));
+
+		final List<Class<?>> treeNodeClasses = new ArrayList<>();
+		for (final Class<?> c : supportedTreeNodeClasses)
+			treeNodeClasses.addAll(convertService.getCompatibleOutputClasses(c));
+		map.put(TreeNode.class, treeNodeClasses);
+
+		final List<Class<?>> maskPredicateClasses = new ArrayList<>();
+		for (final Class<?> c : supportedMaskPredicateClasses)
+			maskPredicateClasses.addAll(convertService.getCompatibleOutputClasses(c));
+		map.put(MaskPredicate.class, maskPredicateClasses);
+
+		final List<Class<?>> tableClasses = new ArrayList<>();
+		for (final Class<?> c : supportedTableClasses)
+			tableClasses.addAll(convertService.getCompatibleOutputClasses(c));
+		map.put(Table.class, tableClasses);
+
 		convertFrom = Collections.unmodifiableMap(map);
 	}
 
