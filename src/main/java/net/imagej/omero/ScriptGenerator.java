@@ -120,7 +120,7 @@ public class ScriptGenerator extends AbstractContextual {
 		final String exe = runScript.getAbsolutePath();
 
 		// generate the scripts
-		generateAll(menuService.getMenu(), dir, exe, 0);
+		generateAll(menuService.getMenu(), dir, exe);
 		return 0;
 	}
 
@@ -166,11 +166,11 @@ public class ScriptGenerator extends AbstractContextual {
 	 * structure.
 	 */
 	private void generateAll(final ShadowMenu menu, final File dir,
-		final String exe, final int pos) throws IOException
+		final String exe) throws IOException
 	{
 		if (menu.isLeaf()) {
 			// menu points to a leaf node -- i.e., a module
-			generate(menu.getModuleInfo(), dir, exe, pos);
+			generate(menu.getModuleInfo(), dir, exe);
 			return;
 		}
 
@@ -183,19 +183,18 @@ public class ScriptGenerator extends AbstractContextual {
 		}
 		else {
 			// create the menu's subdirectory
-			subDir = new File(dir, sanitize(name, pos));
+			subDir = new File(dir, sanitize(name));
 			subDir.mkdir();
 		}
 		// loop over the menu's children
-		int i = 0;
 		for (final ShadowMenu subMenu : menu.getChildren()) {
-			generateAll(subMenu, subDir, exe, i++);
+			generateAll(subMenu, subDir, exe);
 		}
 	}
 
 	/** Generates an OMERO script stub for the given ImageJ module. */
 	private void generate(final ModuleInfo info, final File dir,
-		final String exe, final int pos) throws IOException
+		final String exe) throws IOException
 	{
 		// validate module
 		if (!(info instanceof Identifiable)) return;
@@ -211,7 +210,7 @@ public class ScriptGenerator extends AbstractContextual {
 		final String escapedID = id.replaceAll("\n", "\\\\n");
 
 		// write the stub
-		final File stubFile = formatFilename(dir, info, pos);
+		final File stubFile = formatFilename(dir, info);
 		final PrintWriter out = new PrintWriter(new FileWriter(stubFile));
 		// Someday, we can perhaps improve OMERO to call the ImageJ
 		// launcher directly rather than using Python in this silly way.
@@ -228,27 +227,19 @@ public class ScriptGenerator extends AbstractContextual {
 		out.close();
 	}
 
-	private File formatFilename(final File dir, final ModuleInfo info,
-		final int pos)
+	private File formatFilename(final File dir, final ModuleInfo info)
 	{
-		return new File(dir, sanitize(info.getTitle(), pos) + ".py");
+		return new File(dir, sanitize(info.getTitle()) + ".py");
 	}
 
-	private String sanitize(final String str, final int pos) {
+	private String sanitize(final String str) {
 		// replace undesirable characters (space, slash and backslash)
 		String s = str.replaceAll("[ /\\\\]", "_");
 
 		// remove ellipsis if present
 		if (s.endsWith("...")) s = s.substring(0, s.length() - 3);
 
-		// prepend the correct number of invisible spaces, for proper sorting
-		final StringBuilder sb = new StringBuilder();
-		for (int l = 0; l < pos; l++) {
-			sb.append("\ufeff");
-		}
-		sb.append(s);
-
-		return sb.toString();
+		return s;
 	}
 
 }

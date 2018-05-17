@@ -90,15 +90,15 @@ public class ScriptGeneratorTest {
 		assertTrue(imagejDir.isDirectory());
 		final File fileDir = new File(imagejDir, "File");
 		assertTrue(fileDir.isDirectory());
-		final File animalsDir = new File(imagejDir, "\ufeffAnimals");
+		final File animalsDir = new File(imagejDir, "Animals");
 		assertTrue(animalsDir.isDirectory());
 		assertTrue(new File(fileDir, "New.py").exists());
-		assertTrue(new File(fileDir, "\ufeffOpen.py").exists());
-		assertTrue(new File(fileDir, "\ufeff\ufeffSave.py").exists());
-		assertTrue(new File(fileDir, "\ufeff\ufeff\ufeffExit.py").exists());
+		assertTrue(new File(fileDir, "Open.py").exists());
+		assertTrue(new File(fileDir, "Save.py").exists());
+		assertTrue(new File(fileDir, "Exit.py").exists());
 		assertTrue(new File(animalsDir, "Lion.py").exists());
-		assertTrue(new File(animalsDir, "\ufeffTiger.py").exists());
-		assertTrue(new File(animalsDir, "\ufeff\ufeffBear.py").exists());
+		assertTrue(new File(animalsDir, "Tiger.py").exists());
+		assertTrue(new File(animalsDir, "Bear.py").exists());
 		FileUtils.deleteRecursively(tempDir);
 	}
 
