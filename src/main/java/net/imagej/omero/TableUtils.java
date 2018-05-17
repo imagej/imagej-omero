@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -86,6 +86,10 @@ public final class TableUtils {
 				BoolArray.class)) omeroType = Long[].class;
 		else if (type.equals(Character.class) || type.equals(String.class))
 			omeroType = String.class;
+		else if (type.equals(Object.class) && checkIfDoubleColumn(imageJColumn))
+			omeroType = Double.class;
+		else if (type.equals(Object.class) && checkIfStringColumn(imageJColumn))
+			omeroType = String.class;
 		else {
 			throw new UnsupportedOperationException("Not yet implemented: " + type
 				.getName());
@@ -119,6 +123,10 @@ public final class TableUtils {
 			return convertService.convert(imageJColumn.toArray(), Long[][].class);
 		if (type.equals(String.class) || type.equals(Character.class))
 			return convertService.convert(imageJColumn.toArray(), String[].class);
+		if (type.equals(Object.class) && checkIfDoubleColumn(imageJColumn))
+			return getGenericColumnValuesDouble(imageJColumn);
+		if (type.equals(Object.class) && checkIfStringColumn(imageJColumn))
+			return getGenericColumnValuesString(imageJColumn);
 		throw new UnsupportedOperationException("Unsupported column type: " +
 			imageJColumn.getClass().getName());
 	}
@@ -269,4 +277,35 @@ public final class TableUtils {
 		throw new UnsupportedOperationException(
 			"Not yet implemented reference column for " + refType.name());
 	}
+
+	private static boolean checkIfDoubleColumn(final Column<?> c) {
+		for (int i = 0; i < c.size(); i++) {
+			if (c.get(i) instanceof Double) continue;
+			return false;
+		}
+		return true;
+	}
+
+	private static boolean checkIfStringColumn(final Column<?> c) {
+		for (int i = 0; i < c.size(); i++) {
+			if (c.get(i) instanceof String) continue;
+			return false;
+		}
+		return true;
+	}
+
+	private static Double[] getGenericColumnValuesDouble(final Column<?> c) {
+		final Double[] values = new Double[c.size()];
+		for (int i = 0; i < c.size(); i++)
+			values[i] = (Double) c.get(i);
+		return values;
+	}
+
+	private static String[] getGenericColumnValuesString(final Column<?> c) {
+		final String[] values = new String[c.size()];
+		for (int i = 0; i < c.size(); i++)
+			values[i] = (String) c.get(i);
+		return values;
+	}
+
 }
