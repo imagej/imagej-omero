@@ -29,7 +29,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.ROIConverters;
@@ -40,19 +39,13 @@ import net.imglib2.roi.geom.real.RealPointCollection;
 import org.scijava.Priority;
 import org.scijava.convert.AbstractConverter;
 import org.scijava.convert.Converter;
-import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.TreeNode;
 
-import omero.ServerError;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.PointData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.ShapeData;
-import omero.model.Roi;
-import omero.model.TagAnnotationI;
 
 /**
  * Converts a {@link RealPointCollection} to {@link ROIData}.
@@ -66,9 +59,6 @@ public class TreeNodeRPCToROIData extends
 
 	@Parameter
 	private OMEROService omero;
-
-	@Parameter
-	private LogService log;
 
 	@Override
 	public boolean canConvert(final Object src, final Type dest) {
@@ -124,22 +114,7 @@ public class TreeNodeRPCToROIData extends
 			// is just assigned at "random"
 			updatePoints(r, prev);
 		}
-		else {
-			try {
-				final TagAnnotationI tag = omero.getAnnotation(
-					ROIConverters.IJO_VERSION_DESC, omero.getVersion());
 
-				// created new ROIData so its already loaded, and annotation can just be
-				// attached
-				((Roi) r.asIObject()).linkAnnotation(tag);
-
-			}
-			catch (ServerError | ExecutionException | DSOutOfServiceException
-					| DSAccessException exc)
-			{
-				log.error("Cannot create/retrieve imagej-omero version tag", exc);
-			}
-		}
 		return (T) r;
 	}
 

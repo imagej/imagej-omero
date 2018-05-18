@@ -25,25 +25,16 @@
 
 package net.imagej.omero.roi;
 
-import java.util.concurrent.ExecutionException;
-
-import net.imagej.omero.OMEROService;
-
 import org.scijava.Priority;
 import org.scijava.convert.AbstractConverter;
 import org.scijava.convert.ConvertService;
 import org.scijava.convert.Converter;
-import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import omero.ServerError;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.ShapeData;
 import omero.model.Roi;
-import omero.model.TagAnnotationI;
 
 /**
  * Converts an {@link OMEROROIElement} to {@link ROIData}.
@@ -57,12 +48,6 @@ public class OMEROROIElementToROIData extends
 
 	@Parameter
 	private ConvertService convert;
-
-	@Parameter
-	private OMEROService omero;
-
-	@Parameter
-	private LogService log;
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -90,20 +75,6 @@ public class OMEROROIElementToROIData extends
 			ShapeData.class);
 		r.addShapeData(s);
 
-		try {
-			final TagAnnotationI tag = omero.getAnnotation(
-				ROIConverters.IJO_VERSION_DESC, omero.getVersion());
-
-			// created new ROIData so its already loaded, and annotation can just be
-			// attached
-			((Roi) r.asIObject()).linkAnnotation(tag);
-
-		}
-		catch (ServerError | ExecutionException | DSOutOfServiceException
-				| DSAccessException exc)
-		{
-			log.error("Cannot create/retrieve imagej-omero version tag", exc);
-		}
 		return (T) r;
 	}
 

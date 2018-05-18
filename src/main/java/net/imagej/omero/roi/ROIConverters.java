@@ -29,18 +29,15 @@ import java.awt.Point;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.roi.BoundaryType;
-import net.imglib2.roi.MaskPredicate;
 
 import org.scijava.log.LogService;
 
 import ome.formats.model.UnitsFactory;
 import ome.model.units.BigResult;
-import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.MetadataFacility;
@@ -58,8 +55,6 @@ import omero.gateway.model.TagAnnotationData;
 import omero.gateway.model.TextData;
 import omero.model.AffineTransformI;
 import omero.model.Shape;
-import omero.model.TagAnnotation;
-import omero.model.TagAnnotationI;
 
 /**
  * Utility class for working with ROI converters.
@@ -162,33 +157,6 @@ public class ROIConverters {
 		transform.setA11(omero.rtypes.rdouble(transformFromSource.get(1, 1)));
 		transform.setA12(omero.rtypes.rdouble(transformFromSource.get(1, 2)));
 		return transform;
-	}
-
-	/**
-	 * Creates/Retrieves a {@link TagAnnotation} which contains the boundary
-	 * behavior of this Mask.
-	 *
-	 * @param mask a {@link MaskPredicate} whose boundary behavior will be
-	 *          represented in the annotation
-	 * @param omero an {@link OMEROService} for retrieving the tag
-	 * @param log a {@link LogService} to record any issues
-	 * @return an annotation which contains information about the masks boundary
-	 *         behavior
-	 */
-	public static <L> TagAnnotationI getAnnotation(final MaskPredicate<L> mask,
-		final OMEROService omero, final LogService log)
-	{
-		TagAnnotationI tag = null;
-		try {
-			tag = omero.getAnnotation("imagej:boundaryType", mask.boundaryType()
-				.toString().toLowerCase());
-		}
-		catch (ServerError | ExecutionException | DSOutOfServiceException
-				| DSAccessException exc)
-		{
-			log.error("Cannot retrieve/create tag", exc);
-		}
-		return tag;
 	}
 
 	public static String createBoundaryTypeString(final BoundaryType bt) {

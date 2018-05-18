@@ -25,6 +25,9 @@
 
 package net.imagej.omero;
 
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -41,17 +44,14 @@ import net.imagej.table.Table;
 import net.imglib2.Interval;
 import net.imglib2.roi.MaskPredicate;
 
-import org.scijava.module.ModuleItem;
-import org.scijava.util.TreeNode;
-
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.TableData;
-import omero.model.TagAnnotationI;
+
+import org.scijava.module.ModuleItem;
+import org.scijava.util.TreeNode;
 
 /**
  * Interface for ImageJ services that manage OMERO data conversion.
@@ -305,34 +305,5 @@ public interface OMEROService extends ImageJService {
 	 * @param session The session to be removed
 	 */
 	void removeSession(OMEROSession session);
-
-	/**
-	 * Returns a {@link TagAnnotationI} with the given description and text value.
-	 * If no such {@link TagAnnotationI} is found on the server, one is created,
-	 * saved to the server, and returned.
-	 *
-	 * @param description the description of the tag
-	 * @param value the text value of the tag
-	 * @param location credentials for connecting to the server, if these isn't a
-	 *          current {@link OMEROSession} for these credentials one is created
-	 * @return a {@link TagAnnotationI} with the given description and text value
-	 */
-	TagAnnotationI getAnnotation(String description, String value,
-		OMEROLocation location) throws ExecutionException, ServerError,
-		DSOutOfServiceException, DSAccessException;
-
-	/**
-	 * Returns a {@link TagAnnotationI} with the given description and text value.
-	 * If no such {@link TagAnnotationI} is found on the server, one is created
-	 * and returned. The credentials used for this query are those of the
-	 * {@link OMEROSession} related with the current running thread.
-	 *
-	 * @param description the description of the tag
-	 * @param value the text value of the tag
-	 * @return a {@link TagAnnotationI} with the given description and text value
-	 */
-	TagAnnotationI getAnnotation(String description, String value)
-		throws ExecutionException, ServerError, DSOutOfServiceException,
-		DSAccessException;
 
 }

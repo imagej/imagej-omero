@@ -62,7 +62,6 @@ import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
 import omero.ServerError;
-import omero.api.IQueryPrx;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
@@ -80,7 +79,6 @@ import omero.model.EventI;
 import omero.model.Roi;
 import omero.model.RoiI;
 import omero.model.Shape;
-import omero.sys.Filter;
 
 /**
  * Tests {@link OMEROService#uploadROIs(OMEROLocation, TreeNode, long)}. Note,
@@ -112,9 +110,6 @@ public class UploadROITest {
 
 	@Mocked
 	private PixelsData pixels;
-
-	@Mocked
-	private IQueryPrx query;
 
 	@Before
 	public void setUp() throws URISyntaxException {
@@ -358,14 +353,6 @@ public class UploadROITest {
 					pixels.getSizeY();
 					result = 190;
 				}
-
-				session.getGateway();
-				result = gateway;
-				gateway.getQueryService((SecurityContext) any);
-				result = query;
-				query.findAllByString(anyString, anyString, anyString, anyBoolean,
-					(Filter) any);
-				result = tags;
 
 				final List<ROIData> rd = new ArrayList<>(numROIData);
 				if (rois != null) {

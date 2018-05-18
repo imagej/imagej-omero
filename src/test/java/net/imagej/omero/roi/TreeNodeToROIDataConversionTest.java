@@ -30,12 +30,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.DefaultTypedAxis;
 import net.imagej.axis.TypedAxis;
-import net.imagej.omero.DefaultOMEROService;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMaskRealInterval;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMaskToShapeData;
@@ -64,14 +62,9 @@ import org.junit.Test;
 import org.scijava.Context;
 import org.scijava.convert.ConvertService;
 import org.scijava.log.LogService;
-import org.scijava.plugin.Plugin;
-import org.scijava.service.Service;
 import org.scijava.util.DefaultTreeNode;
 import org.scijava.util.TreeNode;
 
-import omero.ServerError;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.EllipseData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.RectangleData;
@@ -79,11 +72,8 @@ import omero.gateway.model.ShapeData;
 import omero.model.Event;
 import omero.model.EventI;
 import omero.model.Roi;
-import omero.model.RoiAnnotationLink;
 import omero.model.RoiI;
 import omero.model.Shape;
-import omero.model.TagAnnotation;
-import omero.model.TagAnnotationI;
 
 /**
  * Tests converting {@link TreeNode} to {@link ROIData}.
@@ -97,7 +87,7 @@ public class TreeNodeToROIDataConversionTest {
 
 	@Before
 	public void setUp() {
-		final Context c = new Context(MockOMEROService.class, ConvertService.class,
+		final Context c = new Context(OMEROService.class, ConvertService.class,
 			LogService.class);
 		convert = c.getService(ConvertService.class);
 		imagejOmeroVersion = c.getService(OMEROService.class).getVersion();
@@ -490,16 +480,6 @@ public class TreeNodeToROIDataConversionTest {
 		final long originalId)
 	{
 		assertEquals(originalId, converted.getId());
-
-		// check that the annotation is there and correct
-		final List<RoiAnnotationLink> anno = ((Roi) converted.asIObject())
-			.copyAnnotationLinks();
-		assertEquals(1, anno.size());
-		assertTrue(anno.get(0).getChild() instanceof TagAnnotation);
-		final TagAnnotation tag = (TagAnnotation) anno.get(0).getChild();
-		assertEquals(ROIConverters.IJO_VERSION_DESC, tag.getDescription()
-			.getValue());
-		assertEquals(imagejOmeroVersion, tag.getTextValue().getValue());
 	}
 
 	private void assertShapeDataConversionCorrect(final RectangleData converted,
@@ -531,25 +511,5 @@ public class TreeNodeToROIDataConversionTest {
 		assertEquals(z, converted.getZ());
 		assertEquals(t, converted.getT());
 		assertEquals(c, converted.getC());
-	}
-
-	// -- Mock classes --
-
-	@Plugin(type = Service.class)
-	public static final class MockOMEROService extends DefaultOMEROService {
-
-		@Override
-		public TagAnnotationI getAnnotation(final String description,
-			final String value) throws ExecutionException, ServerError,
-			DSOutOfServiceException, DSAccessException
-		{
-			if (description == ROIConverters.IJO_VERSION_DESC) {
-				final TagAnnotationI tag = new TagAnnotationI();
-				tag.setDescription(omero.rtypes.rstring(description));
-				tag.setTextValue(omero.rtypes.rstring(value));
-				return tag;
-			}
-			throw new IllegalArgumentException("Invalid description: " + description);
-		}
 	}
 }

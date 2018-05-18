@@ -113,7 +113,6 @@ import org.scijava.util.Types;
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
 import omero.ServerError;
-import omero.api.IQueryPrx;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
@@ -129,11 +128,8 @@ import omero.gateway.model.ROIResult;
 import omero.gateway.model.ShapeData;
 import omero.gateway.model.TableData;
 import omero.gateway.model.TableDataColumn;
-import omero.gateway.model.TagAnnotationData;
 import omero.model.DatasetI;
 import omero.model.ImageI;
-import omero.model.TagAnnotationI;
-import omero.sys.Filter;
 
 /**
  * Default ImageJ service for managing OMERO data conversion.
@@ -950,26 +946,6 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 	}
 
-	@Override
-	public TagAnnotationI getAnnotation(final String description,
-		final String value, final OMEROLocation location) throws ExecutionException,
-		ServerError, DSOutOfServiceException, DSAccessException
-	{
-		final OMEROSession s = session(location);
-		return getAnnotation(description, value, s);
-	}
-
-	@Override
-	public TagAnnotationI getAnnotation(final String description,
-		final String value) throws ExecutionException, ServerError,
-		DSOutOfServiceException, DSAccessException
-	{
-		final OMEROSession s = activeSessions.get();
-		if (s == null) throw new IllegalArgumentException(
-			"Cannot get TagAnnotation, no session associated with running thread!");
-		return getAnnotation(description, value, s);
-	}
-
 	// -- Helper methods --
 
 	/**
@@ -1140,70 +1116,6 @@ public class DefaultOMEROService extends AbstractService implements
 		@SuppressWarnings("unchecked")
 		final T[] array = (T[]) Array.newInstance(type, 0);
 		return collection.toArray(array);
-	}
-
-	/**
-	 * Creates a {@link TagAnnotationData} with the given description and
-	 * textValue, and saves it to the server using the session credentials.
-	 *
-	 * @param description the description for the {@link TagAnnotationData}, for
-	 *          imagej tags this should start with "imagej:"
-	 * @param value the text value for the {@link TagAnnotationData}
-	 * @param s the session credentials to use and create the
-	 *          {@link TagAnnotationData} for
-	 * @return newly created {@link TagAnnotationData}
-	 * @throws ExecutionException
-	 * @throws DSOutOfServiceException
-	 * @throws DSAccessException
-	 */
-	private TagAnnotationData createTag(final String description,
-		final String value, final OMEROSession s) throws ExecutionException,
-		DSOutOfServiceException, DSAccessException
-	{
-		final DataManagerFacility dm = s.getGateway().getFacility(
-			DataManagerFacility.class);
-		TagAnnotationData t = new TagAnnotationData(value);
-		t.setDescription(description);
-		t = (TagAnnotationData) dm.saveAndReturnObject(s.getSecurityContext(), t);
-		return t;
-	}
-
-	/**
-	 * Attempts to retrieve the {@link TagAnnotationI} with the given description
-	 * and text value from the server. If no such {@link TagAnnotationI} exists
-	 * for the given session/credentials, a new one is created and saved on the
-	 * server.
-	 *
-	 * @param description the description for the tag of interest
-	 * @param value the text value of the tag of interest
-	 * @param s the session credentials to use when querying the server
-	 * @return the found tag, or a new tag if no matching tag previously existed
-	 * @throws ExecutionException
-	 * @throws ServerError
-	 * @throws DSOutOfServiceException
-	 * @throws DSAccessException
-	 */
-	private TagAnnotationI getAnnotation(final String description,
-		final String value, final OMEROSession s) throws ExecutionException,
-		ServerError, DSOutOfServiceException, DSAccessException
-	{
-		final IQueryPrx query = s.getGateway().getQueryService(s
-			.getSecurityContext());
-		final List<omero.model.IObject> tags = query.findAllByString(
-			"TagAnnotationI", "description", description, true, new Filter(
-				omero.rtypes.rbool(false), null, null, null, null, null, null));
-
-		// If query returns nothing, make the tag
-		if (tags == null) return (TagAnnotationI) createTag(description, value, s)
-			.asIObject();
-
-		for (final omero.model.IObject tag : tags) {
-			if (tag instanceof TagAnnotationI && ((TagAnnotationI) tag).getTextValue()
-				.getValue().equals(value)) return (TagAnnotationI) tag;
-		}
-
-		// if no matching tags, create tag
-		return (TagAnnotationI) createTag(description, value, s).asIObject();
 	}
 
 	/**

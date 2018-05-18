@@ -28,21 +28,15 @@ package net.imagej.omero.roi;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROService;
 
 import org.scijava.Priority;
 import org.scijava.convert.AbstractConverter;
 import org.scijava.convert.Converter;
-import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import ome.model.IObject;
-import omero.ServerError;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.EllipseData;
 import omero.gateway.model.LineData;
 import omero.gateway.model.MaskData;
@@ -53,9 +47,6 @@ import omero.gateway.model.ROIData;
 import omero.gateway.model.RectangleData;
 import omero.gateway.model.ShapeData;
 import omero.gateway.model.TextData;
-import omero.model.EventI;
-import omero.model.RoiI;
-import omero.model.TagAnnotationI;
 
 /**
  * Converts an {@link OMEROROICollection} to {@link ROIData}.
@@ -69,9 +60,6 @@ public class OMEROROICollectionToROIData extends
 
 	@Parameter
 	private OMEROService omero;
-
-	@Parameter
-	private LogService log;
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -97,9 +85,6 @@ public class OMEROROICollectionToROIData extends
 				setTextValue(shape, generateBoundaryTypeString(shape));
 			}
 		}
-
-		final RoiI iObject = (RoiI) r.asIObject();
-		linkAnnotation(iObject);
 
 		// Synchronize the server object, but don't return it. OMERORoiCollections
 		// do not get sync-ed to the server object, so updates to the server side
@@ -180,36 +165,6 @@ public class OMEROROICollectionToROIData extends
 		else if (shape instanceof TextData) return;
 		else throw new IllegalArgumentException("Unsupport type: " + shape
 			.getClass());
-	}
-
-	/**
-	 * Attaches a {@link TagAnnotationI} containing the ImageJ-OMERO version to
-	 * the given {@link RoiI}.
-	 *
-	 * @param iObject the {@link IObject} backing the {@link ShapeData} object
-	 * @see <a href=
-	 *      "https://docs.openmicroscopy.org/omero/5.4.0/developers/GettingStarted/AdvancedClientDevelopment.html#lazy-loading-and-caching">omero
-	 *      lazy loading and caching documentation</a>
-	 */
-	private void linkAnnotation(final RoiI iObject) {
-		try {
-			final TagAnnotationI tag = omero.getAnnotation(
-				ROIConverters.IJO_VERSION_DESC, omero.getVersion());
-
-			if (!iObject.isAnnotationLinksLoaded()) {
-				final RoiI loadedCopy = new RoiI(iObject.getId(), true);
-				loadedCopy.getDetails().setUpdateEvent(new EventI(iObject.getDetails()
-					.getUpdateEvent().getId(), false));
-				loadedCopy.linkAnnotation(tag);
-				iObject.reloadAnnotationLinks(loadedCopy);
-			}
-			else iObject.linkAnnotation(tag);
-		}
-		catch (ServerError | ExecutionException | DSOutOfServiceException
-				| DSAccessException exc)
-		{
-			log.error("Cannot create/retrieve imagej-omero version tag", exc);
-		}
 	}
 
 	/**

@@ -31,9 +31,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-import net.imagej.omero.DefaultOMEROService;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.ROIConverters;
 import net.imglib2.RealLocalizable;
@@ -50,21 +48,12 @@ import org.scijava.Context;
 import org.scijava.convert.ConvertService;
 import org.scijava.convert.Converter;
 import org.scijava.log.LogService;
-import org.scijava.plugin.Plugin;
-import org.scijava.service.Service;
 import org.scijava.util.DefaultTreeNode;
 import org.scijava.util.TreeNode;
 
-import omero.ServerError;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.PointData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.ShapeData;
-import omero.model.Roi;
-import omero.model.RoiAnnotationLink;
-import omero.model.TagAnnotation;
-import omero.model.TagAnnotationI;
 
 /**
  * Tests for {@link TreeNodeRPCToROIData}.
@@ -78,7 +67,7 @@ public class TreeNodeRPCToROIDataConversionTest {
 
 	@Before
 	public void setUp() {
-		final Context c = new Context(ConvertService.class, MockOMEROService.class,
+		final Context c = new Context(ConvertService.class, OMEROService.class,
 			LogService.class);
 		convert = c.getService(ConvertService.class);
 		pts = new ArrayList<>(5);
@@ -157,17 +146,6 @@ public class TreeNodeRPCToROIDataConversionTest {
 	private void checkROIData(final ROIData rd) {
 		// ensure ID set to -1, so not over-written on server
 		assertEquals(-1, rd.getId());
-
-		// check that the annotation is there and correct
-		final List<RoiAnnotationLink> anno = ((Roi) rd.asIObject())
-			.copyAnnotationLinks();
-		assertEquals(1, anno.size());
-		assertTrue(anno.get(0).getChild() instanceof TagAnnotation);
-		final TagAnnotation tag = (TagAnnotation) anno.get(0).getChild();
-		assertEquals(ROIConverters.IJO_VERSION_DESC, tag.getDescription()
-			.getValue());
-		assertEquals(convert.getContext().getService(OMEROService.class)
-			.getVersion(), tag.getTextValue().getValue());
 	}
 
 	private void checkShapeData(final ROIData rd) {
@@ -200,25 +178,5 @@ public class TreeNodeRPCToROIDataConversionTest {
 		}
 		// No matching point found
 		assertTrue(false);
-	}
-
-//-- Mock classes --
-
-	@Plugin(type = Service.class)
-	public static final class MockOMEROService extends DefaultOMEROService {
-
-		@Override
-		public TagAnnotationI getAnnotation(final String description,
-			final String value) throws ExecutionException, ServerError,
-			DSOutOfServiceException, DSAccessException
-		{
-			if (description == ROIConverters.IJO_VERSION_DESC) {
-				final TagAnnotationI tag = new TagAnnotationI();
-				tag.setDescription(omero.rtypes.rstring(description));
-				tag.setTextValue(omero.rtypes.rstring(value));
-				return tag;
-			}
-			throw new IllegalArgumentException("Invalid description: " + description);
-		}
 	}
 }

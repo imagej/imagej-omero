@@ -26,7 +26,6 @@
 package net.imagej.omero.roi;
 
 import java.lang.reflect.Type;
-import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROService;
 import net.imglib2.RandomAccessible;
@@ -41,13 +40,8 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.util.TreeNode;
 
-import omero.ServerError;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.ShapeData;
-import omero.model.Roi;
-import omero.model.TagAnnotationI;
 
 /**
  * Abstract base layer for converting {@link TreeNode} to {@link ROIData}.
@@ -120,22 +114,6 @@ public abstract class AbstractTreeNodeToROIData<D extends TreeNode<?>> extends
 			// Assume there's only one shape, since only ROIData with one ShapeData is
 			// equivalent to MaskPredicate
 			s.setId(prev.getIterator().next().iterator().next().getId());
-		}
-		else {
-			try {
-				final TagAnnotationI tag = omero.getAnnotation(
-					ROIConverters.IJO_VERSION_DESC, omero.getVersion());
-
-				// created new ROIData so its already loaded, and annotation can just be
-				// attached
-				((Roi) r.asIObject()).linkAnnotation(tag);
-
-			}
-			catch (ServerError | ExecutionException | DSOutOfServiceException
-					| DSAccessException exc)
-			{
-				log.error("Cannot create/retrieve imagej-omero version tag", exc);
-			}
 		}
 
 		r.addShapeData(s);
