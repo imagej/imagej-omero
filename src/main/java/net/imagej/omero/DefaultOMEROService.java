@@ -120,6 +120,7 @@ import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.DataManagerFacility;
 import omero.gateway.facility.ROIFacility;
 import omero.gateway.facility.TablesFacility;
+import omero.gateway.model.DataObject;
 import omero.gateway.model.DatasetData;
 import omero.gateway.model.FileAnnotationData;
 import omero.gateway.model.ImageData;
@@ -803,28 +804,25 @@ public class DefaultOMEROService extends AbstractService implements
 		final Pair<List<OMEROROICollection>, List<TreeNode<?>>> splitROIs = split(
 			ijROIs);
 		final List<ROIData> newROIs = new ArrayList<>();
-		final List<ROIData> cleaned = new ArrayList<>(splitROIs.getA().size());
 		final List<Long> ids = new ArrayList<>();
-		final ROIFacility roifac = session.getGateway().getFacility(
-			ROIFacility.class);
+		final ROIFacility roifac = session.getGateway().getFacility(ROIFacility.class);
+		final DataManagerFacility dm = session.getGateway().getFacility(
+			DataManagerFacility.class);
 
 		// Handle ROIs which originated in OMERO
 		for (final OMEROROICollection orc : splitROIs.getA()) {
-			final ROIData converted = convertOMEROROI(orc, interval).get(0);
-			if (downloadedROIs.containsKey(converted.getId())) cleaned.add(
-				downloadedROIs.get(converted.getId()));
-			else cleaned.add(converted);
-			ids.add(cleaned.get(cleaned.size() - 1).getId());
+			ROIData converted = convertOMEROROI(orc, interval).get(0);
+			if (downloadedROIs.containsKey(converted.getId())) converted =
+				downloadedROIs.get(converted.getId());
+			final DataObject savedOMERO = dm.saveAndReturnObject(session
+				.getSecurityContext(), converted);
+			if (!(savedOMERO instanceof ROIData)) throw new IllegalArgumentException(
+				"ROI was not returned by OMERO");
+			final ROIData savedROI = (ROIData) savedOMERO;
+			downloadedROIs.put(savedROI.getId(), savedROI);
+			updateROIData(orc, savedROI);
+			ids.add(savedROI.getId());
 		}
-
-		final Collection<ROIData> savedOMERO = roifac.saveROIs(session
-			.getSecurityContext(), imageID, cleaned);
-		for (final ROIData r : savedOMERO)
-			downloadedROIs.put(r.getId(), r);
-
-		// Update IDs, it is possible new Shapes were added
-		for (final OMEROROICollection orc : splitROIs.getA())
-			updateROIData(orc, downloadedROIs.get(orc.data().getId()));
 
 		// Handle ROIs which originated in ImageJ
 		for (final TreeNode<?> dn : splitROIs.getB()) {
@@ -840,8 +838,6 @@ public class DefaultOMEROService extends AbstractService implements
 		// Check if any ROIs must be deleted
 		final Collection<ROIResult> roisOnServer = roifac.loadROIs(session
 			.getSecurityContext(), imageID);
-		final DataManagerFacility dm = session.getGateway().getFacility(
-			DataManagerFacility.class);
 		for (final ROIResult result : roisOnServer) {
 			for (final ROIData roi : result.getROIs()) {
 				if (!ids.contains(roi.getId())) {
