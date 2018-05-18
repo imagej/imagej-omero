@@ -231,9 +231,12 @@ public class DefaultOMEROService extends AbstractService implements
 		}
 
 		// ROI
+		// When requesting a TreeNode it is assumed that you want all the number
+		// provided is an image ID and you want all the ROIs associated with
+		// that image
 		if (TreeNode.class.isAssignableFrom(type) || (getFromConvert(TreeNode.class)
 			.contains(type) && getToConvert(TreeNode.class).contains(type)))
-			return omero.rtypes.rlist();
+			return omero.rtypes.rlong(0);
 
 		if (MaskPredicate.class.isAssignableFrom(type) || (getFromConvert(
 			MaskPredicate.class).contains(type) && getToConvert(MaskPredicate.class)
@@ -1065,10 +1068,10 @@ public class DefaultOMEROService extends AbstractService implements
 				return table;
 			}
 			if (TreeNode.class.isAssignableFrom(type)) {
-				final long roiID = ((Number) value).longValue();
+				final long imageID = ((Number) value).longValue();
 				final OMEROLocation credentials = createCredentials(client);
 				@SuppressWarnings("unchecked")
-				final T TreeNode = (T) downloadROI(credentials, roiID);
+				final T TreeNode = (T) downloadROIs(credentials, imageID);
 				return TreeNode;
 			}
 			if (MaskPredicate.class.isAssignableFrom(type)) {
