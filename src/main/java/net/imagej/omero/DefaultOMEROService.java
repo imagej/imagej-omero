@@ -1080,7 +1080,7 @@ public class DefaultOMEROService extends AbstractService implements
 				final TreeNode<?> TreeNode = downloadROI(credentials, roiID);
 				final List<TreeNode<?>> children = TreeNode.children();
 				@SuppressWarnings("unchecked")
-				final T omeroMP = (T) children.get(0).data();
+				final T omeroMP = (T) children.get(0).children().get(0).data();
 				if (children.size() > 1) log.warn("Requested OMERO ROI has more than " +
 					"one ShapeData. Only one shape will be returned.");
 				return omeroMP;
