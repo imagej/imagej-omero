@@ -44,16 +44,13 @@
 				<role>maintainer</role>
 			</roles>
 		</developer>
-		<developer>
-			<id>awalter17</id>
-			<name>Alison Walter</name>
-			<url>http://imagej.net/User:Awalter2</url>
-			<roles>
-				<role>developer</role>
-			</roles>
-		</developer>
 	</developers>
 	<contributors>
+		<contributor>
+			<name>Alison Walter</name>
+			<url>http://imagej.net/User:Awalter2</url>
+			<properties><id>awalter17</id></properties>
+		</contributor>
 		<contributor>
 			<name>Josh Moore</name>
 			<url>http://imagej.net/User:Moore</url>
