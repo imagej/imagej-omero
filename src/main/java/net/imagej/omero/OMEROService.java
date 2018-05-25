@@ -25,27 +25,33 @@
 
 package net.imagej.omero;
 
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
+
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
-import net.imagej.omero.rois.DataNode;
+import net.imagej.roi.ROITree;
 import net.imagej.table.Table;
+import net.imglib2.Interval;
+import net.imglib2.roi.MaskPredicate;
 
-import org.scijava.module.ModuleItem;
-
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.TableData;
-import omero.model.TagAnnotationI;
+
+import org.scijava.module.ModuleItem;
+import org.scijava.util.TreeNode;
 
 /**
  * Interface for ImageJ services that manage OMERO data conversion.
@@ -89,7 +95,8 @@ public interface OMEROService extends ImageJService {
 	 */
 	Object toOMERO(omero.client client, Object value) throws omero.ServerError,
 		IOException, PermissionDeniedException, CannotCreateSessionException,
-		ExecutionException, DSOutOfServiceException, DSAccessException;
+		ExecutionException, DSOutOfServiceException, DSAccessException,
+		NumberFormatException, URISyntaxException;
 
 	/**
 	 * Converts an OMERO parameter value to an ImageJ value of the given type.
@@ -103,6 +110,28 @@ public interface OMEROService extends ImageJService {
 		throws omero.ServerError, IOException, PermissionDeniedException,
 		CannotCreateSessionException, SecurityException, DSOutOfServiceException,
 		ExecutionException, DSAccessException;
+
+	/**
+	 * Uploads the given image to OMERO, and optionally uploads the given ROIs and
+	 * tables. The ROIs can also optionally be updated on the server.
+	 */
+	void uploadImage(OMEROLocation credentials, Dataset image, boolean uploadROIs,
+		TreeNode<?> rois, boolean updateROIs, boolean uploadTables,
+		List<Table<?, ?>> tables, String[] tableNames, long omeroDatasetID)
+		throws ServerError, IOException, ExecutionException,
+		DSOutOfServiceException, DSAccessException, PermissionDeniedException,
+		CannotCreateSessionException;
+
+	/**
+	 * Uploads the attachments to the OMERO server, and attaches them to the image
+	 * associated with the given id. In order to update ROIs these ROIs must exist
+	 * on the given image in OMERO.
+	 */
+	void uploadImageAttachments(OMEROLocation credentials, long imageID,
+		boolean uploadROIs, boolean updateROIs, boolean uploadTables,
+		TreeNode<?> rois, List<Table<?, ?>> tables, String[] tableNames)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException,
+		ServerError, PermissionDeniedException, CannotCreateSessionException;
 
 	/**
 	 * Downloads the image with the given image ID from OMERO, storing the result
@@ -143,29 +172,106 @@ public interface OMEROService extends ImageJService {
 		ExecutionException, DSOutOfServiceException, DSAccessException;
 
 	/**
-	 * Downloads the ROIs associated with the given {@code imageID} from OMERO,
-	 * and returns them as a {@code List} of {@link DataNode}s.
+	 * Downloads all tables associated with the given image ID in OMERO.
 	 */
-	List<DataNode<?>> downloadROIs(OMEROLocation credentials, long imageID)
+	List<Table<?, ?>> downloadTables(OMEROLocation credentials, long imageID)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException,
+		ServerError, PermissionDeniedException, CannotCreateSessionException;
+
+	/**
+	 * Downloads the ROIs associated with the given {@code imageID} from OMERO,
+	 * and returns them as a {@link ROITree}.
+	 */
+	ROITree downloadROIs(OMEROLocation credentials, long imageID)
 		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
 		ExecutionException, DSOutOfServiceException, DSAccessException;
 
 	/**
 	 * Downloads the {@link ROIData} with the given {@code roiID} from OMERO, and
-	 * returns it as a {@link DataNode}.
+	 * returns it as a {@link ROITree}.
 	 */
-	DataNode<?> downloadROI(final OMEROLocation credentials,
-		final long roiID) throws DSOutOfServiceException, DSAccessException,
-		ExecutionException;
+	ROITree downloadROI(final OMEROLocation credentials, final long roiID)
+		throws DSOutOfServiceException, DSAccessException, ExecutionException;
 
 	/**
-	 * Converts the given {@link DataNode}s to OMERO ROIs, uploads them to the
-	 * OMEROServer, and attaches them to the image with the specified ID.
+	 * Converts the given {@link TreeNode} to OMERO ROI(s), uploads them to the
+	 * OMEROServer, and attaches them to the image with the specified ID. All ROIs
+	 * are uploaded as new Objects, regardless of their origin.
 	 */
-	<D extends DataNode<?>> long[] uploadROIs(OMEROLocation credentials,
-		List<D> ijROIs, long imageID) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException;
+	long[] uploadROIs(OMEROLocation credentials, TreeNode<?> ijROIs, long imageID)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Converts the given {@link TreeNode} to OMERO ROIs(s). ROIs which originated
+	 * from OMERO are updated on the server, and new ROIs are uploaded. The ids of
+	 * the new ROI objects is returned.
+	 */
+	long[] updateROIs(OMEROLocation credentials, TreeNode<?> ijROIs, long imageID)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Converts the given {@link TreeNode} to OMERO ROI(s), and uploads them all
+	 * as new Objects to the server. The new OMERO objects are then returned.
+	 */
+	Collection<ROIData> uploadAndReturnROIs(OMEROLocation credentials,
+		TreeNode<?> ijROIs, long imageID) throws ExecutionException,
+		DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Converts the given {@link TreeNode} to OMERO ROI(s), creating new Objects
+	 * on the server only for ROIs which didn't previously exist. ROIs which
+	 * originated from OMERO are updated on the server. A collection of the new
+	 * ROI objects is returned.
+	 */
+	Collection<ROIData> updateAndReturnROIs(OMEROLocation credentials,
+		TreeNode<?> ijROIs, long imageID) throws ExecutionException,
+		DSOutOfServiceException, DSAccessException;
+
+	/**
+	 * Converts the given {@link TreeNode} to {@link ROIData}. If an interval is
+	 * provided it will be used to convert unbounded {@link MaskPredicate}s to
+	 * {@link ROIData}. If the interval is null, then unbounded
+	 * {@link MaskPredicate}s cannot be converted to {@link ROIData} and an
+	 * exception is thrown.
+	 */
+	List<ROIData> convertOMEROROI(TreeNode<?> dataNodeRois, Interval interval);
+
+	/**
+	 * Returns the most recently retrieved {@link ROIData} object with the given
+	 * ID. If no such mapping exists {@code null} is returned.
+	 * <p>
+	 * When a ROIData object is updated and the new version uploaded to the OMERO
+	 * server, previous ROIData objects become "locked" and subsequent attempts to
+	 * update and upload new versions of them to OMERO will result in
+	 * {@link ome.conditions.OptimisticLockException}. Therefore, pairings of the
+	 * id and the update OMERO server ROIData object must be stored.
+	 * </p>
+	 */
+	ROIData getUpdatedServerROIData(long roiDataId);
+
+	/**
+	 * Add a mapping between a ROIs originating from ImageJ and an OMERO
+	 * {@link ROIData}.
+	 */
+	void addROIMapping(Object roi, ROIData shape);
+
+	/**
+	 * Retrieve the {@link ROIData} associated with this key. Returns {@code null}
+	 * if there's no mapping.
+	 */
+	ROIData getROIMapping(Object key);
+
+	/** Returns all the keys for mapped ROIs. */
+	Set<Object> getROIMappingKeys();
+
+	/**
+	 * Removes the {@code Object} {@link ROIData} mapping associated with the
+	 * given key from the stored ROIs.
+	 */
+	void removeROIMapping(Object key);
+
+	/** Removes all {@code Object} {@link ROIData} mappings. */
+	void clearROIMappings();
 
 	/**
 	 * Returns an {@link OMEROSession} using the given {@link OMEROLocation}. If a
@@ -199,34 +305,5 @@ public interface OMEROService extends ImageJService {
 	 * @param session The session to be removed
 	 */
 	void removeSession(OMEROSession session);
-
-	/**
-	 * Returns a {@link TagAnnotationI} with the given description and text value.
-	 * If no such {@link TagAnnotationI} is found on the server, one is created,
-	 * saved to the server, and returned.
-	 *
-	 * @param description the description of the tag
-	 * @param value the text value of the tag
-	 * @param location credentials for connecting to the server, if these isn't a
-	 *          current {@link OMEROSession} for these credentials one is created
-	 * @return a {@link TagAnnotationI} with the given description and text value
-	 */
-	TagAnnotationI getAnnotation(String description, String value,
-		OMEROLocation location) throws ExecutionException, ServerError,
-		DSOutOfServiceException, DSAccessException;
-
-	/**
-	 * Returns a {@link TagAnnotationI} with the given description and text value.
-	 * If no such {@link TagAnnotationI} is found on the server, one is created
-	 * and returned. The credentials used for this query are those of the
-	 * {@link OMEROSession} related with the current running thread.
-	 *
-	 * @param description the description of the tag
-	 * @param value the text value of the tag
-	 * @return a {@link TagAnnotationI} with the given description and text value
-	 */
-	TagAnnotationI getAnnotation(String description, String value)
-		throws ExecutionException, ServerError, DSOutOfServiceException,
-		DSAccessException;
 
 }

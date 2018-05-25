@@ -44,9 +44,9 @@ import net.imagej.omero.DefaultOMEROSession;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
-import net.imagej.omero.rois.DataNode;
-import net.imagej.omero.rois.DefaultDataNode;
-import net.imagej.omero.rois.OMERORoiCollection;
+import net.imagej.omero.roi.OMEROROICollection;
+import net.imagej.roi.DefaultROITree;
+import net.imagej.roi.ROITree;
 import net.imagej.table.ByteTable;
 import net.imagej.table.DefaultByteTable;
 import net.imagej.table.Table;
@@ -62,10 +62,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.scijava.Context;
+import org.scijava.util.DefaultTreeNode;
+import org.scijava.util.TreeNode;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
-import edu.emory.mathcs.backport.java.util.Collections;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
@@ -218,17 +219,17 @@ public class OmeroIT {
 		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
 		DSAccessException
 	{
-		final List<DataNode<?>> dns = omero.downloadROIs(cred, 1);
+		final TreeNode<?> dns = omero.downloadROIs(cred, 1);
 
 		assertNotNull(dns);
-		assertFalse(dns.isEmpty());
-		assertEquals(10, dns.size());
+		assertFalse(dns.children().isEmpty());
+		assertEquals(10, dns.children().size());
 
-		for (final DataNode<?> dn : dns) {
-			assertTrue(dn instanceof OMERORoiCollection);
-			final List<DataNode<?>> children = dn.children();
+		for (final TreeNode<?> dn : dns.children()) {
+			assertTrue(dn instanceof OMEROROICollection);
+			final List<TreeNode<?>> children = dn.children();
 			assertEquals(1, children.size());
-			assertTrue(children.get(0).getData() instanceof PointMask);
+			assertTrue(children.get(0).data() instanceof PointMask);
 		}
 	}
 
@@ -236,32 +237,37 @@ public class OmeroIT {
 	public void testDownloadROI() throws DSOutOfServiceException,
 		DSAccessException, ExecutionException
 	{
-		final DataNode<?> dn = omero.downloadROI(cred, 1);
+		final TreeNode<?> dn = omero.downloadROI(cred, 1);
 
-		assertTrue(dn instanceof OMERORoiCollection);
-		final List<DataNode<?>> children = dn.children();
+		assertTrue(dn instanceof ROITree);
+		assertEquals(1, dn.children().size());
+
+		assertTrue(dn.children().get(0) instanceof OMEROROICollection);
+		final List<TreeNode<?>> children = dn.children().get(0).children();
 		assertEquals(1, children.size());
-		assertTrue(children.get(0).getData() instanceof PointMask);
+
+		assertTrue(children.get(0).data() instanceof PointMask);
 	}
 
 	@Test
-	public void testUploadROIs() throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+	public void testUploadROIs() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException
 	{
-		final Box b = GeomMasks.closedWritableBox(new double[] { 10, 10 },
-			new double[] { 22, 46.5 });
-		final DataNode<Box> dnb = new DefaultDataNode<>(b, null, null);
-		final Ellipsoid e = GeomMasks.openWritableEllipsoid(new double[] { 120,
-			121.25 }, new double[] { 4, 9 });
-		final DataNode<Ellipsoid> dne = new DefaultDataNode<>(e, null, null);
-		final Polygon2D p = GeomMasks.writablePolygon2D(new double[] { 30, 40, 50 },
+		final Box b = GeomMasks.closedBox(new double[] { 10, 10 }, new double[] {
+			22, 46.5 });
+		final TreeNode<Box> dnb = new DefaultTreeNode<>(b, null);
+		final Ellipsoid e = GeomMasks.openEllipsoid(new double[] { 120, 121.25 },
+			new double[] { 4, 9 });
+		final TreeNode<Ellipsoid> dne = new DefaultTreeNode<>(e, null);
+		final Polygon2D p = GeomMasks.polygon2D(new double[] { 30, 40, 50 },
 			new double[] { 50, 80, 50 });
-		final DataNode<Polygon2D> dnp = new DefaultDataNode<>(p, null, null);
+		final TreeNode<Polygon2D> dnp = new DefaultTreeNode<>(p, null);
 
-		final List<DataNode<?>> dns = Lists.newArrayList(dnb, dne, dnp);
+		final List<TreeNode<?>> dns = Lists.newArrayList(dnb, dne, dnp);
+		final ROITree parent = new DefaultROITree();
+		parent.addChildren(dns);
 
-		final long[] ids = omero.uploadROIs(cred, dns, 2);
+		final long[] ids = omero.uploadROIs(cred, parent, 2);
 
 		assertEquals(3, ids.length);
 		assertTrue(ids[0] > 0);
@@ -270,21 +276,19 @@ public class OmeroIT {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testDownloadThenUploadROI() throws DSOutOfServiceException,
-		DSAccessException, ExecutionException, ServerError,
-		PermissionDeniedException, CannotCreateSessionException
+		DSAccessException, ExecutionException
 	{
 		final long originalRoiId = 3;
-		final DataNode<?> dn = omero.downloadROI(cred, originalRoiId);
+		final TreeNode<?> dn = omero.downloadROI(cred, originalRoiId);
 
-		final List<DataNode<?>> children = dn.children();
-		assertTrue(children.get(0).getData() instanceof WritablePointMask);
-		final WritablePointMask pm = (WritablePointMask) children.get(0).getData();
+		final List<TreeNode<?>> children = dn.children().get(0).children();
+		assertTrue(children.get(0).data() instanceof WritablePointMask);
+		final WritablePointMask pm = (WritablePointMask) children.get(0).data();
 
 		pm.setPosition(new double[] { 0, 0 });
 
-		final long[] ids = omero.uploadROIs(cred, Collections.singletonList(dn), 2);
+		final long[] ids = omero.uploadROIs(cred, dn, 2);
 
 		assertEquals(1, ids.length);
 		assertTrue(originalRoiId != ids[0]);
