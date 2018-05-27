@@ -12,6 +12,8 @@ as well as uploading image data from ImageJ to OMERO as a new image.
 To try it out, enable the appropriate
 [update site](http://imagej.net/Update_Sites):
 
+* __OMERO-5.4__ If your OMERO server is version 5.4.x.
+* __OMERO-5.2__ If your OMERO server is version 5.2.x.
 * __OMERO-5.1__ If your OMERO server is version 5.1.x.
 * __OMERO-5.0__ If your OMERO server is version 5.0.x.
 
@@ -49,7 +51,7 @@ sh install-imagej <path/to/omero>
 The installer will:
 
 *   Download and install ImageJ into OMERO's `lib/ImageJ.app` folder,
-    with the __Fiji__ and __OMERO-5.1__ update sites enabled.
+    with the __Fiji__ and __OMERO-5.x__ update sites enabled.
 *   Install OMERO script wrappers for all available ImageJ commands
     into OMERO's `lib/scripts/imagej` folder.
 
@@ -58,7 +60,7 @@ The installer will:
 If you already have ImageJ installed on the OMERO server machine,
 you can use that, rather than installing a new copy of ImageJ:
 
-1.  Enable the __OMERO-5.1__ [update site](http://imagej.net/Update_Sites).
+1.  Enable the __OMERO-5.x__ [update site](http://imagej.net/Update_Sites).
 2.  Run `gen-scripts` in ImageJ's `lib` directory.
 
 ### Take it for a spin
