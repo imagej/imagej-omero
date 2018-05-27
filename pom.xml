@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>21.0.0</version>
+		<version>22.1.0</version>
 		<relativePath />
 	</parent>
 
@@ -122,9 +122,6 @@
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
-		<imagej-common.version>0.26.1</imagej-common.version>
-		<scijava-common.version>2.73.1</scijava-common.version>
-		<scifio.version>0.36.0</scifio.version>
 		<!-- Test configuration -->
 		<skipITs>true</skipITs>
 	</properties>
