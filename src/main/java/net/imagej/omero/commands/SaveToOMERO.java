@@ -98,7 +98,7 @@ public class SaveToOMERO extends OMEROCommand {
 	private boolean uploadROIs;
 
 	@Parameter(label = "Update ROIs?", description = "If the ROIs already exist" +
-		" in OMERO, they'll be updated. If not, new ones will be created")
+		" in OMERO, they'll be updated. If not, new ones will be created.")
 	private boolean updateROIs;
 
 	@Parameter(label = "Table names")

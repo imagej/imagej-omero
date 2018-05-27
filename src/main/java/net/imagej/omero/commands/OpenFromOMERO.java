@@ -63,13 +63,13 @@ public class OpenFromOMERO extends OMEROCommand {
 	@Parameter
 	private OMEROService omeroService;
 
-	@Parameter
+	@Parameter(label = "OMERO Image ID")
 	private long imageID;
 
-	@Parameter
+	@Parameter(label = "Download tables?")
 	private boolean downloadTables;
 
-	@Parameter
+	@Parameter(label = "Download ROIs?")
 	private boolean downloadRois;
 
 	@Parameter(type = ItemIO.OUTPUT)
