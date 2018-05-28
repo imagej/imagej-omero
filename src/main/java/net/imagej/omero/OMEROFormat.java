@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -562,8 +563,37 @@ public class OMEROFormat extends AbstractFormat {
 		{
 			if (session == null) initSession();
 
+			final Map<AxisType, CalibratedAxis> axisMap = new HashMap<>();
+			final ImageMetadata imageMeta = getMetadata().get(imageIndex);
+			final List<CalibratedAxis> imageAxes = getMetadata().get(imageIndex)
+				.getAxes();
+			final List<CalibratedAxis> planarAxes = getMetadata().get(imageIndex)
+					.getAxesPlanar();
+
+			if (imageAxes.size() > 5) throw new IllegalArgumentException(
+				"Cannot have more than 5 axes!");
+			for (final CalibratedAxis imageAxis : imageAxes)
+				mapAxesToType(imageMeta, axisMap, imageAxis);
+
+			final long nBytes = imageMeta.getAxisLength(planarAxes.get(0)) * imageMeta
+				.getAxisLength(planarAxes.get(1));
+
+			long zPlaneLength = 1;
+			long cPlaneLength = 1;
+			long tPlaneLength = 1;
+
+			if (axisMap.containsKey(Axes.Z) && planarAxes.contains(axisMap.get(
+				Axes.Z))) zPlaneLength = imageMeta.getAxisLength(axisMap.get(Axes.Z));
+			if (axisMap.containsKey(Axes.TIME) && planarAxes.contains(axisMap.get(
+				Axes.TIME))) tPlaneLength = imageMeta.getAxisLength(axisMap.get(
+					Axes.TIME));
+			if (axisMap.containsKey(Axes.CHANNEL) && planarAxes.contains(axisMap.get(
+				Axes.CHANNEL))) cPlaneLength = imageMeta.getAxisLength(axisMap.get(
+					Axes.CHANNEL));
+
 			final byte[] bytes = plane.getBytes();
 			final int[] zct = zct(imageIndex, planeIndex, getMetadata());
+
 			try {
 				log.debug("writePlane: bytes = " + bytes.length);
 				log.debug("writePlane: z = " + zct[0] + " c = " + zct[1] + " t = " +
@@ -673,12 +703,63 @@ public class OMEROFormat extends AbstractFormat {
 	public static int[] zct(final int imageIndex, final long planeIndex,
 		final Metadata metadata)
 	{
+		final Map<AxisType, CalibratedAxis> axisMap = new HashMap<>();
+		final ImageMetadata imageMeta = metadata.get(imageIndex);
+		final List<CalibratedAxis> imageAxes = metadata.get(imageIndex).getAxes();
+
+		if (imageAxes.size() > 5) throw new IllegalArgumentException(
+			"Cannot have more than 5 axes!");
+
+		for (final CalibratedAxis imageAxis : imageAxes)
+			mapAxesToType(imageMeta, axisMap, imageAxis);
+
+		final long[] lengths = new long[3];
+		lengths[0] = axisMap.get(Axes.Z) == null ? -1 : imageMeta.getAxisLength(
+			axisMap.get(Axes.Z));
+		lengths[1] = axisMap.get(Axes.CHANNEL) == null ? -1 : imageMeta.getAxisLength(
+			axisMap.get(Axes.CHANNEL));
+		lengths[2] = axisMap.get(Axes.TIME) == null ? -1 : imageMeta.getAxisLength(
+			axisMap.get(Axes.TIME));
+
 		final AxisType[] axes = { Axes.Z, Axes.CHANNEL, Axes.TIME };
-		final long[] zct = rasterToPosition(imageIndex, planeIndex, metadata, axes);
+		final long[] zct = FormatTools.rasterToPosition(lengths, planeIndex);
 		final int[] result = new int[zct.length];
 		for (int i = 0; i < zct.length; i++)
 			result[i] = value(axes[i], zct[i]);
 		return result;
+	}
+
+	private static void mapAxesToType(final ImageMetadata imageMeta,
+		final Map<AxisType, CalibratedAxis> axisMap, final CalibratedAxis axis)
+	{
+		final AxisType type = axis.type();
+		if (axis.type().equals(Axes.UNKNOWN_LABEL)) axisMap.put(
+			computeUnknownAxisType(imageMeta, axisMap), axis);
+		else if (type.equals(Axes.X) || type.equals(Axes.Y) || type.equals(
+			Axes.Z) || type.equals(Axes.TIME) || type.equals(Axes.CHANNEL))
+		{
+			if (!axisMap.containsKey(type)) axisMap.put(type, axis);
+			else throw new IllegalArgumentException("Duplicate " + type +
+				" axis found");
+		}
+		else throw new IllegalArgumentException("Unsupported axis type: " + type);
+	}
+
+	private static AxisType computeUnknownAxisType(final ImageMetadata imageMeta,
+		final Map<AxisType, CalibratedAxis> axisMap)
+	{
+		if (imageMeta.getAxisIndex(Axes.X) < 0 && !axisMap.containsKey(Axes.X))
+			return Axes.X;
+		if (imageMeta.getAxisIndex(Axes.Y) < 0 && !axisMap.containsKey(Axes.Y))
+			return Axes.Y;
+		if (imageMeta.getAxisIndex(Axes.Z) < 0 && !axisMap.containsKey(Axes.Z))
+			return Axes.Z;
+		if (imageMeta.getAxisIndex(Axes.CHANNEL) < 0 && !axisMap.containsKey(
+			Axes.CHANNEL)) return Axes.CHANNEL;
+		if (imageMeta.getAxisIndex(Axes.TIME) < 0 && !axisMap.containsKey(
+			Axes.TIME)) return Axes.TIME;
+		throw new IllegalArgumentException(
+			"Cannot map unknown axis type, no labels free.");
 	}
 
 	/**
