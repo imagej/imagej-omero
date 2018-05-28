@@ -34,8 +34,6 @@ import com.google.common.collect.Lists;
 import java.awt.geom.Point2D;
 import java.util.List;
 
-import net.imagej.omero.roi.polyline.DefaultOMEROPolyline;
-import net.imagej.omero.roi.polyline.OMEROPolyline;
 import net.imglib2.RealPoint;
 import net.imglib2.roi.BoundaryType;
 

@@ -32,10 +32,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import net.imagej.omero.OMEROService;
-import net.imagej.omero.roi.OMEROROICollection;
-import net.imagej.omero.roi.OMEROROIElement;
-import net.imagej.omero.roi.ROIConverters;
-import net.imagej.omero.roi.ROIDataToOMEROROICollection;
 import net.imagej.omero.roi.ellipse.OMEROEllipse;
 import net.imagej.omero.roi.ellipse.OpenOMEROEllipse;
 import net.imagej.omero.roi.point.OMEROPoint;

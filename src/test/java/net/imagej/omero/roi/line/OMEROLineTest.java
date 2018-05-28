@@ -29,8 +29,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import net.imagej.omero.roi.line.DefaultOMEROLine;
-import net.imagej.omero.roi.line.OMEROLine;
 import net.imglib2.RealPoint;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.util.RealLocalizableRealPositionable;

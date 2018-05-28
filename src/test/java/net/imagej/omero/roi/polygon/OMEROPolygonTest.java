@@ -34,10 +34,6 @@ import com.google.common.collect.Lists;
 import java.awt.geom.Point2D;
 import java.util.List;
 
-import net.imagej.omero.roi.polygon.ClosedOMEROPolygon;
-import net.imagej.omero.roi.polygon.DefaultOMEROPolygon;
-import net.imagej.omero.roi.polygon.OMEROPolygon;
-import net.imagej.omero.roi.polygon.OpenOMEROPolygon;
 import net.imglib2.RealPoint;
 import net.imglib2.RealPositionable;
 import net.imglib2.roi.BoundaryType;

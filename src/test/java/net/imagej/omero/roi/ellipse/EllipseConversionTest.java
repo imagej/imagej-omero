@@ -31,11 +31,6 @@ import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.ROIConverters;
-import net.imagej.omero.roi.ellipse.ClosedOMEROEllipse;
-import net.imagej.omero.roi.ellipse.ImageJToOMEROEllipse;
-import net.imagej.omero.roi.ellipse.OMEROEllipse;
-import net.imagej.omero.roi.ellipse.OMEROEllipseUnwrapper;
-import net.imagej.omero.roi.ellipse.OMEROToImageJEllipse;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.geom.real.ClosedWritableEllipsoid;

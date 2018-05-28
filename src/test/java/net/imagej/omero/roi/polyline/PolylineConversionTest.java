@@ -35,11 +35,6 @@ import java.util.List;
 
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.ROIConverters;
-import net.imagej.omero.roi.polyline.DefaultOMEROPolyline;
-import net.imagej.omero.roi.polyline.ImageJToOMEROPolyline;
-import net.imagej.omero.roi.polyline.OMEROPolyline;
-import net.imagej.omero.roi.polyline.OMEROPolylineUnwrapper;
-import net.imagej.omero.roi.polyline.OMEROToImageJPolyline;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.roi.BoundaryType;

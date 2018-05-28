@@ -29,9 +29,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import net.imagej.omero.roi.rectangle.ClosedOMERORectangle;
-import net.imagej.omero.roi.rectangle.OMERORectangle;
-import net.imagej.omero.roi.rectangle.OpenOMERORectangle;
 import net.imglib2.RealPoint;
 import net.imglib2.RealPositionable;
 import net.imglib2.roi.BoundaryType;

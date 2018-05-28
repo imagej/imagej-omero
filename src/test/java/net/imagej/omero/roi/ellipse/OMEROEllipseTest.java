@@ -29,9 +29,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import net.imagej.omero.roi.ellipse.ClosedOMEROEllipse;
-import net.imagej.omero.roi.ellipse.OMEROEllipse;
-import net.imagej.omero.roi.ellipse.OpenOMEROEllipse;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.roi.BoundaryType;

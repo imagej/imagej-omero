@@ -28,6 +28,7 @@ package net.imagej.omero;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
 import io.scif.Checker;
 import io.scif.FormatException;
 import io.scif.MetadataService;

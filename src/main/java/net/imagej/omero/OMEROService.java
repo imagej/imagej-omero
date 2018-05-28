@@ -25,9 +25,6 @@
 
 package net.imagej.omero;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -44,14 +41,16 @@ import net.imagej.table.Table;
 import net.imglib2.Interval;
 import net.imglib2.roi.MaskPredicate;
 
+import org.scijava.module.ModuleItem;
+import org.scijava.util.TreeNode;
+
+import Glacier2.CannotCreateSessionException;
+import Glacier2.PermissionDeniedException;
 import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.TableData;
-
-import org.scijava.module.ModuleItem;
-import org.scijava.util.TreeNode;
 
 /**
  * Interface for ImageJ services that manage OMERO data conversion.

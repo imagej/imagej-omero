@@ -31,9 +31,6 @@ import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.ROIConverters;
-import net.imagej.omero.roi.mask.MaskIntervalToMaskData;
-import net.imagej.omero.roi.mask.RAIToMaskData;
-import net.imagej.omero.roi.mask.RealMaskRealIntervalToMaskData;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccess;

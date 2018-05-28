@@ -34,11 +34,6 @@ import java.util.List;
 
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.ROIConverters;
-import net.imagej.omero.roi.polygon.ImageJToOMEROPolygon;
-import net.imagej.omero.roi.polygon.OMEROPolygon;
-import net.imagej.omero.roi.polygon.OMEROPolygonUnwrapper;
-import net.imagej.omero.roi.polygon.OMEROToImageJPolygon;
-import net.imagej.omero.roi.polygon.OpenOMEROPolygon;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.geom.real.ClosedWritablePolygon2D;

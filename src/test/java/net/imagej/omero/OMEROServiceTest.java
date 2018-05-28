@@ -40,6 +40,16 @@ import java.util.Set;
 import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.scijava.Context;
+import org.scijava.module.AbstractModuleItem;
+import org.scijava.module.ModuleItem;
+import org.scijava.util.ColorRGB;
+import org.scijava.util.MersenneTwisterFast;
+
 import omero.RArray;
 import omero.RBool;
 import omero.RDouble;
@@ -52,15 +62,6 @@ import omero.RSet;
 import omero.RString;
 import omero.RType;
 import omero.grid.Param;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.scijava.Context;
-import org.scijava.module.AbstractModuleItem;
-import org.scijava.module.ModuleItem;
-import org.scijava.util.ColorRGB;
-import org.scijava.util.MersenneTwisterFast;
 
 /**
  * Tests {@link DefaultOMEROService}.

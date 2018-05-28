@@ -31,11 +31,6 @@ import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.ROIConverters;
-import net.imagej.omero.roi.point.DefaultOMEROPoint;
-import net.imagej.omero.roi.point.ImageJToOMEROPoint;
-import net.imagej.omero.roi.point.OMEROPoint;
-import net.imagej.omero.roi.point.OMEROPointUnwrapper;
-import net.imagej.omero.roi.point.OMEROToImageJPoint;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.geom.real.DefaultWritablePointMask;
 import net.imglib2.roi.geom.real.PointMask;

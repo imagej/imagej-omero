@@ -31,11 +31,6 @@ import static org.junit.Assert.assertTrue;
 
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.ROIConverters;
-import net.imagej.omero.roi.rectangle.ClosedOMERORectangle;
-import net.imagej.omero.roi.rectangle.ImageJToOMERORectangle;
-import net.imagej.omero.roi.rectangle.OMERORectangle;
-import net.imagej.omero.roi.rectangle.OMERORectangleUnwrapper;
-import net.imagej.omero.roi.rectangle.OMEROToImageJRectangle;
 import net.imglib2.roi.BoundaryType;
 import net.imglib2.roi.MaskPredicate;
 import net.imglib2.roi.geom.real.Box;
