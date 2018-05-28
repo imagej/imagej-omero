@@ -25,14 +25,14 @@
 
 package net.imagej.omero;
 
-import net.imagej.omero.commands.OpenImageFromOMERO;
+import net.imagej.omero.commands.OpenFromOMERO;
 
 import org.scijava.Context;
 import org.scijava.command.CommandService;
 import org.scijava.ui.UIService;
 
 /**
- * Manual test for {@link OpenImageFromOMERO}.
+ * Manual test for {@link OpenFromOMERO}.
  * 
  * @author Curtis Rueden
  */
@@ -45,7 +45,7 @@ public final class Main {
 	public static void main(final String... args) {
 		final Context c = new Context();
 		c.service(UIService.class).showUI();
-		c.service(CommandService.class).run(OpenImageFromOMERO.class, true);
+		c.service(CommandService.class).run(OpenFromOMERO.class, true);
 	}
 
 }
