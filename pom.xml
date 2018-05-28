@@ -124,7 +124,8 @@
 
 		<imagej-common.version>0.26.1</imagej-common.version>
 		<scijava-common.version>2.73.1</scijava-common.version>
-		<scifio.version>0.36.0</scifio.version>
+		<scifio.version>0.36.1-SNAPSHOT</scifio.version>
+		<enforcer.skip>true</enforcer.skip>
 		<!-- Test configuration -->
 		<skipITs>true</skipITs>
 	</properties>
