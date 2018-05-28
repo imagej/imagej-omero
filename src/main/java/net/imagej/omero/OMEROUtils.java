@@ -44,78 +44,78 @@ public final class OMEROUtils {
 	}
 
 	/**
-	 * Converts a {@link UnitsTime} object into a {@link Unit}{@code <Length>}.
+	 * Converts a {@link UnitsLength} object into a {@link Unit}{@code <Length>}.
 	 */
 	public static Unit<Length> unit(final UnitsLength unit) {
 		switch (unit) {
 			case ANGSTROM:
 				return UNITS.ANGSTROM;
 			case ASTRONOMICALUNIT:
-				return UNITS.UA;
+				return UNITS.ASTRONOMICALUNIT;
 			case ATTOMETER:
-				return UNITS.AM;
+				return UNITS.ATTOMETER;
 			case CENTIMETER:
-				return UNITS.CM;
+				return UNITS.CENTIMETER;
 			case DECAMETER:
-				return UNITS.DAM;
+				return UNITS.DECAMETER;
 			case DECIMETER:
-				return UNITS.DM;
+				return UNITS.DECIMETER;
 			case EXAMETER:
-				return UNITS.EXAM;
+				return UNITS.EXAMETER;
 			case FEMTOMETER:
-				return UNITS.FM;
+				return UNITS.FEMTOMETER;
 			case FOOT:
-				return UNITS.FT;
+				return UNITS.FOOT;
 			case GIGAMETER:
-				return UNITS.GIGAM;
+				return UNITS.GIGAMETER;
 			case HECTOMETER:
-				return UNITS.HM;
+				return UNITS.HECTOMETER;
 			case INCH:
 				return UNITS.INCH;
 			case KILOMETER:
-				return UNITS.KM;
+				return UNITS.KILOMETER;
 			case LIGHTYEAR:
-				return UNITS.LY;
+				return UNITS.LIGHTYEAR;
 			case LINE:
-				return UNITS.LI;
+				return UNITS.LINE;
 			case MEGAMETER:
-				return UNITS.MEGAM;
+				return UNITS.MEGAMETER;
 			case METER:
-				return UNITS.M;
+				return UNITS.METER;
 			case MICROMETER:
-				return UNITS.MICROM;
+				return UNITS.MICROMETER;
 			case MILE:
-				return UNITS.MI;
+				return UNITS.MILE;
 			case MILLIMETER:
-				return UNITS.MM;
+				return UNITS.MILLIMETER;
 			case NANOMETER:
-				return UNITS.NM;
+				return UNITS.NANOMETER;
 			case PARSEC:
-				return UNITS.PC;
+				return UNITS.PARSEC;
 			case PETAMETER:
-				return UNITS.PETAM;
+				return UNITS.PETAMETER;
 			case PICOMETER:
-				return UNITS.PM;
+				return UNITS.PICOMETER;
 			case PIXEL:
 				return UNITS.PIXEL;
 			case POINT:
-				return UNITS.PT;
+				return UNITS.POINT;
 			case REFERENCEFRAME:
 				return UNITS.REFERENCEFRAME;
 			case TERAMETER:
-				return UNITS.TERAM;
+				return UNITS.TERAMETER;
 			case THOU:
 				return UNITS.THOU;
 			case YARD:
-				return UNITS.YD;
+				return UNITS.YARD;
 			case YOCTOMETER:
-				return UNITS.YM;
+				return UNITS.YOCTOMETER;
 			case YOTTAMETER:
-				return UNITS.YOTTAM;
+				return UNITS.YOTTAMETER;
 			case ZEPTOMETER:
-				return UNITS.ZM;
+				return UNITS.ZEPTOMETER;
 			case ZETTAMETER:
-				return UNITS.ZETTAM;
+				return UNITS.ZETTAMETER;
 			default:
 				throw new IllegalArgumentException("Unknown unit: " + unit);
 		}
@@ -125,53 +125,53 @@ public final class OMEROUtils {
 	public static Unit<Time> unit(final UnitsTime unit) {
 		switch (unit) {
 			case ATTOSECOND:
-				return UNITS.AS;
+				return UNITS.ATTOSECOND;
 			case CENTISECOND:
-				return UNITS.CS;
+				return UNITS.CENTISECOND;
 			case DAY:
-				return UNITS.D;
+				return UNITS.DAY;
 			case DECASECOND:
-				return UNITS.DAS;
+				return UNITS.DECASECOND;
 			case DECISECOND:
-				return UNITS.DS;
+				return UNITS.DECISECOND;
 			case EXASECOND:
-				return UNITS.EXAS;
+				return UNITS.EXASECOND;
 			case FEMTOSECOND:
-				return UNITS.FS;
+				return UNITS.FEMTOSECOND;
 			case GIGASECOND:
-				return UNITS.GIGAS;
+				return UNITS.GIGASECOND;
 			case HECTOSECOND:
-				return UNITS.HS;
+				return UNITS.HECTOSECOND;
 			case HOUR:
-				return UNITS.H;
+				return UNITS.HOUR;
 			case KILOSECOND:
-				return UNITS.KS;
+				return UNITS.KILOSECOND;
 			case MEGASECOND:
-				return UNITS.MEGAS;
+				return UNITS.MEGASECOND;
 			case MICROSECOND:
-				return UNITS.MICROS;
+				return UNITS.MICROSECOND;
 			case MILLISECOND:
-				return UNITS.MS;
+				return UNITS.MILLISECOND;
 			case MINUTE:
-				return UNITS.MIN;
+				return UNITS.MINUTE;
 			case NANOSECOND:
-				return UNITS.NS;
+				return UNITS.NANOSECOND;
 			case PETASECOND:
-				return UNITS.PETAS;
+				return UNITS.PETASECOND;
 			case PICOSECOND:
-				return UNITS.PS;
+				return UNITS.PICOSECOND;
 			case SECOND:
-				return UNITS.S;
+				return UNITS.SECOND;
 			case TERASECOND:
-				return UNITS.TERAS;
+				return UNITS.TERASECOND;
 			case YOCTOSECOND:
-				return UNITS.YS;
+				return UNITS.YOCTOSECOND;
 			case YOTTASECOND:
-				return UNITS.YOTTAS;
+				return UNITS.YOTTASECOND;
 			case ZEPTOSECOND:
-				return UNITS.ZS;
+				return UNITS.ZEPTOSECOND;
 			case ZETTASECOND:
-				return UNITS.ZETTAS;
+				return UNITS.ZETTASECOND;
 			default:
 				throw new IllegalArgumentException("Unknown unit: " + unit);
 		}
