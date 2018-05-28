@@ -210,20 +210,20 @@ public class ScriptGenerator extends AbstractContextual {
 
 		// write the stub
 		final File stubFile = formatFilename(dir, info);
-		final PrintWriter out = new PrintWriter(new FileWriter(stubFile));
-		// Someday, we can perhaps improve OMERO to call the ImageJ
-		// launcher directly rather than using Python in this silly way.
-		out.println("#!/usr/bin/env python");
-		out.println("from __future__ import print_function");
-		out.println("import sys, subprocess");
-		out.println("exe = \"" + exe + "\"");
-		out.println("ident = \"" + escapedID + "\"");
-		out.println("try:");
-		out.println("    print(subprocess.check_output([exe, ident]))");
-		out.println("except subprocess.CalledProcessError, e:");
-		out.println("    print(e.output)");
-		out.println("    sys.exit(e.returncode)");
-		out.close();
+		try (final PrintWriter out = new PrintWriter(new FileWriter(stubFile))) {
+			// Someday, we can perhaps improve OMERO to call the ImageJ
+			// launcher directly rather than using Python in this silly way.
+			out.println("#!/usr/bin/env python");
+			out.println("from __future__ import print_function");
+			out.println("import sys, subprocess");
+			out.println("exe = \"" + exe + "\"");
+			out.println("ident = \"" + escapedID + "\"");
+			out.println("try:");
+			out.println("    print(subprocess.check_output([exe, ident]))");
+			out.println("except subprocess.CalledProcessError, e:");
+			out.println("    print(e.output)");
+			out.println("    sys.exit(e.returncode)");
+		}
 	}
 
 	private File formatFilename(final File dir, final ModuleInfo info)
