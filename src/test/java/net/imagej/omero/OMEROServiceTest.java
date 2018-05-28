@@ -87,61 +87,61 @@ public class OMEROServiceTest {
 	public void testGetJobParam() {
 		// -- test primitive types --
 
-		assertParam(omeroService, RBool.class, boolean.class);
-		assertParam(omeroService, RString.class, byte.class);
-		assertParam(omeroService, RString.class, char.class);
-		assertParam(omeroService, RDouble.class, double.class);
-		assertParam(omeroService, RFloat.class, float.class);
-		assertParam(omeroService, RInt.class, int.class);
-		assertParam(omeroService, RLong.class, long.class);
-		assertParam(omeroService, RString.class, short.class);
+		assertParam(RBool.class, boolean.class);
+		assertParam(RString.class, byte.class);
+		assertParam(RString.class, char.class);
+		assertParam(RDouble.class, double.class);
+		assertParam(RFloat.class, float.class);
+		assertParam(RInt.class, int.class);
+		assertParam(RLong.class, long.class);
+		assertParam(RString.class, short.class);
 
 		// -- test primitive object wrappers --
 
-		assertParam(omeroService, RBool.class, Boolean.class);
-		assertParam(omeroService, RString.class, Byte.class);
-		assertParam(omeroService, RString.class, Character.class);
-		assertParam(omeroService, RDouble.class, Double.class);
-		assertParam(omeroService, RFloat.class, Float.class);
-		assertParam(omeroService, RInt.class, Integer.class);
-		assertParam(omeroService, RLong.class, Long.class);
-		assertParam(omeroService, RString.class, Short.class);
+		assertParam(RBool.class, Boolean.class);
+		assertParam(RString.class, Byte.class);
+		assertParam(RString.class, Character.class);
+		assertParam(RDouble.class, Double.class);
+		assertParam(RFloat.class, Float.class);
+		assertParam(RInt.class, Integer.class);
+		assertParam(RLong.class, Long.class);
+		assertParam(RString.class, Short.class);
 
 		// -- test array types --
 
-		assertParam(omeroService, RArray.class, boolean[].class);
-		assertParam(omeroService, RArray.class, byte[].class);
-		assertParam(omeroService, RArray.class, char[].class);
-		assertParam(omeroService, RArray.class, double[].class);
-		assertParam(omeroService, RArray.class, float[].class);
-		assertParam(omeroService, RArray.class, int[].class);
-		assertParam(omeroService, RArray.class, long[].class);
-		assertParam(omeroService, RArray.class, short[].class);
-		assertParam(omeroService, RArray.class, Object[].class);
-		assertParam(omeroService, RArray.class, String[].class);
+		assertParam(RArray.class, boolean[].class);
+		assertParam(RArray.class, byte[].class);
+		assertParam(RArray.class, char[].class);
+		assertParam(RArray.class, double[].class);
+		assertParam(RArray.class, float[].class);
+		assertParam(RArray.class, int[].class);
+		assertParam(RArray.class, long[].class);
+		assertParam(RArray.class, short[].class);
+		assertParam(RArray.class, Object[].class);
+		assertParam(RArray.class, String[].class);
 
 		// -- test collection types --
 
-		assertParam(omeroService, RList.class, List.class);
-		assertParam(omeroService, RMap.class, Map.class);
-		assertParam(omeroService, RSet.class, Set.class);
+		assertParam(RList.class, List.class);
+		assertParam(RMap.class, Map.class);
+		assertParam(RSet.class, Set.class);
 
-		assertParam(omeroService, RList.class, ArrayList.class);
-		assertParam(omeroService, RMap.class, HashMap.class);
-		assertParam(omeroService, RSet.class, HashSet.class);
+		assertParam(RList.class, ArrayList.class);
+		assertParam(RMap.class, HashMap.class);
+		assertParam(RSet.class, HashSet.class);
 
 		// -- test ImageJ image types --
 
-		assertParam(omeroService, RLong.class, Dataset.class);
-		assertParam(omeroService, RLong.class, DatasetView.class);
-		assertParam(omeroService, RLong.class, ImageDisplay.class);
+		assertParam(RLong.class, Dataset.class);
+		assertParam(RLong.class, DatasetView.class);
+		assertParam(RLong.class, ImageDisplay.class);
 
 		// -- test other object types --
 
-		assertParam(omeroService, RString.class, BigDecimal.class);
-		assertParam(omeroService, RString.class, BigInteger.class);
-		assertParam(omeroService, RString.class, ColorRGB.class);
-		assertParam(omeroService, RString.class, File.class);
+		assertParam(RString.class, BigDecimal.class);
+		assertParam(RString.class, BigInteger.class);
+		assertParam(RString.class, ColorRGB.class);
+		assertParam(RString.class, File.class);
 	}
 
 	/** Tests {@link OMEROService#prototype(Class)}. */
@@ -149,61 +149,61 @@ public class OMEROServiceTest {
 	public void testPrototype() {
 		// -- test primitive types --
 
-		assertPrototype(omeroService, RBool.class, boolean.class);
-		assertPrototype(omeroService, RString.class, byte.class);
-		assertPrototype(omeroService, RString.class, char.class);
-		assertPrototype(omeroService, RDouble.class, double.class);
-		assertPrototype(omeroService, RFloat.class, float.class);
-		assertPrototype(omeroService, RInt.class, int.class);
-		assertPrototype(omeroService, RLong.class, long.class);
-		assertPrototype(omeroService, RString.class, short.class);
+		assertPrototype(RBool.class, boolean.class);
+		assertPrototype(RString.class, byte.class);
+		assertPrototype(RString.class, char.class);
+		assertPrototype(RDouble.class, double.class);
+		assertPrototype(RFloat.class, float.class);
+		assertPrototype(RInt.class, int.class);
+		assertPrototype(RLong.class, long.class);
+		assertPrototype(RString.class, short.class);
 
 		// -- test primitive object wrappers --
 
-		assertPrototype(omeroService, RBool.class, Boolean.class);
-		assertPrototype(omeroService, RString.class, Byte.class);
-		assertPrototype(omeroService, RString.class, Character.class);
-		assertPrototype(omeroService, RDouble.class, Double.class);
-		assertPrototype(omeroService, RFloat.class, Float.class);
-		assertPrototype(omeroService, RInt.class, Integer.class);
-		assertPrototype(omeroService, RLong.class, Long.class);
-		assertPrototype(omeroService, RString.class, Short.class);
+		assertPrototype(RBool.class, Boolean.class);
+		assertPrototype(RString.class, Byte.class);
+		assertPrototype(RString.class, Character.class);
+		assertPrototype(RDouble.class, Double.class);
+		assertPrototype(RFloat.class, Float.class);
+		assertPrototype(RInt.class, Integer.class);
+		assertPrototype(RLong.class, Long.class);
+		assertPrototype(RString.class, Short.class);
 
 		// -- test array types --
 
-		assertPrototype(omeroService, RArray.class, boolean[].class);
-		assertPrototype(omeroService, RArray.class, byte[].class);
-		assertPrototype(omeroService, RArray.class, char[].class);
-		assertPrototype(omeroService, RArray.class, double[].class);
-		assertPrototype(omeroService, RArray.class, float[].class);
-		assertPrototype(omeroService, RArray.class, int[].class);
-		assertPrototype(omeroService, RArray.class, long[].class);
-		assertPrototype(omeroService, RArray.class, short[].class);
-		assertPrototype(omeroService, RArray.class, Object[].class);
-		assertPrototype(omeroService, RArray.class, String[].class);
+		assertPrototype(RArray.class, boolean[].class);
+		assertPrototype(RArray.class, byte[].class);
+		assertPrototype(RArray.class, char[].class);
+		assertPrototype(RArray.class, double[].class);
+		assertPrototype(RArray.class, float[].class);
+		assertPrototype(RArray.class, int[].class);
+		assertPrototype(RArray.class, long[].class);
+		assertPrototype(RArray.class, short[].class);
+		assertPrototype(RArray.class, Object[].class);
+		assertPrototype(RArray.class, String[].class);
 
 		// -- test collection types --
 
-		assertPrototype(omeroService, RList.class, List.class);
-		assertPrototype(omeroService, RMap.class, Map.class);
-		assertPrototype(omeroService, RSet.class, Set.class);
+		assertPrototype(RList.class, List.class);
+		assertPrototype(RMap.class, Map.class);
+		assertPrototype(RSet.class, Set.class);
 
-		assertPrototype(omeroService, RList.class, ArrayList.class);
-		assertPrototype(omeroService, RMap.class, HashMap.class);
-		assertPrototype(omeroService, RSet.class, HashSet.class);
+		assertPrototype(RList.class, ArrayList.class);
+		assertPrototype(RMap.class, HashMap.class);
+		assertPrototype(RSet.class, HashSet.class);
 
 		// -- test ImageJ image types --
 
-		assertPrototype(omeroService, RLong.class, Dataset.class);
-		assertPrototype(omeroService, RLong.class, DatasetView.class);
-		assertPrototype(omeroService, RLong.class, ImageDisplay.class);
+		assertPrototype(RLong.class, Dataset.class);
+		assertPrototype(RLong.class, DatasetView.class);
+		assertPrototype(RLong.class, ImageDisplay.class);
 
 		// -- test other object types --
 
-		assertPrototype(omeroService, RString.class, BigDecimal.class);
-		assertPrototype(omeroService, RString.class, BigInteger.class);
-		assertPrototype(omeroService, RString.class, ColorRGB.class);
-		assertPrototype(omeroService, RString.class, File.class);
+		assertPrototype(RString.class, BigDecimal.class);
+		assertPrototype(RString.class, BigInteger.class);
+		assertPrototype(RString.class, ColorRGB.class);
+		assertPrototype(RString.class, File.class);
 	}
 
 	// -- Helper methods --
@@ -212,9 +212,7 @@ public class OMEROServiceTest {
 		return new TestModuleItem<>(type);
 	}
 
-	private <T> void assertParam(final OMEROService omeroService,
-		final Class<?> omero, final Class<T> pojo)
-	{
+	private <T> void assertParam(final Class<?> omero, final Class<T> pojo) {
 		final ModuleItem<T> item = createItem(pojo);
 		final Param param = omeroService.getJobParam(item);
 		assertEquals(!item.isRequired(), param.optional);
@@ -222,9 +220,7 @@ public class OMEROServiceTest {
 		assertEquals(item.getDescription(), param.description);
 	}
 
-	private void assertPrototype(final OMEROService omeroService,
-		final Class<?> omero, final Class<?> pojo)
-	{
+	private void assertPrototype(final Class<?> omero, final Class<?> pojo) {
 		final RType proto = omeroService.prototype(pojo);
 		assertInstance(omero, proto);
 	}
