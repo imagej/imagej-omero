@@ -70,8 +70,7 @@ public class ScriptGeneratorTest {
 				add(pluginInfo(Bear.class));
 			}
 		};
-		final ArrayList<Class<? extends Service>> classes =
-			new ArrayList<Class<? extends Service>>();
+		final ArrayList<Class<? extends Service>> classes = new ArrayList<>();
 		classes.add(AppService.class);
 		classes.add(CommandService.class);
 		classes.add(MenuService.class);
@@ -108,7 +107,7 @@ public class ScriptGeneratorTest {
 		final Class<? extends Command> pluginClass)
 	{
 		final Plugin ann = pluginClass.getAnnotation(Plugin.class);
-		return new PluginInfo<Command>(pluginClass, Command.class, ann);
+		return new PluginInfo<>(pluginClass, Command.class, ann);
 	}
 
 	// -- Helper classes --

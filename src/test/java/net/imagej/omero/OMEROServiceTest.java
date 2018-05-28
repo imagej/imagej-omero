@@ -209,7 +209,7 @@ public class OMEROServiceTest {
 	// -- Helper methods --
 
 	private <T> ModuleItem<T> createItem(final Class<T> type) {
-		return new TestModuleItem<T>(type);
+		return new TestModuleItem<>(type);
 	}
 
 	private <T> void assertParam(final OMEROService omeroService,

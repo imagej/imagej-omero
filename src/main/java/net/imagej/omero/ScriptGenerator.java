@@ -197,7 +197,6 @@ public class ScriptGenerator extends AbstractContextual {
 		final String exe) throws IOException
 	{
 		// validate module
-		if (!(info instanceof Identifiable)) return;
 		if (headlessOnly && !info.canRunHeadless()) return;
 
 		// validate directory

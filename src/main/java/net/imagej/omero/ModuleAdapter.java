@@ -44,7 +44,6 @@ import net.imagej.display.ImageDisplay;
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
 import org.scijava.ItemVisibility;
-import org.scijava.Versioned;
 import org.scijava.command.Command;
 import org.scijava.convert.ConvertService;
 import org.scijava.log.LogService;
@@ -306,16 +305,9 @@ public class ModuleAdapter extends AbstractContextual {
 		return omero.rtypes.rinternal(params);
 	}
 
-	/**
-	 * Gets the version of the associated ImageJ module.
-	 *
-	 * @return {@link Versioned#getVersion()}; or null if the module does not
-	 *         implement the {@link Versioned} interface. Extracts the version of
-	 *         the associated ImageJ module, by scanning the relevant JAR manifest
-	 *         and/or POM.
-	 */
+	/** Gets the version of the associated ImageJ module. */
 	public String getVersion() {
-		return info instanceof Versioned ? ((Versioned) info).getVersion() : null;
+		return info.getVersion();
 	}
 
 	// -- Helper methods --

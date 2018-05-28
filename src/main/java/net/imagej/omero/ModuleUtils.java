@@ -47,7 +47,6 @@ public final class ModuleUtils {
 	{
 		// TODO: Migrate logic to ModuleService, and cache identifiers in a hash.
 		for (final ModuleInfo info : moduleService.getModules()) {
-			if (!(info instanceof Identifiable)) continue;
 			final String infoID = ((Identifiable) info).getIdentifier();
 			if (id.equals(infoID)) return info;
 		}
