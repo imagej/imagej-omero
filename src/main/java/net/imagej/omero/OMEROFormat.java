@@ -504,9 +504,11 @@ public class OMEROFormat extends AbstractFormat {
 				// NB: planeMin is inclusive; planeMax is exclusive.
 				final int w = (int) (planeMax[0] - planeMin[0]);
 				final int h = (int) (planeMax[1] - planeMin[1]);
-				log().debug("openPlane: z = " + zct[0] + " c = " + zct[1] + " t = " + zct[2]);
-				log().debug("openPlane: x = " + x + ", y = " + y);
-				log().debug("openPlane: w = " + w + ", h = " + h);
+				if (log().isDebug()) {
+					log().debug("openPlane:" + //
+						" z:" + zct[0] + " c:" + zct[1] + " t:" + zct[2] + //
+						" x:" + x + " y:" + y + " w:" + w + " h:" + h);
+				}
 				final byte[] tile = store.getTile(zct[0], zct[1], zct[2], x, y, w, h);
 				plane.setData(tile);
 			}
@@ -868,12 +870,12 @@ public class OMEROFormat extends AbstractFormat {
 		try {
 			if (log.isDebug()) {
 				final ImageMetadata imageMeta = plane.getImageMetadata();
-				log.debug("writePlane: bytes = " + data.length);
-				log.debug("writePlane: z = " + z + " c = " + c + " t = " + t);
-				log.debug("writePlane: w = " + imageMeta.getAxisLength(0));
-				log.debug("writePlane: h = " + imageMeta.getAxisLength(1));
-				log.debug("writePlane: planar axes = " + //
-					axesToString(imageMeta, imageMeta.getAxesPlanar()));
+				log.debug("writePlane:" + //
+					" z:" + z + " c:" + c + " t:" + t + //
+					" w:" + imageMeta.getAxisLength(0) + //
+					" h:" + imageMeta.getAxisLength(1) + //
+					" len:" + data.length + //
+					" axes:" + axesToString(imageMeta, imageMeta.getAxesPlanar()));
 			}
 			store.setPlane(data, z, c, t);
 		}
