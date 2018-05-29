@@ -586,9 +586,7 @@ public class OMEROFormat extends AbstractFormat {
 					final CalibratedAxis channelAxis = axisMap.get(Axes.CHANNEL);
 					if (!planarAxes.contains(channelAxis)) {
 						throw new IllegalArgumentException("Unsupported planar axes: " +
-							planarAxes.stream()//
-								.map(axis -> axis.type())//
-								.collect(Collectors.toList()));
+							axesToString(imageMeta, planarAxes));
 					}
 					final long channelCount = imageMeta.getAxisLength(channelAxis);
 					int startByte = 0;
@@ -868,12 +866,15 @@ public class OMEROFormat extends AbstractFormat {
 		throws FormatException
 	{
 		try {
-			log.debug("writePlane: bytes = " + data.length);
-			log.debug("writePlane: z = " + z + " c = " + c + " t = " + t);
-			log.debug("writePlane: w = " + plane.getImageMetadata().getAxisLength(0));
-			log.debug("writePlane: h = " + plane.getImageMetadata().getAxisLength(1));
-			log.debug("writePlane: num planar = " + //
-				plane.getImageMetadata().getPlanarAxisCount());
+			if (log.isDebug()) {
+				final ImageMetadata imageMeta = plane.getImageMetadata();
+				log.debug("writePlane: bytes = " + data.length);
+				log.debug("writePlane: z = " + z + " c = " + c + " t = " + t);
+				log.debug("writePlane: w = " + imageMeta.getAxisLength(0));
+				log.debug("writePlane: h = " + imageMeta.getAxisLength(1));
+				log.debug("writePlane: planar axes = " + //
+					axesToString(imageMeta, imageMeta.getAxesPlanar()));
+			}
 			store.setPlane(data, z, c, t);
 		}
 		catch (final ServerError err) {
@@ -884,4 +885,11 @@ public class OMEROFormat extends AbstractFormat {
 		}
 	}
 
+	private static String axesToString(final ImageMetadata imageMeta,
+		final Collection<CalibratedAxis> axes)
+	{
+		return axes.stream()//
+			.map(axis -> axis.type() + "[" + imageMeta.getAxisLength(axis) + "]")//
+			.collect(Collectors.toList()).toString();
+	}
 }
