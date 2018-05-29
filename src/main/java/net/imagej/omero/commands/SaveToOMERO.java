@@ -57,14 +57,16 @@ import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 
 /**
- * Exports Objects to OMERO.
+ * A command to export objects to an OMERO database.
  *
  * @author Alison Walter
  */
-@Plugin(type = Command.class, label = "Export to OMERO", menu = { @Menu(
-	label = MenuConstants.FILE_LABEL, weight = MenuConstants.FILE_WEIGHT,
-	mnemonic = MenuConstants.FILE_MNEMONIC), @Menu(label = "Export", weight = 6),
-	@Menu(label = "To OMERO ... ", weight = 100, mnemonic = 'o') })
+@Plugin(type = Command.class, label = "Export to OMERO", menu = { //
+	@Menu(label = MenuConstants.FILE_LABEL, weight = MenuConstants.FILE_WEIGHT,
+		mnemonic = MenuConstants.FILE_MNEMONIC), //
+	@Menu(label = "Export", weight = 6), //
+	@Menu(label = "OMERO... ", weight = 100, mnemonic = 'o') //
+})
 public class SaveToOMERO extends OMEROCommand {
 
 	@Parameter

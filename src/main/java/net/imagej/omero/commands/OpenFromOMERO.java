@@ -49,12 +49,16 @@ import Glacier2.PermissionDeniedException;
 import omero.ServerError;
 
 /**
+ * A command to import objects from an OMERO database.
+ * 
  * @author Alison Walter
  */
-@Plugin(type = Command.class, label = "Import From OMERO", menu = { @Menu(
-	label = MenuConstants.FILE_LABEL, weight = MenuConstants.FILE_WEIGHT,
-	mnemonic = MenuConstants.FILE_MNEMONIC), @Menu(label = "Import", weight = 6),
-	@Menu(label = "From OMERO ...", weight = 100, mnemonic = 'o') })
+@Plugin(type = Command.class, label = "Import from OMERO", menu = { //
+	@Menu(label = MenuConstants.FILE_LABEL, weight = MenuConstants.FILE_WEIGHT,
+		mnemonic = MenuConstants.FILE_MNEMONIC), //
+	@Menu(label = "Import", weight = 6), //
+	@Menu(label = "OMERO...", weight = 100, mnemonic = 'o') //
+})
 public class OpenFromOMERO extends OMEROCommand {
 
 	@Parameter
