@@ -428,9 +428,6 @@ public class OMEROFormat extends AbstractFormat {
 		@Parameter
 		private OMEROService omeroService;
 
-		@Parameter
-		private LogService logService;
-
 		@Override
 		public void typedParse(final RandomAccessInputStream stream,
 			final Metadata meta, final SCIFIOConfig config) throws IOException,
@@ -455,10 +452,10 @@ public class OMEROFormat extends AbstractFormat {
 			}
 
 			// Set table and rois to lazy loaders
-			meta.setRois(new LazyROITree(null, meta.getImageID(), meta
-				.getCredentials(), omeroService, logService));
+			meta.setRois(new LazyROITree(null, meta.getImageID(), //
+				meta.getCredentials(), omeroService, log()));
 			meta.setTables(new LazyTableList(meta.getImageID(), meta.getCredentials(),
-				omeroService, logService));
+				omeroService, log()));
 
 			// parse pixel sizes
 			meta.setSizeX(pix.getSizeX().getValue());
@@ -553,9 +550,6 @@ public class OMEROFormat extends AbstractFormat {
 		private MetadataService metadataService;
 
 		@Parameter
-		private LogService log;
-
-		@Parameter
 		private OMEROService omeroService;
 
 		private OMEROSession session;
@@ -582,7 +576,7 @@ public class OMEROFormat extends AbstractFormat {
 			switch (planarAxisCount) {
 				case 2: // XY
 					writePlaneToOMERO(bytes, zct[0], zct[1], zct[2], //
-						plane, imageIndex, planeIndex, log, store);
+						plane, imageIndex, planeIndex, log(), store);
 					break;
 				case 3: // XYC
 					final CalibratedAxis channelAxis = axisMap.get(Axes.CHANNEL);
@@ -598,7 +592,7 @@ public class OMEROFormat extends AbstractFormat {
 					for (int i = 0; i < channelCount; i++) {
 						final byte[] data = Arrays.copyOfRange(bytes, startByte, endByte);
 						writePlaneToOMERO(data, zct[0], zct[1] + i, zct[2], //
-							plane, imageIndex, planeIndex, log, store);
+							plane, imageIndex, planeIndex, log(), store);
 						startByte = endByte;
 						endByte = endByte + nBytes;
 					}
