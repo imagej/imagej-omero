@@ -504,6 +504,9 @@ public class OMEROFormat extends AbstractFormat {
 				// NB: planeMin is inclusive; planeMax is exclusive.
 				final int w = (int) (planeMax[0] - planeMin[0]);
 				final int h = (int) (planeMax[1] - planeMin[1]);
+				log().debug("openPlane: z = " + zct[0] + " c = " + zct[1] + " t = " + zct[2]);
+				log().debug("openPlane: x = " + x + ", y = " + y);
+				log().debug("openPlane: w = " + w + ", h = " + h);
 				final byte[] tile = store.getTile(zct[0], zct[1], zct[2], x, y, w, h);
 				plane.setData(tile);
 			}
