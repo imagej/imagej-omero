@@ -19,8 +19,15 @@ To try it out, enable the appropriate
 
 You will then have the following new menu items:
 
+--- <= OMERO 5.3 ---
+
 * File > Import > OMERO...
 * File > Export > OMERO...
+
+--- > OMERO 5.3 ---
+
+* File > Import > From OMERO...
+* File > Export > To OMERO...
 
 ## Calling ImageJ commands as OMERO scripts
 
