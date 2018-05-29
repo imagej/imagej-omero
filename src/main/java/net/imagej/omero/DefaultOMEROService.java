@@ -26,6 +26,8 @@
 package net.imagej.omero;
 
 import io.scif.Metadata;
+import io.scif.config.SCIFIOConfig;
+import io.scif.config.SCIFIOConfig.ImgMode;
 import io.scif.services.DatasetIOService;
 
 import java.io.IOException;
@@ -508,7 +510,9 @@ public class DefaultOMEROService extends AbstractService implements
 		final String omeroSource = "omero:" + credentials(client) + "&imageID=" +
 			imageID;
 
-		return datasetIOService.open(omeroSource);
+		final SCIFIOConfig config = //
+			new SCIFIOConfig().imgOpenerSetImgModes(ImgMode.CELL);
+		return datasetIOService.open(omeroSource, config);
 	}
 
 	@Override
