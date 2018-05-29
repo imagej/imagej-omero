@@ -617,8 +617,8 @@ public class OMEROFormat extends AbstractFormat {
 					getMetadata().setImageID(image.getId().getValue());
 
 					// try to attach image to dataset
-					if (session.getExperimenter() != null && session
-						.getGateway() != null && getMetadata().getDatasetID() != 0)
+					if (session.getExperimenter() != null && //
+						session.getGateway() != null && getMetadata().getDatasetID() != 0)
 					{
 						attachImageToDataset(image, getMetadata().getDatasetID());
 					}
@@ -673,8 +673,8 @@ public class OMEROFormat extends AbstractFormat {
 
 				if (!temp.isEmpty()) {
 					final DatasetData ds = temp.iterator().next();
-					final ImageData imgdata = browse.getImage(ctx, image.getId()
-						.getValue());
+					final ImageData imgdata = browse.getImage(ctx, //
+						image.getId().getValue());
 					dmf.addImageToDataset(ctx, imgdata, ds);
 				}
 			}
@@ -697,12 +697,9 @@ public class OMEROFormat extends AbstractFormat {
 		final Map<AxisType, CalibratedAxis> axisMap)
 	{
 		final long[] lengths = new long[3];
-		lengths[0] = axisMap.get(Axes.Z) == null ? -1 : imageMeta.getAxisLength(
-			axisMap.get(Axes.Z));
-		lengths[1] = axisMap.get(Axes.CHANNEL) == null ? -1 : imageMeta
-			.getAxisLength(axisMap.get(Axes.CHANNEL));
-		lengths[2] = axisMap.get(Axes.TIME) == null ? -1 : imageMeta.getAxisLength(
-			axisMap.get(Axes.TIME));
+		lengths[0] = axisLength(imageMeta, axisMap, Axes.Z);
+		lengths[1] = axisLength(imageMeta, axisMap, Axes.CHANNEL);
+		lengths[2] = axisLength(imageMeta, axisMap, Axes.TIME);
 
 		final AxisType[] axes = { Axes.Z, Axes.CHANNEL, Axes.TIME };
 		final long[] zct = FormatTools.rasterToPosition(lengths, planeIndex);
@@ -800,6 +797,13 @@ public class OMEROFormat extends AbstractFormat {
 
 	private static Integer i(final RInt value) {
 		return value == null ? null : value.getValue();
+	}
+
+	private static long axisLength(final ImageMetadata imageMeta,
+		final Map<AxisType, CalibratedAxis> axisMap, AxisType type)
+	{
+		final CalibratedAxis axis = axisMap.get(type);
+		return axis == null ? -1 : imageMeta.getAxisLength(axis);
 	}
 
 	private static Map<AxisType, CalibratedAxis> createAxisMap(
