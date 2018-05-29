@@ -34,9 +34,12 @@ You will then have the following new menu items:
 You can execute ImageJ modules (commands, scripts, etc.) on the server side as
 OMERO scripts.
 
-Translation of some complex data types is not yet implemented. In particular,
-ImageJ results tables are not translated to and from OMERO.tables structures,
-and ImageJ regions of interest (ROIs) are not translated to/from OMERO ROIs.
+Currently images, tables, and ROIs are supported. However, only ROIs can be
+updated on the server. Images and tables must be uploaded as new objects.
+
+Additionally, it is possible to dictate where in OMERO outputs get stored by using special parameter properties.
+* `attachToOMERODatasetIDs` - This is used for output images to specify which OMERO Datasets they should be associated with. The OMERO Dataset must be specified by ID, and each output image can be associated with multiple OMERO Datasets.
+* `attachToImages` - This is used to dictate to which **input images** output ROIs/tables should be attached. These images must be inputs to the script, and should be referenced by their name (not ID). 
 
 If you wish to give it a test drive, the steps are:
 
