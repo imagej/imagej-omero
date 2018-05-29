@@ -65,6 +65,7 @@ import org.scijava.Priority;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.ArrayUtils;
 
 import omero.RInt;
 import omero.ServerError;
@@ -570,8 +571,9 @@ public class OMEROFormat extends AbstractFormat {
 			final List<CalibratedAxis> planarAxes = imageMeta.getAxesPlanar();
 			final Map<AxisType, CalibratedAxis> axisMap = createAxisMap(imageMeta);
 
-			final int nBytes = (int) (imageMeta.getAxisLength(planarAxes.get(0)) *
-				imageMeta.getAxisLength(planarAxes.get(1)));
+			final long sizeX = imageMeta.getAxisLength(planarAxes.get(0));
+			final long sizeY = imageMeta.getAxisLength(planarAxes.get(1));
+			final int nBytes = ArrayUtils.safeMultiply32(sizeX, sizeY);
 			final byte[] bytes = plane.getBytes();
 			final int[] zct = zct(planeIndex, imageMeta, axisMap);
 
