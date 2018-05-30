@@ -93,23 +93,19 @@ public class OpenFromOMERO extends OMEROCommand {
 			// Load ROIs by requesting the children
 			// Do NOT set ROIs as an output, because they're already attached to the
 			// image. Declaring them as output will cause duplicates to be attached.
-			if (downloadRois) ((ROITree) image.getProperties().get(
-				ROIService.ROI_PROPERTY)).children();
+			if (downloadRois) {
+				final Object rois = image.getProperties().get(ROIService.ROI_PROPERTY);
+				((ROITree) rois).children();
+			}
 
-			if (downloadTables) tables = (List<Table<?, ?>>) image.getProperties()
-				.get(TableService.TABLE_PROPERTY);
+			if (downloadTables) {
+				tables = (List<Table<?, ?>>) image.getProperties().get(
+					TableService.TABLE_PROPERTY);
+			}
 		}
-		catch (final ServerError exc) {
-			log.error(exc);
-			exc.printStackTrace();
-			cancel("Error talking to OMERO: " + exc.getMessage());
-		}
-		catch (final PermissionDeniedException exc) {
-			log.error(exc);
-			exc.printStackTrace();
-			cancel("Error talking to OMERO: " + exc.getMessage());
-		}
-		catch (final CannotCreateSessionException exc) {
+		catch (final ServerError | PermissionDeniedException
+				| CannotCreateSessionException exc)
+		{
 			log.error(exc);
 			exc.printStackTrace();
 			cancel("Error talking to OMERO: " + exc.getMessage());
@@ -118,5 +114,4 @@ public class OpenFromOMERO extends OMEROCommand {
 			log.error(exc);
 		}
 	}
-
 }
