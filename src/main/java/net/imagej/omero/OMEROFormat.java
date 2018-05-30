@@ -40,6 +40,7 @@ import io.scif.MetadataService;
 import io.scif.Plane;
 import io.scif.config.SCIFIOConfig;
 import io.scif.io.RandomAccessInputStream;
+import io.scif.io.RandomAccessOutputStream;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
@@ -653,6 +654,17 @@ public class OMEROFormat extends AbstractFormat {
 					throw versionException(exc);
 				}
 			}
+		}
+
+		@Override
+		public void setDest(final String fileName, final int imageIndex,
+			final SCIFIOConfig config) throws FormatException, IOException
+		{
+			getMetadata().setDatasetName(fileName);
+			// HACK: Create a dummy RAOS around this "fileName".
+			// The OMERO format does not use RAOS to wrangle bytes.
+			// This avoids creating a spurious empty file on disk.
+			setDest(new RandomAccessOutputStream(null), imageIndex, config);
 		}
 
 		@Override
