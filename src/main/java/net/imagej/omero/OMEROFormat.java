@@ -693,23 +693,7 @@ public class OMEROFormat extends AbstractFormat {
 
 	// -- Utility methods --
 
-	public static int[] zct(final long planeIndex, final ImageMetadata imageMeta,
-		final Map<AxisType, CalibratedAxis> axisMap)
-	{
-		final long[] lengths = new long[3];
-		lengths[0] = axisLength(imageMeta, axisMap, Axes.Z);
-		lengths[1] = axisLength(imageMeta, axisMap, Axes.CHANNEL);
-		lengths[2] = axisLength(imageMeta, axisMap, Axes.TIME);
-
-		final AxisType[] axes = { Axes.Z, Axes.CHANNEL, Axes.TIME };
-		final long[] zct = FormatTools.rasterToPosition(lengths, planeIndex);
-		final int[] result = new int[zct.length];
-		for (int i = 0; i < zct.length; i++)
-			result[i] = value(axes[i], zct[i]);
-		return result;
-	}
-
-	public static void parseArguments(final MetadataService metadataService,
+	static void parseArguments(final MetadataService metadataService,
 		final String string, final Metadata meta) throws FormatException
 	{
 		// strip omero prefix and/or suffix
@@ -731,6 +715,22 @@ public class OMEROFormat extends AbstractFormat {
 	}
 
 	// -- Helper methods --
+
+	private static int[] zct(final long planeIndex, final ImageMetadata imageMeta,
+		final Map<AxisType, CalibratedAxis> axisMap)
+	{
+		final long[] lengths = new long[3];
+		lengths[0] = axisLength(imageMeta, axisMap, Axes.Z);
+		lengths[1] = axisLength(imageMeta, axisMap, Axes.CHANNEL);
+		lengths[2] = axisLength(imageMeta, axisMap, Axes.TIME);
+
+		final AxisType[] axes = { Axes.Z, Axes.CHANNEL, Axes.TIME };
+		final long[] zct = FormatTools.rasterToPosition(lengths, planeIndex);
+		final int[] result = new int[zct.length];
+		for (int i = 0; i < zct.length; i++)
+			result[i] = value(axes[i], zct[i]);
+		return result;
+	}
 
 	private static FormatException communicationException(final Throwable cause) {
 		return new FormatException("Error communicating with OMERO", cause);
