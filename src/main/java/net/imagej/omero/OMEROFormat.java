@@ -63,7 +63,7 @@ import net.imagej.roi.ROITree;
 import net.imagej.table.Table;
 
 import org.scijava.Priority;
-import org.scijava.log.LogService;
+import org.scijava.log.Logger;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.ArrayUtils;
@@ -868,7 +868,7 @@ public class OMEROFormat extends AbstractFormat {
 
 	private static void writePlaneToOMERO(final byte[] data, final int z,
 		final int c, final int t, final Plane plane, final int imageIndex,
-		final long planeIndex, final LogService log, final RawPixelsStorePrx store)
+		final long planeIndex, final Logger log, final RawPixelsStorePrx store)
 		throws FormatException
 	{
 		try {
