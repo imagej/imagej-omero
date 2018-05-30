@@ -50,6 +50,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -494,9 +495,8 @@ public class OMEROFormat extends AbstractFormat {
 			// TODO: Consider whether to reuse OMERO session from the parsing step.
 			if (session == null) initSession();
 
-			final Map<AxisType, CalibratedAxis> axisMap = //
-				createAxisMap(getMetadata().get(imageIndex));
-			final int[] zct = zct(planeIndex, getMetadata().get(imageIndex), axisMap);
+			final AxisMap axisMap = new AxisMap(getMetadata().get(imageIndex));
+			final int[] zct = axisMap.zct(planeIndex);
 			try {
 				// FIXME: Check before array access, and before casting.
 				final int x = (int) planeMin[0];
@@ -570,13 +570,13 @@ public class OMEROFormat extends AbstractFormat {
 
 			final ImageMetadata imageMeta = getMetadata().get(imageIndex);
 			final List<CalibratedAxis> planarAxes = imageMeta.getAxesPlanar();
-			final Map<AxisType, CalibratedAxis> axisMap = createAxisMap(imageMeta);
+			final AxisMap axisMap = new AxisMap(imageMeta);
 
 			final long sizeX = imageMeta.getAxisLength(planarAxes.get(0));
 			final long sizeY = imageMeta.getAxisLength(planarAxes.get(1));
 			final int nBytes = ArrayUtils.safeMultiply32(sizeX, sizeY);
 			final byte[] bytes = plane.getBytes();
-			final int[] zct = zct(planeIndex, imageMeta, axisMap);
+			final int[] zct = axisMap.zct(planeIndex);
 
 			final int planarAxisCount = planarAxes.size();
 			switch (planarAxisCount) {
@@ -585,7 +585,7 @@ public class OMEROFormat extends AbstractFormat {
 						plane, imageIndex, planeIndex, log(), store);
 					break;
 				case 3: // XYC
-					final CalibratedAxis channelAxis = axisMap.get(Axes.CHANNEL);
+					final CalibratedAxis channelAxis = axisMap.axis(Axes.CHANNEL);
 					if (!planarAxes.contains(channelAxis)) {
 						throw new IllegalArgumentException("Unsupported planar axes: " +
 							axesToString(imageMeta, planarAxes));
@@ -691,6 +691,94 @@ public class OMEROFormat extends AbstractFormat {
 
 	}
 
+	/** A map of axis types to their associated {@link CalibratedAxis} objects. */
+	private static class AxisMap {
+
+		private static final List<AxisType> XYZCT = //
+			Arrays.asList(Axes.X, Axes.Y, Axes.Z, Axes.CHANNEL, Axes.TIME);
+
+		private ImageMetadata imageMeta;
+		private Map<AxisType, CalibratedAxis> map;
+
+		private AxisMap(final ImageMetadata imageMeta) {
+			this.imageMeta = imageMeta;
+
+			// Fail fast if axis organization is unsupported.
+			final List<CalibratedAxis> axes = imageMeta.getAxes();
+			if (axes.size() > 5) {
+				throw new IllegalArgumentException("Cannot have more than 5 axes!");
+			}
+			final List<CalibratedAxis> planarAxes = imageMeta.getAxesPlanar();
+			if (planarAxes.size() < 2) {
+				throw new IllegalArgumentException(
+					"Must have at least two planar axes!");
+			}
+			final AxisType axisType0 = planarAxes.get(0).type();
+			if (axisType0 != Axes.X && !isUnknownAxis(axisType0)) {
+				throw new IllegalArgumentException("First axis must be X");
+			}
+			final AxisType axisType1 = planarAxes.get(1).type();
+			if (axisType1 != Axes.Y && !isUnknownAxis(axisType1)) {
+				throw new IllegalArgumentException("Second axis must be Y");
+			}
+
+			map = new HashMap<>();
+			for (final CalibratedAxis axis : axes) {
+				final AxisType axisType = axis.type();
+				if (map.containsKey(axisType)) {
+					throw new IllegalArgumentException(//
+						"Duplicate " + axisType + " axis found");
+				}
+				if (XYZCT.contains(axisType)) {
+					map.put(axisType, axis);
+				}
+				else if (isUnknownAxis(axisType)) {
+					// Assign the first available axis type from XYZCT.
+					final Optional<AxisType> availableAxisType =
+						XYZCT.stream().filter(at -> isAvailable(at)).findFirst();
+					if (!availableAxisType.isPresent()) {
+						throw new IllegalArgumentException(
+							"Cannot map unknown axis type, no labels free.");
+					}
+					map.put(availableAxisType.get(), axis);
+				}
+				else {
+					throw new IllegalArgumentException(//
+						"Unsupported axis type: " + axisType);
+				}
+			}
+		}
+
+		public CalibratedAxis axis(final AxisType axisType) {
+			return map.get(axisType);
+		}
+
+		public int[] zct(final long planeIndex) {
+			final AxisType[] axisTypes = { Axes.Z, Axes.CHANNEL, Axes.TIME };
+			final long[] lengths = new long[axisTypes.length];
+			for (int i = 0; i < axisTypes.length; i++)
+				lengths[i] = length(axisTypes[i]);
+			final long[] zct = FormatTools.rasterToPosition(lengths, planeIndex);
+			final int[] result = new int[zct.length];
+			for (int i = 0; i < zct.length; i++)
+				result[i] = value(axisTypes[i], zct[i]);
+			return result;
+		}
+
+		private long length(final AxisType axisType) {
+			final CalibratedAxis axis = map.get(axisType);
+			return axis == null ? -1 : imageMeta.getAxisLength(axis);
+		}
+
+		private static boolean isUnknownAxis(final AxisType axisType1) {
+			return Axes.UNKNOWN_LABEL.equals(axisType1.getLabel());
+		}
+
+		private boolean isAvailable(final AxisType axisType) {
+			return imageMeta.getAxisIndex(axisType) < 0 && !map.containsKey(axisType);
+		}
+	}
+
 	// -- Utility methods --
 
 	static void parseArguments(final MetadataService metadataService,
@@ -715,22 +803,6 @@ public class OMEROFormat extends AbstractFormat {
 	}
 
 	// -- Helper methods --
-
-	private static int[] zct(final long planeIndex, final ImageMetadata imageMeta,
-		final Map<AxisType, CalibratedAxis> axisMap)
-	{
-		final long[] lengths = new long[3];
-		lengths[0] = axisLength(imageMeta, axisMap, Axes.Z);
-		lengths[1] = axisLength(imageMeta, axisMap, Axes.CHANNEL);
-		lengths[2] = axisLength(imageMeta, axisMap, Axes.TIME);
-
-		final AxisType[] axes = { Axes.Z, Axes.CHANNEL, Axes.TIME };
-		final long[] zct = FormatTools.rasterToPosition(lengths, planeIndex);
-		final int[] result = new int[zct.length];
-		for (int i = 0; i < zct.length; i++)
-			result[i] = value(axes[i], zct[i]);
-		return result;
-	}
 
 	private static FormatException communicationException(final Throwable cause) {
 		return new FormatException("Error communicating with OMERO", cause);
@@ -797,73 +869,6 @@ public class OMEROFormat extends AbstractFormat {
 
 	private static Integer i(final RInt value) {
 		return value == null ? null : value.getValue();
-	}
-
-	private static long axisLength(final ImageMetadata imageMeta,
-		final Map<AxisType, CalibratedAxis> axisMap, final AxisType axisType)
-	{
-		final CalibratedAxis axis = axisMap.get(axisType);
-		return axis == null ? -1 : imageMeta.getAxisLength(axis);
-	}
-
-	private static Map<AxisType, CalibratedAxis> createAxisMap(
-		final ImageMetadata imageMeta)
-	{
-		final Map<AxisType, CalibratedAxis> axisMap = new HashMap<>();
-		final List<CalibratedAxis> imageAxes = imageMeta.getAxes();
-		final List<CalibratedAxis> planarAxes = imageMeta.getAxesPlanar();
-
-		if (imageAxes.size() > 5) {
-			throw new IllegalArgumentException("Cannot have more than 5 axes!");
-		}
-		if (planarAxes.size() > 3) {
-			throw new IllegalArgumentException(
-				"Cannot have more than three planar axes!");
-		}
-		for (final CalibratedAxis imageAxis : imageAxes) {
-			mapAxesToType(imageMeta, axisMap, imageAxis);
-		}
-
-		return axisMap;
-	}
-
-	private static final List<AxisType> XYZCT = //
-		Arrays.asList(Axes.X, Axes.Y, Axes.Z, Axes.CHANNEL, Axes.TIME);
-
-	private static void mapAxesToType(final ImageMetadata imageMeta,
-		final Map<AxisType, CalibratedAxis> axisMap, final CalibratedAxis axis)
-	{
-		final AxisType axisType = axis.type();
-		if (axisType.toString().equals(Axes.unknown().toString())) {
-			axisMap.put(computeUnknownAxisType(imageMeta, axisMap), axis);
-		}
-		else if (XYZCT.contains(axisType)) {
-			if (axisMap.containsKey(axisType)) {
-				throw new IllegalArgumentException(//
-					"Duplicate " + axisType + " axis found");
-			}
-			axisMap.put(axisType, axis);
-		}
-		else {
-			throw new IllegalArgumentException("Unsupported axis type: " + axisType);
-		}
-	}
-
-	private static AxisType computeUnknownAxisType(final ImageMetadata imageMeta,
-		final Map<AxisType, CalibratedAxis> axisMap)
-	{
-		for (final AxisType axisType : XYZCT) {
-			if (isAxisAvailable(imageMeta, axisMap, axisType)) return axisType;
-		}
-		throw new IllegalArgumentException(
-			"Cannot map unknown axis type, no labels free.");
-	}
-
-	private static boolean isAxisAvailable(final ImageMetadata imageMeta,
-		final Map<AxisType, CalibratedAxis> axisMap, final AxisType axisType)
-	{
-		return imageMeta.getAxisIndex(axisType) < 0 && //
-			!axisMap.containsKey(axisType);
 	}
 
 	private static void writePlaneToOMERO(final byte[] data, final int z,
