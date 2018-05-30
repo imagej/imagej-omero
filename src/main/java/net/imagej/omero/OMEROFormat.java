@@ -785,8 +785,9 @@ public class OMEROFormat extends AbstractFormat {
 		final String string, final Metadata meta) throws FormatException
 	{
 		// strip omero prefix and/or suffix
-		final String clean = string.replaceFirst("^omero:", "").replaceFirst(
-			"\\.omero$", "");
+		final String clean = string//
+			.replaceFirst("^omero:", "")//
+			.replaceFirst("\\.omero$", "");
 
 		final Map<String, Object> map = metadataService.parse(clean, "&");
 
@@ -827,8 +828,8 @@ public class OMEROFormat extends AbstractFormat {
 	private static int value(final AxisType axisType, final long value) {
 		if (value < 0) return 0;
 		if (value <= Integer.MAX_VALUE) return (int) value;
-		throw new IllegalArgumentException(axisType + " axis position too large: " +
-			value);
+		throw new IllegalArgumentException(//
+			axisType + " axis position too large: " + value);
 	}
 
 	private static LinearAxis axis(final AxisType axisType, final Length q) {
