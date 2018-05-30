@@ -800,9 +800,9 @@ public class OMEROFormat extends AbstractFormat {
 	}
 
 	private static long axisLength(final ImageMetadata imageMeta,
-		final Map<AxisType, CalibratedAxis> axisMap, AxisType type)
+		final Map<AxisType, CalibratedAxis> axisMap, final AxisType axisType)
 	{
-		final CalibratedAxis axis = axisMap.get(type);
+		final CalibratedAxis axis = axisMap.get(axisType);
 		return axis == null ? -1 : imageMeta.getAxisLength(axis);
 	}
 
@@ -833,33 +833,37 @@ public class OMEROFormat extends AbstractFormat {
 	private static void mapAxesToType(final ImageMetadata imageMeta,
 		final Map<AxisType, CalibratedAxis> axisMap, final CalibratedAxis axis)
 	{
-		final AxisType type = axis.type();
-		if (axis.type().toString().equals(Axes.unknown().toString())) {
+		final AxisType axisType = axis.type();
+		if (axisType.toString().equals(Axes.unknown().toString())) {
 			axisMap.put(computeUnknownAxisType(imageMeta, axisMap), axis);
 		}
-		else if (XYZCT.contains(type)) {
-			if (axisMap.containsKey(type)) {
-				throw new IllegalArgumentException("Duplicate " + type + " axis found");
+		else if (XYZCT.contains(axisType)) {
+			if (axisMap.containsKey(axisType)) {
+				throw new IllegalArgumentException(//
+					"Duplicate " + axisType + " axis found");
 			}
-			axisMap.put(type, axis);
+			axisMap.put(axisType, axis);
 		}
-		else throw new IllegalArgumentException("Unsupported axis type: " + type);
+		else {
+			throw new IllegalArgumentException("Unsupported axis type: " + axisType);
+		}
 	}
 
 	private static AxisType computeUnknownAxisType(final ImageMetadata imageMeta,
 		final Map<AxisType, CalibratedAxis> axisMap)
 	{
-		for (final AxisType type : XYZCT) {
-			if (isAxisAvailable(imageMeta, axisMap, type)) return type;
+		for (final AxisType axisType : XYZCT) {
+			if (isAxisAvailable(imageMeta, axisMap, axisType)) return axisType;
 		}
 		throw new IllegalArgumentException(
 			"Cannot map unknown axis type, no labels free.");
 	}
 
 	private static boolean isAxisAvailable(final ImageMetadata imageMeta,
-		final Map<AxisType, CalibratedAxis> axisMap, final AxisType type)
+		final Map<AxisType, CalibratedAxis> axisMap, final AxisType axisType)
 	{
-		return imageMeta.getAxisIndex(type) < 0 && !axisMap.containsKey(type);
+		return imageMeta.getAxisIndex(axisType) < 0 && //
+			!axisMap.containsKey(axisType);
 	}
 
 	private static void writePlaneToOMERO(final byte[] data, final int z,
