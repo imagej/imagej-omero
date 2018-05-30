@@ -500,9 +500,8 @@ public class OMEROFormat extends AbstractFormat {
 			try {
 				final int x = i(planeMin[0]);
 				final int y = i(planeMin[1]);
-				// NB: planeMin is inclusive; planeMax is exclusive.
-				final int w = i(planeMax[0] - planeMin[0]);
-				final int h = i(planeMax[1] - planeMin[1]);
+				final int w = i(planeMax[0] - planeMin[0] + 1);
+				final int h = i(planeMax[1] - planeMin[1] + 1);
 				if (log().isDebug()) {
 					log().debug("openPlane:" + //
 						" z:" + zct[0] + " c:" + zct[1] + " t:" + zct[2] + //
