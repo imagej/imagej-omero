@@ -81,14 +81,12 @@ public class OMEROLocation extends URILocation {
 		super(createURI(args));
 
 		// Set encrypted if present
-		if (args.containsKey("encrypted")) encrypted = Boolean.parseBoolean(args
-			.get("encrypted").toString());
-		else encrypted = false;
+		encrypted = args.containsKey("encrypted") ? //
+			Boolean.parseBoolean(args.get("encrypted").toString()) : false;
 
 		// Set sessionID if present
-		if (args.containsKey("sessionID")) sessionID = args.get("sessionID")
-			.toString();
-		else sessionID = null;
+		sessionID = args.containsKey("sessionID") ? //
+			args.get("sessionID").toString() : null;
 	}
 
 	// -- OMEROLocation methods --
@@ -102,13 +100,13 @@ public class OMEROLocation extends URILocation {
 	}
 
 	public String getUser() {
-		return getURI().getUserInfo() == null ? null : getURI().getUserInfo().split(
-			":")[0];
+		return getURI().getUserInfo() == null ? //
+			null : getURI().getUserInfo().split(":")[0];
 	}
 
 	public String getPassword() {
-		return getURI().getUserInfo() == null ? null : getURI().getUserInfo().split(
-			":")[1];
+		return getURI().getUserInfo() == null ? //
+			null : getURI().getUserInfo().split(":")[1];
 	}
 
 	public boolean isEncrypted() {
@@ -123,9 +121,10 @@ public class OMEROLocation extends URILocation {
 	public boolean equals(final Object obj) {
 		if (!(obj instanceof OMEROLocation)) return false;
 		final OMEROLocation other = (OMEROLocation) obj;
-		return Objects.equals(getServer(), other.getServer()) && Objects.equals(
-			getUser(), other.getUser()) && Objects.equals(getPassword(), other
-				.getPassword()) && getPort() == other.getPort() &&
+		return Objects.equals(getServer(), other.getServer()) && //
+			Objects.equals(getUser(), other.getUser()) && //
+			Objects.equals(getPassword(), other.getPassword()) && //
+			getPort() == other.getPort() && //
 			encrypted == other.encrypted;
 	}
 
@@ -144,8 +143,9 @@ public class OMEROLocation extends URILocation {
 		if (args.containsKey("user") && args.containsKey("password"))
 			return new URI(null, args.get("user") + ":" + args.get("password"),
 				server, port, null, null, null);
-		else if (args.containsKey("sessionID")) return new URI(null, null, server,
-			port, null, null, null);
+		else if (args.containsKey("sessionID")) {
+			return new URI(null, null, server, port, null, null, null);
+		}
 		throw new IllegalArgumentException(
 			"Need username and password OR session ID to create OMEROLocation");
 	}
