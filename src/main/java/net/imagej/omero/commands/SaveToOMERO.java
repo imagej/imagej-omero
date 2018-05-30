@@ -123,45 +123,26 @@ public class SaveToOMERO extends OMEROCommand {
 			final OMEROLocation credentials = new OMEROLocation(getServer(),
 				getPort(), getUser(), getPassword());
 
-			final ROITree ROIsToUpload = uploadROIs || updateROIs ? roiService
-				.getROIs(dataset) : null;
-			final List<Table<?, ?>> tablesToUpload = uploadTables ? tableService
-				.getTables(dataset) : null;
-			final String[] names = uploadTables && tablesToUpload != null
-				? getTableNames(tablesToUpload.size()) : null;
+			final ROITree roisToUpload = //
+				uploadROIs || updateROIs ? roiService.getROIs(dataset) : null;
+			final List<Table<?, ?>> tablesToUpload = //
+				uploadTables ? tableService.getTables(dataset) : null;
+			final String[] names = uploadTables && tablesToUpload != null ? //
+				getTableNames(tablesToUpload.size()) : null;
 
-			if (uploadImage) omeroService.uploadImage(credentials, dataset,
-				uploadROIs, ROIsToUpload, updateROIs, uploadTables, tablesToUpload,
-				names, datasetID);
-			else omeroService.uploadImageAttachments(credentials, imageID, uploadROIs,
-				updateROIs, uploadTables, ROIsToUpload, tablesToUpload, names);
+			if (uploadImage) {
+				omeroService.uploadImage(credentials, dataset, uploadROIs, roisToUpload,
+					updateROIs, uploadTables, tablesToUpload, names, datasetID);
+			}
+			else {
+				omeroService.uploadImageAttachments(credentials, imageID, uploadROIs,
+					updateROIs, uploadTables, roisToUpload, tablesToUpload, names);
+			}
 		}
-		catch (final ServerError exc) {
-			log.error(exc);
-			exc.printStackTrace();
-			cancel("Error talking to OMERO: " + exc.getMessage());
-		}
-		catch (final PermissionDeniedException exc) {
-			log.error(exc);
-			exc.printStackTrace();
-			cancel("Error talking to OMERO: " + exc.getMessage());
-		}
-		catch (final CannotCreateSessionException exc) {
-			log.error(exc);
-			exc.printStackTrace();
-			cancel("Error talking to OMERO: " + exc.getMessage());
-		}
-		catch (final DSOutOfServiceException exc) {
-			log.error(exc);
-			exc.printStackTrace();
-			cancel("Error talking to OMERO: " + exc.getMessage());
-		}
-		catch (final ExecutionException exc) {
-			log.error(exc);
-			exc.printStackTrace();
-			cancel("Error talking to OMERO: " + exc.getMessage());
-		}
-		catch (final DSAccessException exc) {
+		catch (final ServerError | PermissionDeniedException
+				| CannotCreateSessionException | DSOutOfServiceException
+				| ExecutionException | DSAccessException exc)
+		{
 			log.error(exc);
 			exc.printStackTrace();
 			cancel("Error talking to OMERO: " + exc.getMessage());
@@ -196,8 +177,9 @@ public class SaveToOMERO extends OMEROCommand {
 			return -1;
 
 		// Parse source String
-		final String clean = source.replaceFirst("^omero:", "").replaceFirst(
-			"\\.omero$", "");
+		final String clean = source//
+			.replaceFirst("^omero:", "")//
+			.replaceFirst("\\.omero$", "");
 		final Map<String, Object> map = metadataService.parse(clean, "&");
 		final Object id = map.get("imageID");
 
