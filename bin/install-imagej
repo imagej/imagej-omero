@@ -34,7 +34,7 @@ then
 	imagej="$IMAGEJ_HOME"
 	echo "Using ImageJ location set by IMAGEJ_HOME: $imagej"
 else
-	imagej="$omero/lib/ImageJ.app"
+	imagej="$omero/lib/Fiji.app"
 	echo "Using default location of ImageJ: $imagej"
 fi
 
@@ -44,15 +44,33 @@ if [ -d "$imagej" ]
 then
 	echo "ImageJ installation already exists; skipping."
 else (
-	installer="install.js"
-	mkdir -p "$imagej"
-	cd "$imagej"
-	download ImageJ http://update.imagej.net/bootstrap.js "$installer"
-	echo "-> installing ImageJ"
-	jrunscript "$installer" add-update-site \
+	# Determine correct ImageJ launcher executable.
+	case "$(uname -s),$(uname -m)" in
+		Linux,x86_64) launcher=ImageJ-linux64 ;;
+		Linux,*) launcher=ImageJ-linux32 ;;
+		Darwin,*) launcher=Contents/MacOS/ImageJ-macosx ;;
+		MING*,*) launcher=ImageJ-win32.exe ;;
+		*) die "Unknown platform" ;;
+	esac
+
+	if [ ! -f "$imagej/fiji-nojre.zip" ]
+	then
+		echo
+		echo "--> Downloading Fiji"
+		(cd "$(dirname "$imagej")" &&
+			curl -O http://downloads.imagej.net/fiji/latest/fiji-nojre.zip)
+	fi
+
+	echo
+	echo "--> Unpacking Fiji"
+	rm -rf "$imagej"
+	(cd "$(dirname "$imagej")" && unzip fiji-nojre.zip)
+
+	echo
+	echo "--> Enabling ImageJ-OMERO"
+	"$imagej/$launcher" --update add-update-site \
 		OMERO-5.4 http://sites.imagej.net/OMERO-5.4
-	jrunscript "$installer" update
-	rm "$installer"
+	"$imagej/$launcher" --update update-force-pristine
 ) fi
 
 # -- Generate OMERO scripts --
