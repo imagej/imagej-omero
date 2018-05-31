@@ -45,11 +45,3 @@ test -f "$omero/lib/server/blitz.jar" ||
 
 "$(dirname "$0")/run-class" net.imagej.omero.ScriptGenerator "$omero" $@ &&
 	echo "$(find "$omero/lib/scripts/imagej" | wc -l) scripts generated."
-
-# HACK: Workaround https://github.com/imagej/imagej-omero/issue/80
-pattern="[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}"
-find "$omero/lib/scripts/imagej" -regex ".*/$pattern.*" -print0 | while read -d $'\0' script
-do
-	renamed=$(echo "$script" | sed "s/$pattern//")
-	mv "$script" "$renamed"
-done
