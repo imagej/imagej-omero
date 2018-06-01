@@ -9,6 +9,8 @@ This project provides interoperability between
 There are ImageJ commands for accessing images from a remote OMERO server,
 as well as uploading image data from ImageJ to OMERO as a new image.
 
+### Installation
+
 To try it out, enable the appropriate
 [update site](http://imagej.net/Update_Sites):
 
@@ -21,6 +23,10 @@ You will then have the following new menu items:
 
 * File > Import > OMERO...
 * File > Export > OMERO...
+
+### Demonstration Video
+
+[Updating ROIs from OMERO in ImageJ](https://www.youtube.com/watch?v=st1E9Qxu0-s)
 
 ## Calling ImageJ commands as OMERO scripts
 
@@ -71,6 +77,11 @@ If you already have ImageJ installed on the OMERO server machine,
 you can use that, rather than installing a new copy of ImageJ:
 
 1.  Enable the __OMERO-5.x__ [update site](http://imagej.net/Update_Sites).
+    ```shell
+   <path-to-imagej>/<imagej-launcher> --update add-update-site OMERO-5.x http://sites.imagej.net/OMERO-5.x
+   <path-to-imagej>/<imagej-launcher> --update update-force-pristine
+    ```
+    Where x is your OMERO version, <path-to-imagej> is a path to your ImageJ directory (i.e. ImageJ.app or Fiji.app), and <imagej-launcher> is the launcher for your operating system (i.e. ImageJ-linux64)
 2.  Run `gen-scripts` in ImageJ's `lib` directory.
 
 ### Take it for a spin
@@ -110,6 +121,11 @@ If you wish to remove ImageJ support from OMERO:
 OMERO_PREFIX="/path/to/omero"
 rm -rf "$OMERO_PREFIX/lib/scripts/imagej" "$OMERO_PREFIX/lib/ImageJ.app"
 ```
+
+### Demonstration Videos
+
+[Inverting an Image in OMERO.web](https://www.youtube.com/watch?v=gpu2NdidBHQ)
+[Analyze Particles in OMERO.web](https://www.youtube.com/watch?v=CQP_cIYt00U)
 
 ## Under the hood: a SCIFIO format for OMERO data
 
