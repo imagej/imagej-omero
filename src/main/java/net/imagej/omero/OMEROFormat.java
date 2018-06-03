@@ -63,6 +63,7 @@ import net.imagej.axis.LinearAxis;
 import net.imagej.omero.roi.LazyROITree;
 import net.imagej.roi.ROITree;
 import net.imagej.table.Table;
+import net.imglib2.Interval;
 
 import org.scijava.Priority;
 import org.scijava.plugin.Parameter;
@@ -489,7 +490,7 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public ByteArrayPlane openPlane(final int imageIndex, final long planeIndex,
-			final ByteArrayPlane plane, final long[] planeMin, final long[] planeMax,
+			final ByteArrayPlane plane, final Interval bounds,
 			final SCIFIOConfig config) throws FormatException, IOException
 		{
 			// TODO: Consider whether to reuse OMERO session from the parsing step.
@@ -498,11 +499,10 @@ public class OMEROFormat extends AbstractFormat {
 			final AxisMap axisMap = new AxisMap(getMetadata().get(imageIndex));
 			final int[] zct = axisMap.zct(planeIndex);
 			try {
-				final int x = i(planeMin[0]);
-				final int y = i(planeMin[1]);
-				// NB: planeMin is inclusive; planeMax is exclusive.
-				final int w = i(planeMax[0] - planeMin[0]);
-				final int h = i(planeMax[1] - planeMin[1]);
+				final int x = i(bounds.min(0));
+				final int y = i(bounds.min(1));
+				final int w = i(bounds.dimension(0));
+				final int h = i(bounds.dimension(1));
 				if (log().isDebug()) {
 					log().debug("openPlane:" + //
 						" z:" + zct[0] + " c:" + zct[1] + " t:" + zct[2] + //
@@ -562,8 +562,8 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public void writePlane(final int imageIndex, final long planeIndex,
-			final Plane plane, final long[] planeMin, final long[] planeMax)
-			throws FormatException, IOException
+			final Plane plane, final Interval bounds) throws FormatException,
+			IOException
 		{
 			if (session == null) initSession();
 			final ImageMetadata imageMeta = getMetadata().get(imageIndex);
