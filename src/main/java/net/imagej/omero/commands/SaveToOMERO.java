@@ -88,7 +88,7 @@ public class SaveToOMERO extends OMEROCommand {
 	private long datasetID = -1;
 
 	@Parameter(type = ItemIO.BOTH)
-	private Dataset dataset;
+	private Dataset image;
 
 	@Parameter(label = "Upload new image?")
 	private boolean uploadImage;
@@ -124,14 +124,14 @@ public class SaveToOMERO extends OMEROCommand {
 				getPort(), getUser(), getPassword());
 
 			final ROITree roisToUpload = //
-				uploadROIs || updateROIs ? roiService.getROIs(dataset) : null;
+				uploadROIs || updateROIs ? roiService.getROIs(image) : null;
 			final List<Table<?, ?>> tablesToUpload = //
-				uploadTables ? tableService.getTables(dataset) : null;
+				uploadTables ? tableService.getTables(image) : null;
 			final String[] names = uploadTables && tablesToUpload != null ? //
 				getTableNames(tablesToUpload.size()) : null;
 
 			if (uploadImage) {
-				omeroService.uploadImage(credentials, dataset, uploadROIs, roisToUpload,
+				omeroService.uploadImage(credentials, image, uploadROIs, roisToUpload,
 					updateROIs, uploadTables, tablesToUpload, names, datasetID);
 			}
 			else {
@@ -172,7 +172,7 @@ public class SaveToOMERO extends OMEROCommand {
 	}
 
 	private long getImageID() {
-		final String source = dataset.getSource();
+		final String source = image.getSource();
 		if (source == null || source.isEmpty() || !source.contains("omero"))
 			return -1;
 
