@@ -25,20 +25,19 @@
 
 package net.imagej.omero;
 
-import net.imagej.table.BoolColumn;
-import net.imagej.table.Column;
-import net.imagej.table.DefaultBoolTable;
-import net.imagej.table.DefaultColumn;
-import net.imagej.table.DefaultGenericTable;
-import net.imagej.table.DefaultLongTable;
-import net.imagej.table.DefaultResultsTable;
-import net.imagej.table.DoubleColumn;
-import net.imagej.table.GenericColumn;
-import net.imagej.table.LongColumn;
-import net.imagej.table.Table;
-
 import org.apache.commons.lang.ArrayUtils;
 import org.scijava.convert.ConvertService;
+import org.scijava.table.BoolColumn;
+import org.scijava.table.Column;
+import org.scijava.table.DefaultBoolTable;
+import org.scijava.table.DefaultColumn;
+import org.scijava.table.DefaultDoubleTable;
+import org.scijava.table.DefaultGenericTable;
+import org.scijava.table.DefaultLongTable;
+import org.scijava.table.DoubleColumn;
+import org.scijava.table.GenericColumn;
+import org.scijava.table.LongColumn;
+import org.scijava.table.Table;
 import org.scijava.util.BoolArray;
 import org.scijava.util.ByteArray;
 import org.scijava.util.DoubleArray;
@@ -185,7 +184,7 @@ public final class TableUtils {
 		// if a ShortColumn was created when you went to upload it, it would be
 		// stored as null since no matching column type was found.
 		if (prev.getType().equals(Double.class)) {
-			return new DefaultResultsTable();
+			return new DefaultDoubleTable();
 		}
 		else if (prev.getType().equals(Long.class)) {
 			return new DefaultLongTable();

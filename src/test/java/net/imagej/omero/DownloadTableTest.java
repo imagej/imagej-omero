@@ -32,19 +32,18 @@ import static org.junit.Assert.assertTrue;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.table.BoolColumn;
-import net.imagej.table.BoolTable;
-import net.imagej.table.DefaultColumn;
-import net.imagej.table.GenericTable;
-import net.imagej.table.LongColumn;
-import net.imagej.table.LongTable;
-import net.imagej.table.ResultsTable;
-import net.imagej.table.Table;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.scijava.Context;
+import org.scijava.table.BoolColumn;
+import org.scijava.table.BoolTable;
+import org.scijava.table.DefaultColumn;
+import org.scijava.table.DoubleTable;
+import org.scijava.table.GenericTable;
+import org.scijava.table.LongColumn;
+import org.scijava.table.LongTable;
+import org.scijava.table.Table;
 import org.scijava.util.DoubleArray;
 import org.scijava.util.LongArray;
 
@@ -201,7 +200,7 @@ public class DownloadTableTest {
 			.downloadTable(credentials, 0);
 
 		// Tests
-		assertTrue(ResultsTable.class.isInstance(imageJTable));
+		assertTrue(DoubleTable.class.isInstance(imageJTable));
 		assertEquals(imageJTable.getColumnCount(), 2);
 		assertEquals(imageJTable.getRowCount(), 5);
 
@@ -210,7 +209,7 @@ public class DownloadTableTest {
 
 		for (int r = 0; r < imageJTable.getRowCount(); r++) {
 			for (int c = 0; c < imageJTable.getColumnCount(); c++) {
-				assertEquals((double) data[c][r], ((ResultsTable) imageJTable).get(c,
+				assertEquals((double) data[c][r], ((DoubleTable) imageJTable).get(c,
 					r), 0);
 			}
 		}

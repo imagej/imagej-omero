@@ -25,7 +25,7 @@
 
 package net.imagej.omero;
 
-import net.imagej.table.LongColumn;
+import org.scijava.table.LongColumn;
 
 import omero.gateway.facility.TablesFacility;
 

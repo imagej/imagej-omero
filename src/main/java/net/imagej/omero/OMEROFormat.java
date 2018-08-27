@@ -62,12 +62,12 @@ import net.imagej.axis.DefaultLinearAxis;
 import net.imagej.axis.LinearAxis;
 import net.imagej.omero.roi.LazyROITree;
 import net.imagej.roi.ROITree;
-import net.imagej.table.Table;
 import net.imglib2.Interval;
 
 import org.scijava.Priority;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.table.Table;
 import org.scijava.util.ArrayUtils;
 
 import omero.RInt;
