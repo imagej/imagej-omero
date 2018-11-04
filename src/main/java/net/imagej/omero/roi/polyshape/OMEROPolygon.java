@@ -51,24 +51,4 @@ public interface OMEROPolygon extends OMEROPolyshape<PolygonData>,
 	default void setPoints(final List<Point2D.Double> points) {
 		getShape().setPoints(points);
 	}
-
-	@Override
-	default int numVertices() {
-		return getShape().getPoints().size();
-	}
-
-	@Override
-	default void addVertex(final int index, final double[] vertex) {
-		final List<Point2D.Double> pts = getShape().getPoints();
-		pts.add(index, new Point2D.Double(vertex[0], vertex[1]));
-		getShape().setPoints(pts);
-	}
-
-	@Override
-	default void removeVertex(final int index) {
-		final List<Point2D.Double> pts = getShape().getPoints();
-		pts.remove(index);
-		getShape().setPoints(pts);
-	}
-
 }

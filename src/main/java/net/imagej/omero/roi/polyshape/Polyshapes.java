@@ -94,4 +94,10 @@ public class Polyshapes {
 		// not on edge, check inside
 		return pnpoly(pts, localizable);
 	}
+
+	public static Point2D.Double point(final RealLocalizable vertex) {
+		final double x = vertex.getDoublePosition(0);
+		final double y = vertex.getDoublePosition(1);
+		return new Point2D.Double(x, y);
+	}
 }

@@ -28,6 +28,7 @@ package net.imagej.omero.roi.polyshape;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import net.imagej.omero.roi.AbstractMaskPredicateToShapeData;
 import net.imglib2.RealLocalizable;
@@ -61,11 +62,8 @@ public class ImageJToOMEROPolygon extends
 	@Override
 	public PolygonData convert(final Polygon2D mask, final String boundaryType) {
 		final List<Point2D.Double> points = new ArrayList<>();
-		for (int i = 0; i < mask.numVertices(); i++) {
-			final RealLocalizable loc = mask.vertex(i);
-			points.add(new Point2D.Double(loc.getDoublePosition(0), loc
-				.getDoublePosition(1)));
-		}
+		points.addAll(mask.vertices().stream()//
+			.map(Polyshapes::point).collect(Collectors.toList()));
 		final PolygonData p = new PolygonData(points);
 		p.setText(boundaryType);
 		return p;

@@ -55,26 +55,6 @@ public interface OMEROPolyline extends OMEROPolyshape<PolylineData>,
 	}
 
 	@Override
-	default int numVertices() {
-		return getShape().getPoints().size();
-	}
-
-	@Override
-	default void addVertex(final int index, final RealLocalizable vertex) {
-		final List<Point2D.Double> pts = getShape().getPoints();
-		pts.add(index, new Point2D.Double(vertex.getDoublePosition(0), vertex
-			.getDoublePosition(1)));
-		getShape().setPoints(pts);
-	}
-
-	@Override
-	default void removeVertex(final int index) {
-		final List<Point2D.Double> pts = getShape().getPoints();
-		pts.remove(index);
-		getShape().setPoints(pts);
-	}
-
-	@Override
 	default boolean test(final RealLocalizable l) {
 		final double[] ptOne = new double[2];
 		final double[] ptTwo = new double[2];

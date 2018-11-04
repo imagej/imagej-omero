@@ -132,6 +132,8 @@
 
 		<!-- Test configuration -->
 		<skipITs>true</skipITs>
+
+		<imglib2-roi.version>0.7.0</imglib2-roi.version>
 	</properties>
 
 	<repositories>

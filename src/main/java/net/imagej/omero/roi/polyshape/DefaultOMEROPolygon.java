@@ -25,14 +25,9 @@
 
 package net.imagej.omero.roi.polyshape;
 
-import java.awt.geom.Point2D;
-import java.util.List;
-
 import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.roi.BoundaryType;
-import net.imglib2.roi.util.AbstractRealMaskPoint;
-import net.imglib2.roi.util.RealLocalizableRealPositionable;
 
 import omero.gateway.model.PolygonData;
 
@@ -56,11 +51,6 @@ public class DefaultOMEROPolygon extends
 	}
 
 	@Override
-	public RealLocalizableRealPositionable vertex(final int pos) {
-		return new PolygonVertex(shape.getPoints(), pos);
-	}
-
-	@Override
 	public String toString() {
 		String s = getClass().getSimpleName();
 		for (int i = 0; i < numVertices(); i++) {
@@ -70,25 +60,4 @@ public class DefaultOMEROPolygon extends
 		return s;
 	}
 
-	// -- Helper classes --
-
-	private class PolygonVertex extends AbstractRealMaskPoint {
-
-		private final List<Point2D.Double> pts;
-		private final int index;
-
-		public PolygonVertex(final List<Point2D.Double> pts, final int pos) {
-			super(new double[] { pts.get(pos).getX(), pts.get(pos).getY() });
-			this.pts = pts;
-			index = pos;
-		}
-
-		@Override
-		public void updateBounds() {
-			// Bounds depend on wrapped OMERO shape, so by updating the shape we're
-			// updating the bounds
-			pts.get(index).setLocation(position[0], position[1]);
-			shape.setPoints(pts);
-		}
-	}
 }
