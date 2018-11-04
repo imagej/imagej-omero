@@ -28,7 +28,6 @@ package net.imagej.omero.roi.polyshape;
 import java.awt.geom.Point2D;
 import java.util.List;
 
-import net.imagej.omero.roi.OMERORealMaskRealInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.roi.geom.GeomMaths;
 import net.imglib2.roi.geom.real.Polyline;
@@ -41,9 +40,19 @@ import omero.gateway.model.PolylineData;
  *
  * @author Alison Walter
  */
-public interface OMEROPolyline extends OMERORealMaskRealInterval<PolylineData>,
+public interface OMEROPolyline extends OMEROPolyshape<PolylineData>,
 	WritablePolyline
 {
+
+	@Override
+	default List<Point2D.Double> getPoints() {
+		return getShape().getPoints();
+	}
+
+	@Override
+	default void setPoints(final List<Point2D.Double> points) {
+		getShape().setPoints(points);
+	}
 
 	@Override
 	default int numVertices() {
@@ -82,40 +91,6 @@ public interface OMEROPolyline extends OMERORealMaskRealInterval<PolylineData>,
 			if (testLineContains) return true;
 		}
 		return false;
-	}
-
-	@Override
-	default double realMin(final int d) {
-		if (d < 0 || d > 1) throw new IllegalArgumentException(
-			"Invalid dimension: " + d);
-		final List<Point2D.Double> pts = getShape().getPoints();
-		double min = d == 0 ? pts.get(0).getX() : pts.get(0).getY();
-		for (int i = 1; i < pts.size(); i++) {
-			if (d == 0) {
-				if (pts.get(i).getX() < min) min = pts.get(i).getX();
-			}
-			else {
-				if (pts.get(i).getY() < min) min = pts.get(i).getY();
-			}
-		}
-		return min;
-	}
-
-	@Override
-	default double realMax(final int d) {
-		if (d < 0 || d > 1) throw new IllegalArgumentException(
-			"Invalid dimension: " + d);
-		final List<Point2D.Double> pts = getShape().getPoints();
-		double max = d == 0 ? pts.get(0).getX() : pts.get(0).getY();
-		for (int i = 1; i < pts.size(); i++) {
-			if (d == 0) {
-				if (pts.get(i).getX() > max) max = pts.get(i).getX();
-			}
-			else {
-				if (pts.get(i).getY() > max) max = pts.get(i).getY();
-			}
-		}
-		return max;
 	}
 
 }
