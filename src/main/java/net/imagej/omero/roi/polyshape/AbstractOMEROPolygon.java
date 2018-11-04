@@ -23,35 +23,35 @@
  * #L%
  */
 
-package net.imagej.omero.roi.rectangle;
+package net.imagej.omero.roi.polyshape;
 
-import net.imglib2.RealLocalizable;
+import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.roi.BoundaryType;
 
-import omero.gateway.model.RectangleData;
+import omero.gateway.model.PolygonData;
 
 /**
- * An {@link OMERORectangle} with closed boundary behavior.
+ * Base class for {@link OMEROPolygon}.
  *
+ * @author Curtis Rueden
  * @author Alison Walter
  */
-public class ClosedOMERORectangle extends AbstractOMERORectangle {
+public abstract class AbstractOMEROPolygon extends
+	AbstractOMERORealMaskRealInterval<PolygonData> implements OMEROPolygon
+{
 
-	public ClosedOMERORectangle(final RectangleData shape) {
-		super(shape, BoundaryType.CLOSED);
+	public AbstractOMEROPolygon(final PolygonData shape, final BoundaryType bt) {
+		super(shape, bt);
 	}
 
 	@Override
-	public boolean test(final RealLocalizable l) {
-		final double lx = l.getDoublePosition(0);
-		final double ly = l.getDoublePosition(1);
-
-		final double minX = shape.getX();
-		final double minY = shape.getY();
-		final double maxX = minX + shape.getWidth();
-		final double maxY = minY + shape.getHeight();
-
-		return lx >= minX && lx <= maxX && ly >= minY && ly <= maxY;
+	public String toString() {
+		String s = getClass().getSimpleName();
+		for (int i = 0; i < numVertices(); i++) {
+			s += "\nVertex " + i + ": " + vertex(i).getDoublePosition(0) + ", " +
+				vertex(i).getDoublePosition(1);
+		}
+		return s;
 	}
 
 }

@@ -25,7 +25,6 @@
 
 package net.imagej.omero.roi.polyshape;
 
-import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.roi.BoundaryType;
 
@@ -37,9 +36,7 @@ import omero.gateway.model.PolygonData;
  *
  * @author Alison Walter
  */
-public class DefaultOMEROPolygon extends
-	AbstractOMERORealMaskRealInterval<PolygonData> implements OMEROPolygon
-{
+public class DefaultOMEROPolygon extends AbstractOMEROPolygon {
 
 	public DefaultOMEROPolygon(final PolygonData shape) {
 		super(shape, BoundaryType.UNSPECIFIED);
@@ -48,16 +45,6 @@ public class DefaultOMEROPolygon extends
 	@Override
 	public boolean test(final RealLocalizable l) {
 		return Polyshapes.pnpoly(shape.getPoints(), l);
-	}
-
-	@Override
-	public String toString() {
-		String s = getClass().getSimpleName();
-		for (int i = 0; i < numVertices(); i++) {
-			s += "\nVertex " + i + ": " + vertex(i).getDoublePosition(0) + ", " +
-				vertex(i).getDoublePosition(1);
-		}
-		return s;
 	}
 
 }
