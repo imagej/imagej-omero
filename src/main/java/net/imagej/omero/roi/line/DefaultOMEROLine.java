@@ -27,6 +27,7 @@ package net.imagej.omero.roi.line;
 
 import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.geom.real.Line;
 import net.imglib2.roi.util.AbstractRealMaskPoint;
 import net.imglib2.roi.util.RealLocalizableRealPositionable;
 
@@ -71,6 +72,16 @@ public class DefaultOMEROLine extends
 	@Override
 	public RealLocalizableRealPositionable endpointTwo() {
 		return new LineEndPoint(shape.getX2(), shape.getY2(), false);
+	}
+
+	@Override
+	public int hashCode() {
+		return Line.hashCode(this);
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		return obj instanceof Line && Line.equals(this, (Line) obj);
 	}
 
 	@Override

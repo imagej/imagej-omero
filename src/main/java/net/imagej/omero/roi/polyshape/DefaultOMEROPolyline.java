@@ -27,6 +27,8 @@ package net.imagej.omero.roi.polyshape;
 
 import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.geom.real.Polyline;
+import net.imglib2.roi.geom.real.Polyshape;
 
 import omero.gateway.model.PolylineData;
 
@@ -41,6 +43,16 @@ public class DefaultOMEROPolyline extends
 
 	public DefaultOMEROPolyline(final PolylineData shape) {
 		super(shape, BoundaryType.CLOSED);
+	}
+
+	@Override
+	public int hashCode() {
+		return Polyline.hashCode(this);
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		return obj instanceof Polyline && Polyshape.equals(this, (Polyline) obj);
 	}
 
 	@Override

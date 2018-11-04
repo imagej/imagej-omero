@@ -27,6 +27,8 @@ package net.imagej.omero.roi.polyshape;
 
 import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.geom.real.Polygon2D;
+import net.imglib2.roi.geom.real.Polyshape;
 
 import omero.gateway.model.PolygonData;
 
@@ -42,6 +44,16 @@ public abstract class AbstractOMEROPolygon extends
 
 	public AbstractOMEROPolygon(final PolygonData shape, final BoundaryType bt) {
 		super(shape, bt);
+	}
+
+	@Override
+	public int hashCode() {
+		return Polygon2D.hashCode(this);
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		return obj instanceof Polygon2D && Polyshape.equals(this, (Polygon2D) obj);
 	}
 
 	@Override

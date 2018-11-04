@@ -27,6 +27,7 @@ package net.imagej.omero.roi.point;
 
 import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.geom.real.PointMask;
 
 import omero.gateway.model.PointData;
 
@@ -41,6 +42,16 @@ public class DefaultOMEROPoint extends
 
 	public DefaultOMEROPoint(final PointData shape) {
 		super(shape, BoundaryType.CLOSED);
+	}
+
+	@Override
+	public int hashCode() {
+		return PointMask.hashCode(this);
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		return obj instanceof PointMask && PointMask.equals(this, (PointMask) obj);
 	}
 
 	@Override

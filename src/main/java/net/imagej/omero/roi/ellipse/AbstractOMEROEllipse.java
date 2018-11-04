@@ -27,6 +27,7 @@ package net.imagej.omero.roi.ellipse;
 
 import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.geom.real.SuperEllipsoid;
 import net.imglib2.roi.util.AbstractRealMaskPoint;
 import net.imglib2.roi.util.RealLocalizableRealPositionable;
 
@@ -59,6 +60,17 @@ public abstract class AbstractOMEROEllipse extends
 				shape.setY(position[1]);
 			}
 		};
+	}
+
+	@Override
+	public int hashCode() {
+		return SuperEllipsoid.hashCode(this);
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		return obj instanceof SuperEllipsoid && //
+			SuperEllipsoid.equals(this, (SuperEllipsoid) obj);
 	}
 
 	@Override

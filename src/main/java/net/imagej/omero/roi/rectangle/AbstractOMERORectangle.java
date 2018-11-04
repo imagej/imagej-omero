@@ -27,6 +27,7 @@ package net.imagej.omero.roi.rectangle;
 
 import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.geom.real.Box;
 import net.imglib2.roi.util.AbstractRealMaskPoint;
 import net.imglib2.roi.util.RealLocalizableRealPositionable;
 
@@ -60,6 +61,16 @@ public abstract class AbstractOMERORectangle extends
 				shape.setY(position[1] - shape.getHeight() / 2);
 			}
 		};
+	}
+
+	@Override
+	public int hashCode() {
+		return Box.hashCode(this);
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		return obj instanceof Box && Box.equals(this, (Box) obj);
 	}
 
 	@Override
