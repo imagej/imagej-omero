@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polyline;
+package net.imagej.omero.roi.polyshape;
 
 import java.awt.geom.Point2D;
 import java.util.List;

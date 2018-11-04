@@ -23,26 +23,24 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polyline;
+package net.imagej.omero.roi.polyshape;
 
 import java.awt.geom.Point2D;
 import java.util.List;
 
 import net.imagej.omero.roi.OMERORealMaskRealInterval;
-import net.imglib2.RealLocalizable;
-import net.imglib2.roi.geom.GeomMaths;
-import net.imglib2.roi.geom.real.Polyline;
-import net.imglib2.roi.geom.real.WritablePolyline;
+import net.imglib2.roi.geom.real.Polygon2D;
+import net.imglib2.roi.geom.real.WritablePolygon2D;
 
-import omero.gateway.model.PolylineData;
+import omero.gateway.model.PolygonData;
 
 /**
- * A {@link Polyline} which wraps an OMERO polyline Roi
+ * A {@link Polygon2D} which wraps an OMERO polygon Roi.
  *
  * @author Alison Walter
  */
-public interface OMEROPolyline extends OMERORealMaskRealInterval<PolylineData>,
-	WritablePolyline
+public interface OMEROPolygon extends OMERORealMaskRealInterval<PolygonData>,
+	WritablePolygon2D
 {
 
 	@Override
@@ -51,10 +49,9 @@ public interface OMEROPolyline extends OMERORealMaskRealInterval<PolylineData>,
 	}
 
 	@Override
-	default void addVertex(final int index, final RealLocalizable vertex) {
+	default void addVertex(final int index, final double[] vertex) {
 		final List<Point2D.Double> pts = getShape().getPoints();
-		pts.add(index, new Point2D.Double(vertex.getDoublePosition(0), vertex
-			.getDoublePosition(1)));
+		pts.add(index, new Point2D.Double(vertex[0], vertex[1]));
 		getShape().setPoints(pts);
 	}
 
@@ -63,25 +60,6 @@ public interface OMEROPolyline extends OMERORealMaskRealInterval<PolylineData>,
 		final List<Point2D.Double> pts = getShape().getPoints();
 		pts.remove(index);
 		getShape().setPoints(pts);
-	}
-
-	@Override
-	default boolean test(final RealLocalizable l) {
-		final double[] ptOne = new double[2];
-		final double[] ptTwo = new double[2];
-
-		for (int i = 1; i < getShape().getPoints().size(); i++) {
-			ptOne[0] = getShape().getPoints().get(i - 1).getX();
-			ptOne[1] = getShape().getPoints().get(i - 1).getY();
-
-			ptTwo[0] = getShape().getPoints().get(i).getX();
-			ptTwo[1] = getShape().getPoints().get(i).getY();
-
-			final boolean testLineContains = GeomMaths.lineContains(ptOne, ptTwo, l,
-				2);
-			if (testLineContains) return true;
-		}
-		return false;
 	}
 
 	@Override

@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
 import java.awt.geom.Point2D;
 import java.util.List;
@@ -51,7 +51,7 @@ public class OpenOMEROPolygon extends
 
 	@Override
 	public boolean test(final RealLocalizable l) {
-		return PolygonMaths.pnpolyWithBoundary(shape.getPoints(), l, false);
+		return Polyshapes.pnpolyWithBoundary(shape.getPoints(), l, false);
 	}
 
 	@Override

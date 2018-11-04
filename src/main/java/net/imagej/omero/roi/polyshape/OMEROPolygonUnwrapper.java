@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polyline;
+package net.imagej.omero.roi.polyshape;
 
 import net.imagej.omero.roi.AbstractOMERORealMaskUnwrapper;
 
@@ -31,37 +31,35 @@ import org.scijava.Priority;
 import org.scijava.convert.Converter;
 import org.scijava.plugin.Plugin;
 
-import omero.gateway.model.PolylineData;
+import omero.gateway.model.PolygonData;
 
 /**
- * Unwraps an {@link OMEROPolyline}.
+ * Unwraps an {@link OMEROPolygon}.
  *
  * @author Alison Walter
  */
 @Plugin(type = Converter.class, priority = Priority.HIGH)
-public class OMEROPolylineUnwrapper extends
-	AbstractOMERORealMaskUnwrapper<PolylineData, OMEROPolyline>
+public class OMEROPolygonUnwrapper extends
+	AbstractOMERORealMaskUnwrapper<PolygonData, OMEROPolygon>
 {
 
 	@Override
-	public Class<PolylineData> getOutputType() {
-		return PolylineData.class;
+	public Class<PolygonData> getOutputType() {
+		return PolygonData.class;
 	}
 
 	@Override
-	public Class<OMEROPolyline> getInputType() {
-		return OMEROPolyline.class;
+	public Class<OMEROPolygon> getInputType() {
+		return OMEROPolygon.class;
 	}
 
 	@Override
-	public void setBoundaryType(final PolylineData shape,
-		final String textValue)
-	{
+	public void setBoundaryType(final PolygonData shape, final String textValue) {
 		shape.setText(textValue);
 	}
 
 	@Override
-	public String getTextValue(final PolylineData shape) {
+	public String getTextValue(final PolygonData shape) {
 		return shape.getText();
 	}
 

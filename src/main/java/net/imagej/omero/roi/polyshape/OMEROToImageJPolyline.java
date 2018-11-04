@@ -23,44 +23,46 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
-import net.imagej.omero.roi.AbstractOMERORealMaskUnwrapper;
+import net.imagej.omero.roi.AbstractShapeDataToRealMaskRealInterval;
+import net.imglib2.roi.BoundaryType;
 
-import org.scijava.Priority;
 import org.scijava.convert.Converter;
 import org.scijava.plugin.Plugin;
 
-import omero.gateway.model.PolygonData;
+import omero.gateway.model.PolylineData;
 
 /**
- * Unwraps an {@link OMEROPolygon}.
+ * Converts an OMERO {@link PolylineData} to {@link OMEROPolyline}.
  *
  * @author Alison Walter
  */
-@Plugin(type = Converter.class, priority = Priority.HIGH)
-public class OMEROPolygonUnwrapper extends
-	AbstractOMERORealMaskUnwrapper<PolygonData, OMEROPolygon>
+@Plugin(type = Converter.class)
+public class OMEROToImageJPolyline extends
+	AbstractShapeDataToRealMaskRealInterval<PolylineData, OMEROPolyline>
 {
 
 	@Override
-	public Class<PolygonData> getOutputType() {
-		return PolygonData.class;
+	public Class<PolylineData> getInputType() {
+		return PolylineData.class;
 	}
 
 	@Override
-	public Class<OMEROPolygon> getInputType() {
-		return OMEROPolygon.class;
+	public Class<OMEROPolyline> getOutputType() {
+		return OMEROPolyline.class;
 	}
 
 	@Override
-	public void setBoundaryType(final PolygonData shape, final String textValue) {
-		shape.setText(textValue);
+	public OMEROPolyline convert(final PolylineData shape,
+		final BoundaryType bt)
+	{
+		// OMEROPolylines have no defined boundary behavior
+		return new DefaultOMEROPolyline(shape);
 	}
 
 	@Override
-	public String getTextValue(final PolygonData shape) {
+	public String getTextValue(final PolylineData shape) {
 		return shape.getText();
 	}
-
 }

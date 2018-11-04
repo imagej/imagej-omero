@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
 import net.imagej.omero.roi.AbstractShapeDataToRealMaskRealInterval;
 import net.imglib2.roi.BoundaryType;

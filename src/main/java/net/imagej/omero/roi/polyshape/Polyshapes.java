@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
 import java.awt.geom.Point2D;
 import java.util.List;
@@ -36,7 +36,7 @@ import net.imglib2.roi.geom.GeomMaths;
  *
  * @author Alison Walter
  */
-public class PolygonMaths {
+public class Polyshapes {
 
 	public static boolean pnpoly(final List<Point2D.Double> pts,
 		final RealLocalizable localizable)

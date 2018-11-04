@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
 import java.awt.geom.Point2D;
 import java.util.List;
@@ -37,21 +37,22 @@ import net.imglib2.roi.util.RealLocalizableRealPositionable;
 import omero.gateway.model.PolygonData;
 
 /**
- * An {@link OMEROPolygon} with closed boundary behavior.
+ * Default implementation of {@link OMEROPolygon}. The contains method for this
+ * is the most efficient of the polygons, but the edge behavior is unspecified.
  *
  * @author Alison Walter
  */
-public class ClosedOMEROPolygon extends
+public class DefaultOMEROPolygon extends
 	AbstractOMERORealMaskRealInterval<PolygonData> implements OMEROPolygon
 {
 
-	public ClosedOMEROPolygon(final PolygonData shape) {
-		super(shape, BoundaryType.CLOSED);
+	public DefaultOMEROPolygon(final PolygonData shape) {
+		super(shape, BoundaryType.UNSPECIFIED);
 	}
 
 	@Override
 	public boolean test(final RealLocalizable l) {
-		return PolygonMaths.pnpolyWithBoundary(shape.getPoints(), l, true);
+		return Polyshapes.pnpoly(shape.getPoints(), l);
 	}
 
 	@Override
