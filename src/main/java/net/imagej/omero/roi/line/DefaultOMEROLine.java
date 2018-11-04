@@ -65,14 +65,12 @@ public class DefaultOMEROLine extends
 
 	@Override
 	public RealLocalizableRealPositionable endpointOne() {
-		return new LineEndPoint(new double[] { shape.getX1(), shape.getY1() },
-			true);
+		return new LineEndPoint(shape.getX1(), shape.getY1(), true);
 	}
 
 	@Override
 	public RealLocalizableRealPositionable endpointTwo() {
-		return new LineEndPoint(new double[] { shape.getX2(), shape.getY2() },
-			false);
+		return new LineEndPoint(shape.getX2(), shape.getY2(), false);
 	}
 
 	@Override
@@ -89,15 +87,15 @@ public class DefaultOMEROLine extends
 
 		private final boolean isOne;
 
-		public LineEndPoint(final double[] pos, final boolean isOne) {
-			super(pos);
+		public LineEndPoint(final double x, final double y, final boolean isOne) {
+			super(new double[] { x, y });
 			this.isOne = isOne;
 		}
 
 		@Override
 		public void updateBounds() {
-			// Bounds depend on wrapped OMERO shape, so by updating the shape we're
-			// updating the bounds
+			// Bounds depend on wrapped OMERO shape, so by
+			// updating the shape we're updating the bounds.
 			if (isOne) {
 				shape.setX1(position[0]);
 				shape.setY1(position[1]);

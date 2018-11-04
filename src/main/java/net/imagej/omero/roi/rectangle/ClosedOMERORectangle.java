@@ -61,8 +61,18 @@ public class ClosedOMERORectangle extends
 
 	@Override
 	public RealLocalizableRealPositionable center() {
-		return new RectangleCenter(new double[] { getShape().getX() + getShape()
-			.getWidth() / 2, getShape().getY() + getShape().getHeight() / 2 });
+		final double px = getShape().getX() + getShape().getWidth() / 2;
+		final double py = getShape().getY() + getShape().getHeight() / 2;
+		return new AbstractRealMaskPoint(new double[] { px, py }) {
+
+			@Override
+			public void updateBounds() {
+				// Bounds depend on wrapped OMERO shape, so by
+				// updating the shape we're updating the bounds.
+				shape.setX(position[0] - shape.getWidth() / 2);
+				shape.setY(position[1] - shape.getHeight() / 2);
+			}
+		};
 	}
 
 	@Override
@@ -70,24 +80,6 @@ public class ClosedOMERORectangle extends
 		return getClass().getSimpleName() + "\nCenter: " + center()
 			.getDoublePosition(0) + ", " + center().getDoublePosition(1) +
 			"\nWidth: " + sideLength(0) + "\nHeight: " + sideLength(1);
-	}
-
-	// -- Helper classes --
-
-	private class RectangleCenter extends AbstractRealMaskPoint {
-
-		public RectangleCenter(final double[] pos) {
-			super(pos);
-		}
-
-		@Override
-		public void updateBounds() {
-			// Bounds depend on wrapped OMERO shape, so by updating the shape we're
-			// updating the bounds
-			shape.setX(position[0] - shape.getWidth() / 2);
-			shape.setY(position[1] - shape.getHeight() / 2);
-		}
-
 	}
 
 }
