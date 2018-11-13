@@ -102,7 +102,7 @@ public class OMEROPolygonTest {
 
 	@Test
 	public void testAddVertex() {
-		openPolygon.addVertex(5, new double[] { 120, 120 });
+		openPolygon.addVertex(5, new RealPoint(120, 120));
 
 		// Check wrapper
 		assertEquals(6, openPolygon.numVertices());
