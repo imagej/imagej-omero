@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.table.Table;
+import org.scijava.table.Table;
 
 import org.scijava.log.LogService;
 

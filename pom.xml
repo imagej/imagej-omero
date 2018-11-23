@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>22.3.0</version>
+		<version>23.2.0</version>
 		<relativePath />
 	</parent>
 
 	<groupId>net.imagej</groupId>
 	<artifactId>imagej-omero</artifactId>
-	<version>0.7.1-SNAPSHOT</version>
+	<version>0.8.0-SNAPSHOT</version>
 
 	<name>ImageJ-OMERO interoperability</name>
 	<description>Server- and client-side communication between ImageJ and OMERO.</description>
@@ -78,6 +78,11 @@
 			<url>https://imagej.net/User:Schindelin</url>
 			<properties><id>dscho</id></properties>
 		</contributor>
+		<contributor>
+			<name>Jan Eglinger</name>
+			<url>https://imagej.net/User:Eglinger</url>
+			<properties><id>imagejan</id></properties>
+		</contributor>
 	</contributors>
 
 	<mailingLists>
@@ -122,6 +127,9 @@
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
+		<!-- NB: until pom-scijava-23.3.0 is released  -->
+		<imagej-common.version>0.27.0</imagej-common.version>
+
 		<!-- Test configuration -->
 		<skipITs>true</skipITs>
 	</properties>
@@ -160,6 +168,10 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-table</artifactId>
 		</dependency>
 
 		<!-- OMERO dependencies -->

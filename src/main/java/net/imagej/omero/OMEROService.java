@@ -37,11 +37,11 @@ import net.imagej.ImageJService;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.roi.ROITree;
-import net.imagej.table.Table;
 import net.imglib2.Interval;
 import net.imglib2.roi.MaskPredicate;
 
 import org.scijava.module.ModuleItem;
+import org.scijava.table.Table;
 import org.scijava.util.TreeNode;
 
 import Glacier2.CannotCreateSessionException;
