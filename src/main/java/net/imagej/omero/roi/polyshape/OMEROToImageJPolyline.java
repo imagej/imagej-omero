@@ -2,7 +2,7 @@
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
- * Copyright (C) 2013 - 2016 Open Microscopy Environment:
+ * Copyright (C) 2013 - 2018 Open Microscopy Environment:
  * 	- Board of Regents of the University of Wisconsin-Madison
  * 	- Glencoe Software, Inc.
  * 	- University of Dundee
@@ -23,35 +23,46 @@
  * #L%
  */
 
-package net.imagej.omero.roi.rectangle;
+package net.imagej.omero.roi.polyshape;
 
-import net.imglib2.RealLocalizable;
+import net.imagej.omero.roi.AbstractShapeDataToRealMaskRealInterval;
 import net.imglib2.roi.BoundaryType;
 
-import omero.gateway.model.RectangleData;
+import org.scijava.convert.Converter;
+import org.scijava.plugin.Plugin;
+
+import omero.gateway.model.PolylineData;
 
 /**
- * An {@link OMERORectangle} with closed boundary behavior.
+ * Converts an OMERO {@link PolylineData} to {@link OMEROPolyline}.
  *
  * @author Alison Walter
  */
-public class ClosedOMERORectangle extends AbstractOMERORectangle {
+@Plugin(type = Converter.class)
+public class OMEROToImageJPolyline extends
+	AbstractShapeDataToRealMaskRealInterval<PolylineData, OMEROPolyline>
+{
 
-	public ClosedOMERORectangle(final RectangleData shape) {
-		super(shape, BoundaryType.CLOSED);
+	@Override
+	public Class<PolylineData> getInputType() {
+		return PolylineData.class;
 	}
 
 	@Override
-	public boolean test(final RealLocalizable l) {
-		final double lx = l.getDoublePosition(0);
-		final double ly = l.getDoublePosition(1);
-
-		final double minX = shape.getX();
-		final double minY = shape.getY();
-		final double maxX = minX + shape.getWidth();
-		final double maxY = minY + shape.getHeight();
-
-		return lx >= minX && lx <= maxX && ly >= minY && ly <= maxY;
+	public Class<OMEROPolyline> getOutputType() {
+		return OMEROPolyline.class;
 	}
 
+	@Override
+	public OMEROPolyline convert(final PolylineData shape,
+		final BoundaryType bt)
+	{
+		// OMEROPolylines have no defined boundary behavior
+		return new DefaultOMEROPolyline(shape);
+	}
+
+	@Override
+	public String getTextValue(final PolylineData shape) {
+		return shape.getText();
+	}
 }

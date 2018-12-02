@@ -25,11 +25,8 @@
 
 package net.imagej.omero.roi.rectangle;
 
-import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.roi.BoundaryType;
-import net.imglib2.roi.util.AbstractRealMaskPoint;
-import net.imglib2.roi.util.RealLocalizableRealPositionable;
 
 import omero.gateway.model.RectangleData;
 
@@ -38,9 +35,7 @@ import omero.gateway.model.RectangleData;
  *
  * @author Alison Walter
  */
-public class OpenOMERORectangle extends
-	AbstractOMERORealMaskRealInterval<RectangleData> implements OMERORectangle
-{
+public class OpenOMERORectangle extends AbstractOMERORectangle {
 
 	public OpenOMERORectangle(final RectangleData shape) {
 		super(shape, BoundaryType.OPEN);
@@ -57,37 +52,6 @@ public class OpenOMERORectangle extends
 		final double maxY = minY + shape.getHeight();
 
 		return lx > minX && lx < maxX && ly > minY && ly < maxY;
-	}
-
-	@Override
-	public RealLocalizableRealPositionable center() {
-		return new RectangleCenter(new double[] { getShape().getX() + getShape()
-			.getWidth() / 2, getShape().getY() + getShape().getHeight() / 2 });
-	}
-
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + "\nCenter: " + center()
-			.getDoublePosition(0) + ", " + center().getDoublePosition(1) +
-			"\nWidth: " + sideLength(0) + "\nHeight: " + sideLength(1);
-	}
-
-	// -- Helper classes --
-
-	private class RectangleCenter extends AbstractRealMaskPoint {
-
-		public RectangleCenter(final double[] pos) {
-			super(pos);
-		}
-
-		@Override
-		public void updateBounds() {
-			// Bounds depend on wrapped OMERO shape, so by updating the shape we're
-			// updating the bounds
-			shape.setX(position[0] - shape.getWidth() / 2);
-			shape.setY(position[1] - shape.getHeight() / 2);
-		}
-
 	}
 
 }

@@ -2,7 +2,7 @@
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
- * Copyright (C) 2013 - 2016 Open Microscopy Environment:
+ * Copyright (C) 2013 - 2018 Open Microscopy Environment:
  * 	- Board of Regents of the University of Wisconsin-Madison
  * 	- Glencoe Software, Inc.
  * 	- University of Dundee
@@ -23,35 +23,44 @@
  * #L%
  */
 
-package net.imagej.omero.roi.rectangle;
+package net.imagej.omero.roi.polyshape;
 
-import net.imglib2.RealLocalizable;
-import net.imglib2.roi.BoundaryType;
+import net.imagej.omero.roi.AbstractOMERORealMaskUnwrapper;
 
-import omero.gateway.model.RectangleData;
+import org.scijava.Priority;
+import org.scijava.convert.Converter;
+import org.scijava.plugin.Plugin;
+
+import omero.gateway.model.PolygonData;
 
 /**
- * An {@link OMERORectangle} with closed boundary behavior.
+ * Unwraps an {@link OMEROPolygon}.
  *
  * @author Alison Walter
  */
-public class ClosedOMERORectangle extends AbstractOMERORectangle {
+@Plugin(type = Converter.class, priority = Priority.HIGH)
+public class OMEROPolygonUnwrapper extends
+	AbstractOMERORealMaskUnwrapper<PolygonData, OMEROPolygon>
+{
 
-	public ClosedOMERORectangle(final RectangleData shape) {
-		super(shape, BoundaryType.CLOSED);
+	@Override
+	public Class<PolygonData> getOutputType() {
+		return PolygonData.class;
 	}
 
 	@Override
-	public boolean test(final RealLocalizable l) {
-		final double lx = l.getDoublePosition(0);
-		final double ly = l.getDoublePosition(1);
+	public Class<OMEROPolygon> getInputType() {
+		return OMEROPolygon.class;
+	}
 
-		final double minX = shape.getX();
-		final double minY = shape.getY();
-		final double maxX = minX + shape.getWidth();
-		final double maxY = minY + shape.getHeight();
+	@Override
+	public void setBoundaryType(final PolygonData shape, final String textValue) {
+		shape.setText(textValue);
+	}
 
-		return lx >= minX && lx <= maxX && ly >= minY && ly <= maxY;
+	@Override
+	public String getTextValue(final PolygonData shape) {
+		return shape.getText();
 	}
 
 }

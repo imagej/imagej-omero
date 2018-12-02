@@ -2,7 +2,7 @@
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
- * Copyright (C) 2013 - 2018 Open Microscopy Environment:
+ * Copyright (C) 2013 - 2016 Open Microscopy Environment:
  * 	- Board of Regents of the University of Wisconsin-Madison
  * 	- Glencoe Software, Inc.
  * 	- University of Dundee
@@ -23,52 +23,54 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polyline;
+package net.imagej.omero.roi.polyshape;
 
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
 import java.util.List;
 
-import net.imagej.omero.roi.AbstractMaskPredicateToShapeData;
 import net.imglib2.RealLocalizable;
+import net.imglib2.roi.geom.GeomMaths;
 import net.imglib2.roi.geom.real.Polyline;
-
-import org.scijava.convert.Converter;
-import org.scijava.plugin.Plugin;
+import net.imglib2.roi.geom.real.WritablePolyline;
 
 import omero.gateway.model.PolylineData;
 
 /**
- * Converts a {@link Polyline} to an OMERO {@link PolylineData}.
+ * A {@link Polyline} which wraps an OMERO polyline Roi
  *
  * @author Alison Walter
  */
-@Plugin(type = Converter.class)
-public class ImageJToOMEROPolyline extends
-	AbstractMaskPredicateToShapeData<RealLocalizable, Polyline, PolylineData>
+public interface OMEROPolyline extends OMEROPolyshape<PolylineData>,
+	WritablePolyline
 {
 
 	@Override
-	public Class<Polyline> getInputType() {
-		return Polyline.class;
+	default List<Point2D.Double> getPoints() {
+		return getShape().getPoints();
 	}
 
 	@Override
-	public Class<PolylineData> getOutputType() {
-		return PolylineData.class;
+	default void setPoints(final List<Point2D.Double> points) {
+		getShape().setPoints(points);
 	}
 
 	@Override
-	public PolylineData convert(final Polyline mask, final String boundaryType) {
-		final List<Point2D.Double> points = new ArrayList<>();
-		for (int i = 0; i < mask.numVertices(); i++) {
-			final RealLocalizable loc = mask.vertex(i);
-			points.add(new Point2D.Double(loc.getDoublePosition(0), loc
-				.getDoublePosition(1)));
+	default boolean test(final RealLocalizable l) {
+		final double[] ptOne = new double[2];
+		final double[] ptTwo = new double[2];
+
+		for (int i = 1; i < getShape().getPoints().size(); i++) {
+			ptOne[0] = getShape().getPoints().get(i - 1).getX();
+			ptOne[1] = getShape().getPoints().get(i - 1).getY();
+
+			ptTwo[0] = getShape().getPoints().get(i).getX();
+			ptTwo[1] = getShape().getPoints().get(i).getY();
+
+			final boolean testLineContains = GeomMaths.lineContains(ptOne, ptTwo, l,
+				2);
+			if (testLineContains) return true;
 		}
-		final PolylineData p = new PolylineData(points);
-		p.setText(boundaryType);
-		return p;
+		return false;
 	}
 
 }

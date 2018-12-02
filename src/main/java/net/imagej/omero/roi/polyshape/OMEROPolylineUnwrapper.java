@@ -23,52 +23,46 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
-import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.List;
+import net.imagej.omero.roi.AbstractOMERORealMaskUnwrapper;
 
-import net.imagej.omero.roi.AbstractMaskPredicateToShapeData;
-import net.imglib2.RealLocalizable;
-import net.imglib2.roi.geom.real.Polygon2D;
-
+import org.scijava.Priority;
 import org.scijava.convert.Converter;
 import org.scijava.plugin.Plugin;
 
-import omero.gateway.model.PolygonData;
+import omero.gateway.model.PolylineData;
 
 /**
- * Converts a {@link Polygon2D} to an OMERO {@link PolygonData}.
+ * Unwraps an {@link OMEROPolyline}.
  *
  * @author Alison Walter
  */
-@Plugin(type = Converter.class)
-public class ImageJToOMEROPolygon extends
-	AbstractMaskPredicateToShapeData<RealLocalizable, Polygon2D, PolygonData>
+@Plugin(type = Converter.class, priority = Priority.HIGH)
+public class OMEROPolylineUnwrapper extends
+	AbstractOMERORealMaskUnwrapper<PolylineData, OMEROPolyline>
 {
 
 	@Override
-	public Class<Polygon2D> getInputType() {
-		return Polygon2D.class;
+	public Class<PolylineData> getOutputType() {
+		return PolylineData.class;
 	}
 
 	@Override
-	public Class<PolygonData> getOutputType() {
-		return PolygonData.class;
+	public Class<OMEROPolyline> getInputType() {
+		return OMEROPolyline.class;
 	}
 
 	@Override
-	public PolygonData convert(final Polygon2D mask, final String boundaryType) {
-		final List<Point2D.Double> points = new ArrayList<>();
-		for (int i = 0; i < mask.numVertices(); i++) {
-			final RealLocalizable loc = mask.vertex(i);
-			points.add(new Point2D.Double(loc.getDoublePosition(0), loc
-				.getDoublePosition(1)));
-		}
-		final PolygonData p = new PolygonData(points);
-		p.setText(boundaryType);
-		return p;
+	public void setBoundaryType(final PolylineData shape,
+		final String textValue)
+	{
+		shape.setText(textValue);
+	}
+
+	@Override
+	public String getTextValue(final PolylineData shape) {
+		return shape.getText();
 	}
 
 }

@@ -2,7 +2,7 @@
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
- * Copyright (C) 2013 - 2018 Open Microscopy Environment:
+ * Copyright (C) 2013 - 2016 Open Microscopy Environment:
  * 	- Board of Regents of the University of Wisconsin-Madison
  * 	- Glencoe Software, Inc.
  * 	- University of Dundee
@@ -23,44 +23,27 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
-import net.imagej.omero.roi.AbstractOMERORealMaskUnwrapper;
-
-import org.scijava.Priority;
-import org.scijava.convert.Converter;
-import org.scijava.plugin.Plugin;
+import net.imglib2.RealLocalizable;
+import net.imglib2.roi.BoundaryType;
 
 import omero.gateway.model.PolygonData;
 
 /**
- * Unwraps an {@link OMEROPolygon}.
+ * An {@link OMEROPolygon} with open boundary behavior.
  *
  * @author Alison Walter
  */
-@Plugin(type = Converter.class, priority = Priority.HIGH)
-public class OMEROPolygonUnwrapper extends
-	AbstractOMERORealMaskUnwrapper<PolygonData, OMEROPolygon>
-{
+public class OpenOMEROPolygon extends AbstractOMEROPolygon {
 
-	@Override
-	public Class<PolygonData> getOutputType() {
-		return PolygonData.class;
+	public OpenOMEROPolygon(final PolygonData shape) {
+		super(shape, BoundaryType.OPEN);
 	}
 
 	@Override
-	public Class<OMEROPolygon> getInputType() {
-		return OMEROPolygon.class;
-	}
-
-	@Override
-	public void setBoundaryType(final PolygonData shape, final String textValue) {
-		shape.setText(textValue);
-	}
-
-	@Override
-	public String getTextValue(final PolygonData shape) {
-		return shape.getText();
+	public boolean test(final RealLocalizable l) {
+		return Polyshapes.pnpolyWithBoundary(shape.getPoints(), l, false);
 	}
 
 }

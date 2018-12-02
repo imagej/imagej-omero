@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

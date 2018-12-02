@@ -25,11 +25,8 @@
 
 package net.imagej.omero.roi.ellipse;
 
-import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.roi.BoundaryType;
-import net.imglib2.roi.util.AbstractRealMaskPoint;
-import net.imglib2.roi.util.RealLocalizableRealPositionable;
 
 import omero.gateway.model.EllipseData;
 
@@ -38,9 +35,7 @@ import omero.gateway.model.EllipseData;
  *
  * @author Alison Walter
  */
-public class ClosedOMEROEllipse extends
-	AbstractOMERORealMaskRealInterval<EllipseData> implements OMEROEllipse
-{
+public class ClosedOMEROEllipse extends AbstractOMEROEllipse {
 
 	public ClosedOMEROEllipse(final EllipseData shape) {
 		super(shape, BoundaryType.CLOSED);
@@ -54,36 +49,6 @@ public class ClosedOMEROEllipse extends
 			.getRadiusY();
 
 		return (distanceX * distanceX + distanceY * distanceY) <= 1.0;
-	}
-
-	@Override
-	public RealLocalizableRealPositionable center() {
-		return new EllipseCenter(new double[] { shape.getX(), shape.getY() });
-	}
-
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + "\nCenter: " + center()
-			.getDoublePosition(0) + ", " + center().getDoublePosition(1) + "Radii: " +
-			semiAxisLength(0) + ", " + semiAxisLength(1);
-	}
-
-	// -- Helper classes
-
-	private class EllipseCenter extends AbstractRealMaskPoint {
-
-		public EllipseCenter(final double[] pos) {
-			super(pos);
-		}
-
-		@Override
-		public void updateBounds() {
-			// Bounds depend on wrapped OMERO shape, so by updating the shape we're
-			// updating the bounds
-			shape.setX(position[0]);
-			shape.setY(position[1]);
-		}
-
 	}
 
 }

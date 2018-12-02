@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -34,6 +34,10 @@ import com.google.common.collect.Lists;
 import java.awt.geom.Point2D;
 import java.util.List;
 
+import net.imagej.omero.roi.polyshape.ClosedOMEROPolygon;
+import net.imagej.omero.roi.polyshape.DefaultOMEROPolygon;
+import net.imagej.omero.roi.polyshape.OMEROPolygon;
+import net.imagej.omero.roi.polyshape.OpenOMEROPolygon;
 import net.imglib2.RealPoint;
 import net.imglib2.RealPositionable;
 import net.imglib2.roi.BoundaryType;
@@ -98,7 +102,7 @@ public class OMEROPolygonTest {
 
 	@Test
 	public void testAddVertex() {
-		openPolygon.addVertex(5, new double[] { 120, 120 });
+		openPolygon.addVertex(5, new RealPoint(120, 120));
 
 		// Check wrapper
 		assertEquals(6, openPolygon.numVertices());

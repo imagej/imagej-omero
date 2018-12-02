@@ -81,6 +81,18 @@ public class DefaultOMEROMask extends
 	}
 
 	@Override
+	public int hashCode() {
+		// FIXME - what to do here?
+		return super.hashCode();
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		// FIXME - what to do here?
+		return super.equals(obj);
+	}
+
+	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "\nMin: " + realMin(0) + ", " + realMin(
 			1) + "\nMax: " + realMax(0) + ", " + realMax(1);

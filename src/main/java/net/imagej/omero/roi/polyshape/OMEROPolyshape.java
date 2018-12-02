@@ -23,50 +23,86 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
 import java.awt.geom.Point2D;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import net.imagej.omero.roi.OMERORealMaskRealInterval;
-import net.imglib2.roi.geom.real.Polygon2D;
-import net.imglib2.roi.geom.real.WritablePolygon2D;
+import net.imglib2.RealLocalizable;
+import net.imglib2.roi.geom.real.Polyshape;
+import net.imglib2.roi.geom.real.WritablePolyshape;
+import net.imglib2.roi.util.AbstractRealMaskPoint;
+import net.imglib2.roi.util.RealLocalizableRealPositionable;
 
-import omero.gateway.model.PolygonData;
+import omero.gateway.model.ShapeData;
 
 /**
- * A {@link Polygon2D} which wraps an OMERO polygon Roi.
+ * A {@link Polyshape} which wraps an OMERO ROI.
  *
+ * @author Curtis Rueden
  * @author Alison Walter
  */
-public interface OMEROPolygon extends OMERORealMaskRealInterval<PolygonData>,
-	WritablePolygon2D
+public interface OMEROPolyshape<SD extends ShapeData> extends
+	OMERORealMaskRealInterval<SD>, WritablePolyshape
 {
+
+	List<Point2D.Double> getPoints();
+	void setPoints(List<Point2D.Double> points);
 
 	@Override
 	default int numVertices() {
-		return getShape().getPoints().size();
+		return getPoints().size();
 	}
 
 	@Override
-	default void addVertex(final int index, final double[] vertex) {
-		final List<Point2D.Double> pts = getShape().getPoints();
-		pts.add(index, new Point2D.Double(vertex[0], vertex[1]));
-		getShape().setPoints(pts);
+	default RealLocalizableRealPositionable vertex(final int pos) {
+		final List<Point2D.Double> pts = getPoints();
+		final double x = pts.get(pos).getX(), y = pts.get(pos).getY();
+		return new AbstractRealMaskPoint(new double[] { x, y }) {
+
+			@Override
+			public void updateBounds() {
+				// Bounds depend on wrapped OMERO shape, so by
+				// updating the shape we're updating the bounds.
+				pts.get(pos).setLocation(position[0], position[1]);
+				setPoints(pts);
+			}
+		};
+	}
+
+	@Override
+	default void addVertex(final int index, final RealLocalizable vertex) {
+		final List<Point2D.Double> pts = getPoints();
+		pts.add(index, Polyshapes.point(vertex));
+		setPoints(pts);
 	}
 
 	@Override
 	default void removeVertex(final int index) {
-		final List<Point2D.Double> pts = getShape().getPoints();
+		final List<Point2D.Double> pts = getPoints();
 		pts.remove(index);
-		getShape().setPoints(pts);
+		setPoints(pts);
+	}
+
+	@Override
+	default void addVertices(final int index,
+		Collection<RealLocalizable> vertices)
+	{
+		final List<Point2D.Double> pts = getPoints();
+		pts.addAll(vertices.stream()//
+			.map(Polyshapes::point)//
+			.collect(Collectors.toList()));
+		setPoints(pts);
 	}
 
 	@Override
 	default double realMin(final int d) {
 		if (d < 0 || d > 1) throw new IllegalArgumentException(
 			"Invalid dimension: " + d);
-		final List<Point2D.Double> pts = getShape().getPoints();
+		final List<Point2D.Double> pts = getPoints();
 		double min = d == 0 ? pts.get(0).getX() : pts.get(0).getY();
 		for (int i = 1; i < pts.size(); i++) {
 			if (d == 0) {
@@ -83,7 +119,7 @@ public interface OMEROPolygon extends OMERORealMaskRealInterval<PolygonData>,
 	default double realMax(final int d) {
 		if (d < 0 || d > 1) throw new IllegalArgumentException(
 			"Invalid dimension: " + d);
-		final List<Point2D.Double> pts = getShape().getPoints();
+		final List<Point2D.Double> pts = getPoints();
 		double max = d == 0 ? pts.get(0).getX() : pts.get(0).getY();
 		for (int i = 1; i < pts.size(); i++) {
 			if (d == 0) {

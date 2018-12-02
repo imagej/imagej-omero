@@ -2,7 +2,7 @@
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
- * Copyright (C) 2013 - 2018 Open Microscopy Environment:
+ * Copyright (C) 2013 - 2016 Open Microscopy Environment:
  * 	- Board of Regents of the University of Wisconsin-Madison
  * 	- Glencoe Software, Inc.
  * 	- University of Dundee
@@ -23,46 +23,32 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polyline;
+package net.imagej.omero.roi.polyshape;
 
-import net.imagej.omero.roi.AbstractOMERORealMaskUnwrapper;
+import java.awt.geom.Point2D;
+import java.util.List;
 
-import org.scijava.Priority;
-import org.scijava.convert.Converter;
-import org.scijava.plugin.Plugin;
+import net.imglib2.roi.geom.real.Polygon2D;
+import net.imglib2.roi.geom.real.WritablePolygon2D;
 
-import omero.gateway.model.PolylineData;
+import omero.gateway.model.PolygonData;
 
 /**
- * Unwraps an {@link OMEROPolyline}.
+ * A {@link Polygon2D} which wraps an OMERO polygon Roi.
  *
  * @author Alison Walter
  */
-@Plugin(type = Converter.class, priority = Priority.HIGH)
-public class OMEROPolylineUnwrapper extends
-	AbstractOMERORealMaskUnwrapper<PolylineData, OMEROPolyline>
+public interface OMEROPolygon extends OMEROPolyshape<PolygonData>,
+	WritablePolygon2D
 {
 
 	@Override
-	public Class<PolylineData> getOutputType() {
-		return PolylineData.class;
+	default List<Point2D.Double> getPoints() {
+		return getShape().getPoints();
 	}
 
 	@Override
-	public Class<OMEROPolyline> getInputType() {
-		return OMEROPolyline.class;
+	default void setPoints(final List<Point2D.Double> points) {
+		getShape().setPoints(points);
 	}
-
-	@Override
-	public void setBoundaryType(final PolylineData shape,
-		final String textValue)
-	{
-		shape.setText(textValue);
-	}
-
-	@Override
-	public String getTextValue(final PolylineData shape) {
-		return shape.getText();
-	}
-
 }

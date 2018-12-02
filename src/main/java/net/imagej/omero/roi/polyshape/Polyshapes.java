@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
 import java.awt.geom.Point2D;
 import java.util.List;
@@ -36,7 +36,7 @@ import net.imglib2.roi.geom.GeomMaths;
  *
  * @author Alison Walter
  */
-public class PolygonMaths {
+public class Polyshapes {
 
 	public static boolean pnpoly(final List<Point2D.Double> pts,
 		final RealLocalizable localizable)
@@ -93,5 +93,11 @@ public class PolygonMaths {
 
 		// not on edge, check inside
 		return pnpoly(pts, localizable);
+	}
+
+	public static Point2D.Double point(final RealLocalizable vertex) {
+		final double x = vertex.getDoublePosition(0);
+		final double y = vertex.getDoublePosition(1);
+		return new Point2D.Double(x, y);
 	}
 }

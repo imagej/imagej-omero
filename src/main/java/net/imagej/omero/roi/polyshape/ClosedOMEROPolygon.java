@@ -23,35 +23,27 @@
  * #L%
  */
 
-package net.imagej.omero.roi.rectangle;
+package net.imagej.omero.roi.polyshape;
 
 import net.imglib2.RealLocalizable;
 import net.imglib2.roi.BoundaryType;
 
-import omero.gateway.model.RectangleData;
+import omero.gateway.model.PolygonData;
 
 /**
- * An {@link OMERORectangle} with closed boundary behavior.
+ * An {@link OMEROPolygon} with closed boundary behavior.
  *
  * @author Alison Walter
  */
-public class ClosedOMERORectangle extends AbstractOMERORectangle {
+public class ClosedOMEROPolygon extends AbstractOMEROPolygon {
 
-	public ClosedOMERORectangle(final RectangleData shape) {
+	public ClosedOMEROPolygon(final PolygonData shape) {
 		super(shape, BoundaryType.CLOSED);
 	}
 
 	@Override
 	public boolean test(final RealLocalizable l) {
-		final double lx = l.getDoublePosition(0);
-		final double ly = l.getDoublePosition(1);
-
-		final double minX = shape.getX();
-		final double minY = shape.getY();
-		final double maxX = minX + shape.getWidth();
-		final double maxY = minY + shape.getHeight();
-
-		return lx >= minX && lx <= maxX && ly >= minY && ly <= maxY;
+		return Polyshapes.pnpolyWithBoundary(shape.getPoints(), l, true);
 	}
 
 }

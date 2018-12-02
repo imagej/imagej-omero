@@ -2,7 +2,7 @@
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
- * Copyright (C) 2013 - 2018 Open Microscopy Environment:
+ * Copyright (C) 2013 - 2016 Open Microscopy Environment:
  * 	- Board of Regents of the University of Wisconsin-Madison
  * 	- Glencoe Software, Inc.
  * 	- University of Dundee
@@ -23,46 +23,47 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polyline;
+package net.imagej.omero.roi.polyshape;
 
-import net.imagej.omero.roi.AbstractShapeDataToRealMaskRealInterval;
+import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
 import net.imglib2.roi.BoundaryType;
+import net.imglib2.roi.geom.real.Polygon2D;
+import net.imglib2.roi.geom.real.Polyshape;
 
-import org.scijava.convert.Converter;
-import org.scijava.plugin.Plugin;
-
-import omero.gateway.model.PolylineData;
+import omero.gateway.model.PolygonData;
 
 /**
- * Converts an OMERO {@link PolylineData} to {@link OMEROPolyline}.
+ * Base class for {@link OMEROPolygon}.
  *
+ * @author Curtis Rueden
  * @author Alison Walter
  */
-@Plugin(type = Converter.class)
-public class OMEROToImageJPolyline extends
-	AbstractShapeDataToRealMaskRealInterval<PolylineData, OMEROPolyline>
+public abstract class AbstractOMEROPolygon extends
+	AbstractOMERORealMaskRealInterval<PolygonData> implements OMEROPolygon
 {
 
-	@Override
-	public Class<PolylineData> getInputType() {
-		return PolylineData.class;
+	public AbstractOMEROPolygon(final PolygonData shape, final BoundaryType bt) {
+		super(shape, bt);
 	}
 
 	@Override
-	public Class<OMEROPolyline> getOutputType() {
-		return OMEROPolyline.class;
+	public int hashCode() {
+		return Polygon2D.hashCode(this);
 	}
 
 	@Override
-	public OMEROPolyline convert(final PolylineData shape,
-		final BoundaryType bt)
-	{
-		// OMEROPolylines have no defined boundary behavior
-		return new DefaultOMEROPolyline(shape);
+	public boolean equals(final Object obj) {
+		return obj instanceof Polygon2D && Polyshape.equals(this, (Polygon2D) obj);
 	}
 
 	@Override
-	public String getTextValue(final PolylineData shape) {
-		return shape.getText();
+	public String toString() {
+		String s = getClass().getSimpleName();
+		for (int i = 0; i < numVertices(); i++) {
+			s += "\nVertex " + i + ": " + vertex(i).getDoublePosition(0) + ", " +
+				vertex(i).getDoublePosition(1);
+		}
+		return s;
 	}
+
 }

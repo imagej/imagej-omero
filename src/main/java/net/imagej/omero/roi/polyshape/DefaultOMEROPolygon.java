@@ -2,7 +2,7 @@
  * #%L
  * ImageJ software for multidimensional image processing and analysis.
  * %%
- * Copyright (C) 2013 - 2018 Open Microscopy Environment:
+ * Copyright (C) 2013 - 2016 Open Microscopy Environment:
  * 	- Board of Regents of the University of Wisconsin-Madison
  * 	- Glencoe Software, Inc.
  * 	- University of Dundee
@@ -23,47 +23,28 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
+package net.imagej.omero.roi.polyshape;
 
-import net.imagej.omero.roi.AbstractShapeDataToRealMaskRealInterval;
+import net.imglib2.RealLocalizable;
 import net.imglib2.roi.BoundaryType;
-import net.imglib2.roi.geom.real.Polygon2D;
-
-import org.scijava.convert.Converter;
-import org.scijava.plugin.Plugin;
 
 import omero.gateway.model.PolygonData;
 
 /**
- * Converts an OMERO {@link PolygonData} to {@link Polygon2D}.
+ * Default implementation of {@link OMEROPolygon}. The contains method for this
+ * is the most efficient of the polygons, but the edge behavior is unspecified.
  *
  * @author Alison Walter
  */
-@Plugin(type = Converter.class)
-public class OMEROToImageJPolygon extends
-	AbstractShapeDataToRealMaskRealInterval<PolygonData, OMEROPolygon>
-{
+public class DefaultOMEROPolygon extends AbstractOMEROPolygon {
 
-	@Override
-	public Class<PolygonData> getInputType() {
-		return PolygonData.class;
+	public DefaultOMEROPolygon(final PolygonData shape) {
+		super(shape, BoundaryType.UNSPECIFIED);
 	}
 
 	@Override
-	public Class<OMEROPolygon> getOutputType() {
-		return OMEROPolygon.class;
-	}
-
-	@Override
-	public OMEROPolygon convert(final PolygonData shape, final BoundaryType bt) {
-		if (bt == BoundaryType.OPEN) return new OpenOMEROPolygon(shape);
-		else if (bt == BoundaryType.CLOSED) return new ClosedOMEROPolygon(shape);
-		return new DefaultOMEROPolygon(shape);
-	}
-
-	@Override
-	public String getTextValue(final PolygonData shape) {
-		return shape.getText();
+	public boolean test(final RealLocalizable l) {
+		return Polyshapes.pnpoly(shape.getPoints(), l);
 	}
 
 }

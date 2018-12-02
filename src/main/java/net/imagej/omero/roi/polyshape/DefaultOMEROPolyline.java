@@ -23,40 +23,36 @@
  * #L%
  */
 
-package net.imagej.omero.roi.polygon;
-
-import java.awt.geom.Point2D;
-import java.util.List;
+package net.imagej.omero.roi.polyshape;
 
 import net.imagej.omero.roi.AbstractOMERORealMaskRealInterval;
-import net.imglib2.RealLocalizable;
 import net.imglib2.roi.BoundaryType;
-import net.imglib2.roi.util.AbstractRealMaskPoint;
-import net.imglib2.roi.util.RealLocalizableRealPositionable;
+import net.imglib2.roi.geom.real.Polyline;
+import net.imglib2.roi.geom.real.Polyshape;
 
-import omero.gateway.model.PolygonData;
+import omero.gateway.model.PolylineData;
 
 /**
- * An {@link OMEROPolygon} with open boundary behavior.
+ * Default implementation of {@link OMEROPolyline}.
  *
  * @author Alison Walter
  */
-public class OpenOMEROPolygon extends
-	AbstractOMERORealMaskRealInterval<PolygonData> implements OMEROPolygon
+public class DefaultOMEROPolyline extends
+	AbstractOMERORealMaskRealInterval<PolylineData> implements OMEROPolyline
 {
 
-	public OpenOMEROPolygon(final PolygonData shape) {
-		super(shape, BoundaryType.OPEN);
+	public DefaultOMEROPolyline(final PolylineData shape) {
+		super(shape, BoundaryType.CLOSED);
 	}
 
 	@Override
-	public boolean test(final RealLocalizable l) {
-		return PolygonMaths.pnpolyWithBoundary(shape.getPoints(), l, false);
+	public int hashCode() {
+		return Polyline.hashCode(this);
 	}
 
 	@Override
-	public RealLocalizableRealPositionable vertex(final int pos) {
-		return new PolygonVertex(shape.getPoints(), pos);
+	public boolean equals(final Object obj) {
+		return obj instanceof Polyline && Polyshape.equals(this, (Polyline) obj);
 	}
 
 	@Override
@@ -69,25 +65,4 @@ public class OpenOMEROPolygon extends
 		return s;
 	}
 
-	// -- Helper classes --
-
-	private class PolygonVertex extends AbstractRealMaskPoint {
-
-		private final List<Point2D.Double> pts;
-		private final int index;
-
-		public PolygonVertex(final List<Point2D.Double> pts, final int pos) {
-			super(new double[] { pts.get(pos).getX(), pts.get(pos).getY() });
-			this.pts = pts;
-			index = pos;
-		}
-
-		@Override
-		public void updateBounds() {
-			// Bounds depend on wrapped OMERO shape, so by updating the shape we're
-			// updating the bounds
-			pts.get(index).setLocation(position[0], position[1]);
-			shape.setPoints(pts);
-		}
-	}
 }
