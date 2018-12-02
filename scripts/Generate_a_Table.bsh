@@ -1,4 +1,4 @@
-// @OUTPUT net.imagej.table.ResultsTable table
+#@output net.imagej.table.ResultsTable table
 
 import net.imagej.table.DefaultResultsTable;
 

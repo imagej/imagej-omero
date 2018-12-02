@@ -1,5 +1,5 @@
-#@net.imagej.Dataset image
-#@OUTPUT net.imglib2.roi.MaskPredicate mp
+#@ net.imagej.Dataset image
+#@output net.imglib2.roi.MaskPredicate mp
 
 import net.imglib2.roi.geom.GeomMasks
 

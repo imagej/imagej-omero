@@ -1,5 +1,5 @@
-#@net.imagej.Dataset image
-#@OUTPUT net.imagej.table.Table table
+#@ net.imagej.Dataset image
+#@output net.imagej.table.Table table
 
 import net.imagej.table.DefaultIntTable
 

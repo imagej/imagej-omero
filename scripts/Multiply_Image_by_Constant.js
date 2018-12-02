@@ -1,5 +1,5 @@
-// @int value
-// @BOTH ImagePlus imp
+#@ int value
+#@both ImagePlus imp
 
 imp.getProcessor().multiply(value);
 imp.updateAndDraw();

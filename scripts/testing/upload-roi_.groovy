@@ -1,9 +1,9 @@
-#@OMEROService omero
-#@String username (label="username")
-#@String password (label="password", style=password)
-#@String hostname (label="hostname")
-#@Integer port (label="port")
-#@Long imageID (label="image ID")
+#@ OMEROService omero
+#@ String username (label="username")
+#@ String password (label="password", style=password)
+#@ String hostname (label="hostname")
+#@ Integer port (label="port")
+#@ Long imageID (label="image ID")
 
 import net.imglib2.roi.geom.GeomMasks
 import net.imagej.omero.OMEROLocation

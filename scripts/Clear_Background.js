@@ -1,5 +1,5 @@
-// @BOTH ImagePlus imp
-// @ColorRGB(label = "Color") bg
+#@both ImagePlus imp
+#@ ColorRGB (label = "Color") bg
 
 importClass(Packages.ij.IJ)
 IJ.setAutoThreshold(imp, "Otsu");

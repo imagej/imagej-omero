@@ -1,8 +1,8 @@
-#@net.imagej.Dataset image
+#@ net.imagej.Dataset image
 #@int z
 #@int time
 #@int channel
-#@OUTPUT net.imglib2.roi.MaskPredicate mp
+#@output net.imglib2.roi.MaskPredicate mp
 
 import net.imglib2.roi.geom.GeomMasks
 import net.imagej.omero.rois.project.OMEROZTCProjectedRealMaskRealInterval

@@ -1,6 +1,6 @@
-#@net.imagej.Dataset image
-#@OUTPUT net.imagej.table.Table table
-#@OUTPUT java.util.List l
+#@ net.imagej.Dataset image
+#@output net.imagej.table.Table table
+#@output java.util.List l
 
 import net.imagej.table.DefaultIntTable
 import net.imglib2.roi.geom.GeomMasks

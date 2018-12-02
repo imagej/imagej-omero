@@ -1,21 +1,21 @@
-// @File(label="Multi series file") file
-// @String(label="Fusion method", choices={"Linear Blending", "Average", "Median", "Max. Intensity", "Min. Intensity", "Intensity from random input tile", "Do not fuse images (only write TileConfiguration)"}) fusion_method
-// @double(label="Regression threshold") regression_threshold
-// @double(label="Max/avg displacement threshold") max_avg_displacement_threshold
-// @double(label="Absolute displacement threshold") absolute_displacement_threshold
-// @boolean(label="Add tiles as ROIs") add_tiles_as_rois
-// @boolean(label="Compute overlap (otherwise trust coordinates in the file") compute_overlap
-// @boolean(label="Ignore Calibration") ignore_calibration
-// @int(label="Increase overlap [%]", min=0, max=100) increase_overlap
-// @boolean(label="Invert X coordinates") invert_x
-// @boolean(label="Invert Y coordinates") invert_y
-// @boolean(label="Ignore Z stage position") ignore_z_stage
-// @boolean(label="Subpixel accuracy") subpixel_accuracy
-// @boolean(label="Downsample tiles") downsample_tiles
-// @boolean(label="Display fusion") display_fusion
-// @boolean(label="Use virtual input images") use_virtual_input_images
-// @String(label="Computation parameters", choices={"Save memory (but be slower)", "Save computation time (but use more RAM)"}) computation_parameters
-// @OUTPUT ImagePlus fused_image
+#@ File (label="Multi series file") file
+#@ String (label="Fusion method", choices={"Linear Blending", "Average", "Median", "Max. Intensity", "Min. Intensity", "Intensity from random input tile", "Do not fuse images (only write TileConfiguration)"}) fusion_method
+#@ double (label="Regression threshold") regression_threshold
+#@ double (label="Max/avg displacement threshold") max_avg_displacement_threshold
+#@ double (label="Absolute displacement threshold") absolute_displacement_threshold
+#@ boolean (label="Add tiles as ROIs") add_tiles_as_rois
+#@ boolean (label="Compute overlap (otherwise trust coordinates in the file") compute_overlap
+#@ boolean (label="Ignore Calibration") ignore_calibration
+#@ int (label="Increase overlap [%]", min=0, max=100) increase_overlap
+#@ boolean (label="Invert X coordinates") invert_x
+#@ boolean (label="Invert Y coordinates") invert_y
+#@ boolean (label="Ignore Z stage position") ignore_z_stage
+#@ boolean (label="Subpixel accuracy") subpixel_accuracy
+#@ boolean (label="Downsample tiles") downsample_tiles
+#@ boolean (label="Display fusion") display_fusion
+#@ boolean (label="Use virtual input images") use_virtual_input_images
+#@ String (label="Computation parameters", choices={"Save memory (but be slower)", "Save computation time (but use more RAM)"}) computation_parameters
+#@output ImagePlus fused_image
 
 arg = "type=[Positions from file] order=[Defined by image metadata]" +
 	" browse=[" + file.getAbsolutePath() + "]" +

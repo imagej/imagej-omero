@@ -1,5 +1,5 @@
-#@net.imagej.Dataset imageOne
-#@OUTPUT java.util.List l
+#@ net.imagej.Dataset imageOne
+#@output java.util.List l
 
 import net.imagej.omero.rois.DefaultDataNode
 import net.imglib2.roi.geom.GeomMasks

@@ -1,8 +1,8 @@
-#@net.imagej.Dataset imageOne
-#@net.imagej.Dataset imageTwo
-#@OUTPUT net.imagej.omero.rois.DataNode dataNodeOne
-#@OUTPUT net.imagej.omero.rois.DataNode dataNodeTwo
-#@OUTPUT net.imagej.omero.rois.DataNode dataNodeThree
+#@ net.imagej.Dataset imageOne
+#@ net.imagej.Dataset imageTwo
+#@output net.imagej.omero.rois.DataNode dataNodeOne
+#@output net.imagej.omero.rois.DataNode dataNodeTwo
+#@output net.imagej.omero.rois.DataNode dataNodeThree
 
 import net.imagej.omero.rois.DefaultDataNode
 import net.imglib2.roi.geom.GeomMasks

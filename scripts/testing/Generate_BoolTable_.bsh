@@ -1,4 +1,4 @@
-// @OUTPUT net.imagej.table.BoolTable table
+#@output net.imagej.table.BoolTable table
 
 import net.imagej.table.DefaultBoolTable;
 
