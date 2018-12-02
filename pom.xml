@@ -127,13 +127,11 @@
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
-		<!-- NB: until pom-scijava-23.3.0 is released  -->
-		<imagej-common.version>0.27.0</imagej-common.version>
-
 		<!-- Test configuration -->
 		<skipITs>true</skipITs>
 
 		<imglib2-roi.version>0.7.0</imglib2-roi.version>
+		<imagej-common.version>0.28.0</imagej-common.version>
 	</properties>
 
 	<repositories>

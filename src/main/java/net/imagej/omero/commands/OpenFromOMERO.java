@@ -33,7 +33,6 @@ import net.imagej.omero.OMEROCommand;
 import net.imagej.omero.OMEROService;
 import net.imagej.roi.ROIService;
 import net.imagej.roi.ROITree;
-import net.imagej.table.Table;
 import net.imagej.table.TableService;
 
 import org.scijava.ItemIO;
@@ -43,6 +42,7 @@ import org.scijava.menu.MenuConstants;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.table.Table;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;

@@ -1,6 +1,6 @@
-#@output net.imagej.table.BoolTable table
+#@output org.scijava.table.BoolTable table
 
-import net.imagej.table.DefaultBoolTable;
+import org.scijava.table.DefaultBoolTable;
 
 HEADERS = new String[] {"Header1", "Header2", "Header3"};
 

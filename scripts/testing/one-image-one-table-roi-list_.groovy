@@ -1,8 +1,8 @@
 #@ net.imagej.Dataset image
-#@output net.imagej.table.Table table
+#@output org.scijava.table.Table table
 #@output java.util.List l
 
-import net.imagej.table.DefaultIntTable
+import org.scijava.table.DefaultIntTable
 import net.imglib2.roi.geom.GeomMasks
 
 int[][] data = [[1, 2, 3], [-10, -20, -80], [1707, -2000, 63], [0, 15, -53]]
