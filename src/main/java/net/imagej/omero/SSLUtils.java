@@ -39,6 +39,7 @@ public class SSLUtils {
 	 * OMERO 5.5 will no longer require this. See:
 	 * https://github.com/openmicroscopy/openmicroscopy/pull/5949/
 	 */
+	@Deprecated
 	public static void fixDisabledAlgorithms() {
 		final String property = "jdk.tls.disabledAlgorithms";
 		final String value = Security.getProperty(property);
