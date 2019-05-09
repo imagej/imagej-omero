@@ -43,6 +43,10 @@ import org.scijava.plugin.Parameter;
  */
 public class ScriptRunner extends AbstractContextual {
 
+        static {
+                net.imagej.omero.SSLUtils.fixDisabledAlgorithms();
+        }
+
 	// -- Fields --
 
 	@Parameter

@@ -83,6 +83,10 @@ import omero.gateway.model.TableData;
 @Category(IntegrationTest.class)
 public class OmeroIT {
 
+	static {
+		net.imagej.omero.SSLUtils.fixDisabledAlgorithms();
+	}
+
 	private omero.client client;
 	private OMEROLocation cred;
 	private Context context;

@@ -22,6 +22,8 @@ fi
 # [ERROR] Could not create local repository at /home/mvn/.m2/repository -> [Help 1]
 # env DOCKER_ARGS="-v $HOME/.m2:/home/mvn/.m2"
 
+# TODO: remove SSLUtils when bumping to 5.5
+# see: https://github.com/imagej/imagej-omero/pull/105
 export OMERO_SERVER_VERSION=5.4
 export OMERO_WEB_VERSION=5.4
 export COMPOSE_FILE="docker-compose.yml:volumes.yml"
