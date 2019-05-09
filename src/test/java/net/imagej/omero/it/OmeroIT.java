@@ -36,6 +36,7 @@ import io.scif.services.DatasetIOService;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -82,6 +83,10 @@ import omero.gateway.model.TableData;
  */
 @Category(IntegrationTest.class)
 public class OmeroIT {
+
+	static {
+		net.imagej.omero.SSLUtils.fixDisabledAlgorithms();
+	}
 
 	private omero.client client;
 	private OMEROLocation cred;
