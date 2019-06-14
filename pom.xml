@@ -11,7 +11,7 @@
 
 	<groupId>net.imagej</groupId>
 	<artifactId>imagej-omero</artifactId>
-	<version>0.8.1-SNAPSHOT</version>
+	<version>0.8.1</version>
 
 	<name>ImageJ-OMERO interoperability</name>
 	<description>Server- and client-side communication between ImageJ and OMERO.</description>
@@ -102,7 +102,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/imagej/imagej-omero</connection>
 		<developerConnection>scm:git:git@github.com:imagej/imagej-omero</developerConnection>
-		<tag>HEAD</tag>
+		<tag>imagej-omero-0.8.1</tag>
 		<url>https://github.com/imagej/imagej-omero</url>
 	</scm>
 	<issueManagement>
