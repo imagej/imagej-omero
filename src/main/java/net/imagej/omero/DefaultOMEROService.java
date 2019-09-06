@@ -300,9 +300,9 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Override
 	public Object toOMERO(final omero.client client, final Object value)
-		throws omero.ServerError, IOException, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException, NumberFormatException, URISyntaxException
+		throws omero.ServerError, IOException, ExecutionException,
+		DSOutOfServiceException, DSAccessException, NumberFormatException,
+		URISyntaxException
 	{
 		if (value == null) return null;
 
@@ -373,8 +373,8 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public Object toImageJ(final omero.client client, final omero.RType value,
 		final Class<?> type) throws omero.ServerError, IOException,
-		PermissionDeniedException, CannotCreateSessionException, SecurityException,
-		DSOutOfServiceException, ExecutionException, DSAccessException
+		SecurityException, DSOutOfServiceException, ExecutionException,
+		DSAccessException
 	{
 		if (value instanceof omero.RCollection) {
 			// collection of objects
@@ -453,8 +453,7 @@ public class DefaultOMEROService extends AbstractService implements
 		final boolean uploadROIs, final TreeNode<?> rois, final boolean updateROIs,
 		final boolean uploadTables, final List<Table<?, ?>> tables,
 		final String[] tableNames, final long omeroDatasetID) throws ServerError,
-		IOException, ExecutionException, DSOutOfServiceException, DSAccessException,
-		PermissionDeniedException, CannotCreateSessionException
+		IOException, ExecutionException, DSOutOfServiceException, DSAccessException
 	{
 		if (image == null) throw new IllegalArgumentException(
 			"Image cannot be null!");
@@ -486,7 +485,7 @@ public class DefaultOMEROService extends AbstractService implements
 		final boolean uploadTables, final TreeNode<?> rois,
 		final List<Table<?, ?>> tables, final String[] tableNames)
 		throws ExecutionException, DSOutOfServiceException, DSAccessException,
-		ServerError, PermissionDeniedException, CannotCreateSessionException
+		ServerError
 	{
 		if ((updateROIs || uploadROIs) && rois != null) {
 			if (updateROIs) updateAndReturnROIs(credentials, rois, imageID);
@@ -538,8 +537,7 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public long uploadTable(final OMEROLocation credentials, final String name,
 		final Table<?, ?> imageJTable, final long imageID) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+		ExecutionException, DSOutOfServiceException, DSAccessException
 	{
 		final TableData omeroTable = convertOMEROTable(imageJTable);
 		long id = -1;
@@ -580,9 +578,8 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Override
 	public Table<?, ?> downloadTable(final OMEROLocation credentials,
-		final long tableID) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+		final long tableID) throws ServerError, ExecutionException,
+		DSOutOfServiceException, DSAccessException
 	{
 		final OMEROSession session = session(credentials);
 		final TablesFacility tableService = session.getGateway().getFacility(
@@ -622,8 +619,7 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public List<Table<?, ?>> downloadTables(final OMEROLocation credentials,
 		final long imageID) throws ExecutionException, DSOutOfServiceException,
-		DSAccessException, ServerError, PermissionDeniedException,
-		CannotCreateSessionException
+		DSAccessException, ServerError
 	{
 		final OMEROSession session = session(credentials);
 		final TablesFacility tableService = session.getGateway().getFacility(
@@ -642,9 +638,8 @@ public class DefaultOMEROService extends AbstractService implements
 
 	@Override
 	public ROITree downloadROIs(final OMEROLocation credentials,
-		final long imageID) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+		final long imageID) throws ServerError, ExecutionException,
+		DSOutOfServiceException, DSAccessException
 	{
 		final ROITree roiTree = new DefaultROITree();
 		final OMEROSession session = session(credentials);
@@ -950,14 +945,7 @@ public class DefaultOMEROService extends AbstractService implements
 	 * <li>Many ImageJ types (such as {@link org.scijava.util.ColorRGB}) are
 	 * mapped to {@link String} for use with OMERO. We lean on the SciJava Common
 	 * {@link ConvertService#convert(Object, Class)} method to handle conversion
-	 * of such types back to ImageJ's expected type fo for (final TreeNode<?> dn :
-	 * ijROIs.children()) { ROIData oR; if (!(dn.data() instanceof Interval) &&
-	 * !(dn .data() instanceof RealInterval) && dn .data() instanceof
-	 * MaskPredicate) oR = convertService.convert( interval((MaskPredicate<?>)
-	 * dn.data(), interval, imageID, session), ROIData.class); else oR =
-	 * convertService.convert(dn, ROIData.class); if (oR == null) throw new
-	 * IllegalArgumentException("Unsupported type: " + dn.data().getClass());
-	 * omeroROIs.add(oR); } r the parameter.</li>
+	 * of such types back to ImageJ's expected type for the parameter.</li>
 	 * <li>ImageJ's image types (i.e., {@link Dataset}, {@link DatasetView} and
 	 * {@link ImageDisplay}) are mapped to {@code long} since OMERO communicates
 	 * about images using image IDs. Work must be done to download the image from
@@ -965,8 +953,6 @@ public class DefaultOMEROService extends AbstractService implements
 	 * object such as {@link Dataset}.</li>
 	 * </ol>
 	 *
-	 * @throws CannotCreateSessionException
-	 * @throws PermissionDeniedException
 	 * @throws DSOutOfServiceException
 	 * @throws DSAccessException
 	 * @throws ExecutionException
@@ -976,7 +962,6 @@ public class DefaultOMEROService extends AbstractService implements
 	@SuppressWarnings("deprecation")
 	private <T> T convert(final omero.client client, final Object value,
 		final Class<T> type) throws omero.ServerError, IOException,
-		PermissionDeniedException, CannotCreateSessionException,
 		DSOutOfServiceException, ExecutionException, DSAccessException,
 		NumberFormatException, URISyntaxException
 	{
