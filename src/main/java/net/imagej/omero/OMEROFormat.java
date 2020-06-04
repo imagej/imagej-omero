@@ -39,8 +39,6 @@ import io.scif.ImageMetadata;
 import io.scif.MetadataService;
 import io.scif.Plane;
 import io.scif.config.SCIFIOConfig;
-import io.scif.io.RandomAccessInputStream;
-import io.scif.io.RandomAccessOutputStream;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
@@ -65,6 +63,10 @@ import net.imagej.roi.ROITree;
 import net.imglib2.Interval;
 
 import org.scijava.Priority;
+import org.scijava.io.handle.DataHandle;
+import org.scijava.io.handle.DataHandleService;
+import org.scijava.io.location.DummyLocation;
+import org.scijava.io.location.Location;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.table.Table;
@@ -116,9 +118,9 @@ public class OMEROFormat extends AbstractFormat {
 	public static class Checker extends AbstractChecker {
 
 		@Override
-		public boolean isFormat(final String name, final SCIFIOConfig config) {
-			if (name != null && name.startsWith("omero:")) return true;
-			return super.isFormat(name, config);
+		public boolean isFormat(final Location loc, final SCIFIOConfig config) {
+			if (loc != null && loc.getName().startsWith("omero:")) return true;
+			return super.isFormat(loc, config);
 		}
 
 	}
@@ -431,12 +433,12 @@ public class OMEROFormat extends AbstractFormat {
 		private OMEROService omeroService;
 
 		@Override
-		public void typedParse(final RandomAccessInputStream stream,
+		public void typedParse(final DataHandle<Location> handle,
 			final Metadata meta, final SCIFIOConfig config) throws IOException,
 			FormatException
 		{
 			// parse OMERO credentials from source string
-			parseArguments(metadataService, stream.getFileName(), meta);
+			parseArguments(metadataService, handle.getLocation(), meta);
 
 			// initialize OMERO session
 			final OMEROSession session;
@@ -555,6 +557,9 @@ public class OMEROFormat extends AbstractFormat {
 		private MetadataService metadataService;
 
 		@Parameter
+		private DataHandleService dataHandleService;
+
+		@Parameter
 		private OMEROService omeroService;
 
 		private OMEROSession session;
@@ -657,14 +662,15 @@ public class OMEROFormat extends AbstractFormat {
 		}
 
 		@Override
-		public void setDest(final String fileName, final int imageIndex,
+		public void setDest(final Location fileName, final int imageIndex,
 			final SCIFIOConfig config) throws FormatException, IOException
 		{
-			getMetadata().setDatasetName(fileName);
+			getMetadata().setDatasetName(fileName.getName());
 			// HACK: Create a dummy RAOS around this "fileName".
 			// The OMERO format does not use RAOS to wrangle bytes.
 			// This avoids creating a spurious empty file on disk.
-			setDest(new RandomAccessOutputStream(null), imageIndex, config);
+			setDest(dataHandleService.create(new DummyLocation()), imageIndex,
+				config);
 		}
 
 		@Override
