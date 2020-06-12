@@ -61,10 +61,6 @@ import omero.ServerError;
 })
 public class OpenFromOMERO extends OMEROCommand {
 
-        static {
-                net.imagej.omero.SSLUtils.fixDisabledAlgorithms();
-        }
-
 	@Parameter
 	private LogService log;
 
