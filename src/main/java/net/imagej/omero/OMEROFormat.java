@@ -119,10 +119,8 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public boolean isFormat(final Location loc, final SCIFIOConfig config) {
-			if (loc != null && loc.getName().startsWith("omero:")) return true;
-			return super.isFormat(loc, config);
+			return loc instanceof OMEROLocation;
 		}
-
 	}
 
 	public static class Metadata extends AbstractMetadata {
