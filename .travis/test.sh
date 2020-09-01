@@ -6,7 +6,7 @@ set -e
 set -x
 
 export BACKUPURL=${BACKUPURL:-https://downloads.imagej.net/test/omero/omero_test_infra_backup.zip}
-export INFRABRANCH=${INFRABRANCH:-v0.3.4}
+export INFRABRANCH=${INFRABRANCH:-v0.6.3}
 export INFRAREPO=${INFRAREPO:-git://github.com/openmicroscopy/omero-test-infra}
 
 if [ ! -d .omero ];
