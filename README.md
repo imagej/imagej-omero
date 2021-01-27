@@ -15,7 +15,7 @@ two tools. The other project is
 The two mechanisms work differently and have different features:
 
 * __ImageJ-OMERO__ is built on ImageJ2. It is maintained by the ImageJ team.
-  You can install it using one of the OMERO-5.x update sites, replacing `x`
+  You can install it using one of the OMERO-x.y update sites, replacing `x.y`
   with your version of the OMERO server. The paradigm is to download complete
   5-D images from OMERO as ImageJ2 datasets, with blocks of pixels loaded on
   demand via the ImgLib2 cached cell image mechanism. It also supports
