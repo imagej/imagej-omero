@@ -1,10 +1,45 @@
 [![](https://travis-ci.org/imagej/imagej-omero.svg?branch=master)](https://travis-ci.org/imagej/imagej-omero)
 [![Join the chat at https://gitter.im/imagej/imagej-omero](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/imagej/imagej-omero?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+[ImageJ-OMERO Presentation Slides](http://imagej.github.io/presentations/2018-05-30-imagej-omero/#/)
+
+## Overview
+
 This project provides interoperability between
 [ImageJ](http://imagej.net/) and the [OMERO server](http://imagej.net/OMERO).
 
-[ImageJ-OMERO Presentation Slides](http://imagej.github.io/presentations/2018-05-30-imagej-omero/#/)
+ImageJ-OMERO is ___one of two___ official integration mechanisms combining the
+two tools. The other project is
+[OMERO.imagej](https://omero-guides.readthedocs.io/projects/fiji/en/latest/).
+
+The two mechanisms work differently and have different features:
+
+* __ImageJ-OMERO__ is built on ImageJ2. It is maintained by the ImageJ team.
+  You can install it using one of the OMERO-5.x update sites, replacing `x`
+  with your version of the OMERO server. The paradigm is to download complete
+  5-D images from OMERO as ImageJ2 datasets, with blocks of pixels loaded on
+  demand via the ImgLib2 cached cell image mechanism. It also supports
+  transferring ROIs to/from OMERO as
+  [imglib2-roi](https://github.com/imglib/imglib2-roi) objects, and results
+  tables to/from OMERO as
+  [scijava-table](https://github.com/scijava/scijava-table) objects.
+
+* __OMERO.imagej__ is built on ImageJ 1.x. It is maintained by the OMERO team.
+  It must be installed manually; it does not have an ImageJ update site. The
+  plugin is a thin wrapper of the OMERO.insight client, enabling you to connect
+  to OMERO via the OMERO.insight GUI, browse your database as usual, and send
+  images to ImageJ on demand. There is no direct support for translation of
+  ROIs or tables; the supported workflow is to do your analysis in ImageJ as
+  usual, then upload ROIs and results tables as attachments on the OMERO side.
+
+A third way to integrate OMERO with ImageJ, if you are comfortable writing
+scripts, is via [PyImageJ](https://github.com/imagej/pyimagej), as [described
+in the OMERO
+documentation](https://omero-guides.readthedocs.io/en/latest/fiji/docs/imagej_python.html).
+
+Which approach works best for you will depend on your requirements. For help,
+please post on the [Image.sc Forum](https://forum.image.sc/) using the `imagej`
+and `omero` tags.
 
 ## ImageJ commands for working with OMERO
 
