@@ -51,6 +51,21 @@ public class OMEROLocation extends URILocation {
 
 	private final String sessionID;
 
+	public OMEROLocation(final URI uri) {
+		super(validateURI(uri));
+		encrypted = false;
+		sessionID = null;
+	}
+
+	public OMEROLocation(final String server, final String user,
+		final String password, boolean encrypted) throws URISyntaxException
+	{
+		super(new URI(null, user + ":" + password, server, //
+			encrypted ? 4064 : 4063, null, null, null));
+		this.encrypted = encrypted;
+		sessionID = null;
+	}
+
 	public OMEROLocation(final String server, final int port, final String user,
 		final String password) throws URISyntaxException
 	{
@@ -148,5 +163,12 @@ public class OMEROLocation extends URILocation {
 		}
 		throw new IllegalArgumentException(
 			"Need username and password OR session ID to create OMEROLocation");
+	}
+
+	private static URI validateURI(final URI uri) {
+		if (!"omero".equals(uri.getScheme())) {
+			throw new IllegalArgumentException("Not an omero URI: " + uri);
+		}
+		return uri;
 	}
 }

@@ -63,10 +63,6 @@ import omero.model.PixelsType;
  */
 public class DefaultOMEROSession implements OMEROSession {
 
-        static {
-                net.imagej.omero.SSLUtils.fixDisabledAlgorithms();
-        }
-
 	// -- Fields --
 
 	private omero.client client;

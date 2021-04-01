@@ -329,7 +329,6 @@ public class UploadROITest {
 		new Expectations() {
 
 			{
-				new DefaultOMEROSession(location, service);
 				result = session;
 				session.getGateway();
 				result = gateway;

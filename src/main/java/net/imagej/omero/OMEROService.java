@@ -280,7 +280,7 @@ public interface OMEROService extends ImageJService {
 	 * @param location OMEROLocation
 	 * @return OMEROSession
 	 */
-	OMEROSession session(OMEROLocation location);
+	OMEROSession session(OMEROLocation location, OMEROCredentials credentials);
 
 	/**
 	 * Returns the {@link OMEROSession} related to the running thread.
@@ -296,7 +296,7 @@ public interface OMEROService extends ImageJService {
 	 * @param location OMEROLocation to be used to create the session
 	 * @return a new OMEROSession
 	 */
-	OMEROSession createSession(OMEROLocation location);
+	OMEROSession createSession(OMEROLocation location, OMEROCredentials credentials);
 
 	/**
 	 * Remove the specified {@link OMEROSession} for the cache of stored sessions.

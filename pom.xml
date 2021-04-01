@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>28.0.0</version>
+		<version>29.0.0-beta-2</version>
 		<relativePath />
 	</parent>
 
 	<groupId>net.imagej</groupId>
 	<artifactId>imagej-omero</artifactId>
-	<version>1.0.0-5.5-SNAPSHOT</version>
+	<version>999</version>
 
 	<name>ImageJ-OMERO interoperability</name>
 	<description>Server- and client-side communication between ImageJ and OMERO.</description>
@@ -238,6 +238,14 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>
+						-javaagent:${settings.localRepository}/org/jmockit/jmockit/${jmockit.version}/jmockit-${jmockit.version}.jar
+					</argLine>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

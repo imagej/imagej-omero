@@ -518,9 +518,12 @@ public class DefaultOMEROService extends AbstractService implements
 	public long uploadImage(final omero.client client, final Dataset dataset)
 		throws omero.ServerError, IOException
 	{
-		// TODO: Reuse existing client instead of creating a new connection.
+		// CTR START HERE -
+		// Reuse existing client instead of creating a new connection.
+		// Consider whether to change 
 		// Will need to rethink how SCIFIO conveys source and destination metadata.
 		// The RandomAccessInput/OutputStream design is probably too narrow.
+		new OMEROLocation(server, port, user, password, encrypted)
 		final String omeroDestination = "name=" + dataset.getName() + "&" +
 			credentials(client) //
 			+ ".omero"; // FIXME: Remove this after SCIFIO doesn't need it anymore.
