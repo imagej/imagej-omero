@@ -14,8 +14,8 @@ then
     git clone -b ${INFRABRANCH} ${INFRAREPO} .omero
 fi
 
-.omero/download.sh ${BACKUPURL} $PWD/.travis
-.omero/persist.sh --restore $PWD/.travis
+.omero/download.sh ${BACKUPURL} $PWD/.github
+.omero/persist.sh --restore $PWD/.github
 
 # FIXME: setting DOCKER_ARGS here should work but it's not.
 # It fails with:
