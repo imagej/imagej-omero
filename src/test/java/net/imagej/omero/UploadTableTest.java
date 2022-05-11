@@ -87,7 +87,7 @@ public class UploadTableTest {
 	private OMEROService service;
 
 	@Mocked
-	private DefaultOMEROSession session;
+	private OMEROSession session;
 
 	@Mocked
 	private Gateway gateway;
@@ -439,7 +439,7 @@ public class UploadTableTest {
 		new Expectations() {
 
 			{
-				new DefaultOMEROSession(credentials, service);
+				new OMEROSession(credentials, service);
 
 				gateway.getFacility(BrowseFacility.class);
 				result = browseFacility;

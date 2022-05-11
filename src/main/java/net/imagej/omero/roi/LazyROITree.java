@@ -27,20 +27,13 @@ package net.imagej.omero.roi;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-import net.imagej.omero.OMEROLocation;
-import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROException;
+import net.imagej.omero.OMEROSession;
 import net.imagej.roi.ROITree;
 
 import org.scijava.log.LogService;
 import org.scijava.util.TreeNode;
-
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-import omero.ServerError;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
 
 /**
  * {@link ROITree} which downloads the associated ROIs only when the children
@@ -50,23 +43,17 @@ import omero.gateway.exception.DSOutOfServiceException;
  */
 public class LazyROITree implements ROITree {
 
-	private final OMEROService omero;
 	private TreeNode<?> parent;
 	private final long imageID;
-	private final OMEROLocation location;
+	private final OMEROSession session;
 	private final LogService log;
 	private List<TreeNode<?>> children;
 	private boolean roisLoaded;
 
-	public LazyROITree(final TreeNode<?> parent, final long imageID,
-		final OMEROLocation location, final OMEROService omero,
-		final LogService log)
-	{
-		this.parent = parent;
+	public LazyROITree(final long imageID, final OMEROSession session) {
 		this.imageID = imageID;
-		this.location = location;
-		this.omero = omero;
-		this.log = log;
+		this.session = session;
+		this.log = session.log;
 		roisLoaded = false;
 	}
 
@@ -107,12 +94,9 @@ public class LazyROITree implements ROITree {
 		if (children != null) return;
 		List<TreeNode<?>> c = null;
 		try {
-			c = omero.downloadROIs(location, imageID).children();
+			c = session.downloadROIs(imageID).children();
 		}
-		catch (ServerError | PermissionDeniedException
-				| CannotCreateSessionException | ExecutionException
-				| DSOutOfServiceException | DSAccessException exc)
-		{
+		catch (final OMEROException exc) {
 			log.error("Error retrieving ROIs", exc);
 		}
 

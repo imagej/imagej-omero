@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.omero.DefaultOMEROSession;
+import net.imagej.omero.OMEROSession;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.transform.TransformedOMERORealMaskRealInterval;
@@ -92,7 +92,7 @@ public class DownloadROITest {
 	public final ExpectedException exception = ExpectedException.none();
 
 	@Mocked
-	private DefaultOMEROSession session;
+	private OMEROSession session;
 
 	@Mocked
 	private Gateway gateway;
@@ -177,7 +177,7 @@ public class DownloadROITest {
 			rdThree, rdFour));
 		setUpMethodCalls(5, rr);
 
-		final TreeNode<?> dn = service.downloadROIs(location, 1);
+		final TreeNode<?> dn = service.downloadROIs(session, 1);
 
 		assertEquals(1, dn.children().size());
 		assertTrue(dn.children().get(0) instanceof OMEROROICollection);
@@ -344,7 +344,7 @@ public class DownloadROITest {
 		new Expectations() {
 
 			{
-				new DefaultOMEROSession(location, service);
+				new OMEROSession(location, service);
 
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;
@@ -365,7 +365,7 @@ public class DownloadROITest {
 		new Expectations() {
 
 			{
-				new DefaultOMEROSession(location, service);
+				new OMEROSession(location, service);
 
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;

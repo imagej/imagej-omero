@@ -27,16 +27,16 @@ package net.imagej.omero.commands;
 
 import io.scif.MetadataService;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
 import net.imagej.omero.OMEROCommand;
-import net.imagej.omero.OMEROLocation;
+import net.imagej.omero.OMEROCredentials;
+import net.imagej.omero.OMEROException;
+import net.imagej.omero.OMEROServer;
 import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROSession;
 import net.imagej.roi.ROIService;
 import net.imagej.roi.ROITree;
 import net.imagej.table.TableService;
@@ -49,12 +49,6 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.table.Table;
-
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-import omero.ServerError;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
 
 /**
  * A command to export objects to an OMERO database.
@@ -120,8 +114,10 @@ public class SaveToOMERO extends OMEROCommand {
 				return;
 			}
 
-			final OMEROLocation credentials = new OMEROLocation(getServer(),
-				getPort(), getUser(), getPassword());
+			final OMEROServer server = new OMEROServer(getServer(), getPort());
+			final OMEROCredentials credentials = new OMEROCredentials(getUser(),
+				getPassword());
+			final OMEROSession session = omeroService.session(server, credentials);
 
 			final ROITree roisToUpload = //
 				uploadROIs || updateROIs ? roiService.getROIs(image) : null;
@@ -131,29 +127,18 @@ public class SaveToOMERO extends OMEROCommand {
 				getTableNames(tablesToUpload.size()) : null;
 
 			if (uploadImage) {
-				omeroService.uploadImage(credentials, image, uploadROIs, roisToUpload,
-					updateROIs, uploadTables, tablesToUpload, names, datasetID);
+				session.uploadImage(image, uploadROIs, roisToUpload, updateROIs,
+					uploadTables, tablesToUpload, names, datasetID);
 			}
 			else {
-				omeroService.uploadImageAttachments(credentials, imageID, uploadROIs,
-					updateROIs, uploadTables, roisToUpload, tablesToUpload, names);
+				session.uploadImageAttachments(imageID, uploadROIs, updateROIs,
+					uploadTables, roisToUpload, tablesToUpload, names);
 			}
 		}
-		catch (final ServerError | PermissionDeniedException
-				| CannotCreateSessionException | DSOutOfServiceException
-				| ExecutionException | DSAccessException exc)
-		{
+		catch (final OMEROException exc) {
 			log.error(exc);
 			exc.printStackTrace();
 			cancel("Error talking to OMERO: " + exc.getMessage());
-		}
-		catch (final URISyntaxException exc) {
-			log.error(exc);
-			exc.printStackTrace();
-			cancel("Error creating URI for Session: " + exc.getMessage());
-		}
-		catch (final IOException exc) {
-			log.error(exc);
 		}
 	}
 

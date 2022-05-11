@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero;
+package net.imagej.omero.module;
 
 import org.scijava.Identifiable;
 import org.scijava.module.ModuleInfo;

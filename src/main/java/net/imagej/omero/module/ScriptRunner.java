@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero;
+package net.imagej.omero.module;
 
 import java.util.Date;
 

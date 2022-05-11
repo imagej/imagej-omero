@@ -32,6 +32,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import net.imagej.omero.module.ScriptGenerator;
+
 import org.junit.Test;
 import org.scijava.Context;
 import org.scijava.app.AppService;

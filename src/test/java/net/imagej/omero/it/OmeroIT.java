@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
-import net.imagej.omero.DefaultOMEROSession;
+import net.imagej.omero.OMEROSession;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
@@ -187,7 +187,7 @@ public class OmeroIT {
 
 		final long tableId = omero.uploadTable(cred, "test-table-upload", table, 1);
 
-		try (final OMEROSession session = new DefaultOMEROSession(cred, omero)) {
+		try (final OMEROSession session = new OMEROSession(cred, omero)) {
 			final TablesFacility tablesFacility = session.getGateway().getFacility(
 				TablesFacility.class);
 			final TableData td = tablesFacility.getTableInfo(session

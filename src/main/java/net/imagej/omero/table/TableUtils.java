@@ -23,7 +23,10 @@
  * #L%
  */
 
-package net.imagej.omero;
+package net.imagej.omero.table;
+
+import net.imagej.omero.OMERORef;
+import net.imagej.omero.OMERORefColumn;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.scijava.convert.ConvertService;
@@ -52,6 +55,7 @@ import omero.gateway.model.ImageData;
 import omero.gateway.model.MaskData;
 import omero.gateway.model.PlateData;
 import omero.gateway.model.ROIData;
+import omero.gateway.model.TableData;
 import omero.gateway.model.TableDataColumn;
 import omero.gateway.model.WellSampleData;
 
@@ -64,6 +68,30 @@ public final class TableUtils {
 
 	private TableUtils() {
 		// NB: Prevent instantiation of utility class.
+	}
+
+	/**
+	 * Converts the given ImageJ table to an OMERO table, but does not save the
+	 * table to the server.
+	 */
+	public static TableData convertOMEROTable(final Table<?, ?> imageJTable,
+		final ConvertService convertService)
+	{
+		final TableDataColumn[] omeroColumns = new TableDataColumn[imageJTable
+			.getColumnCount()];
+		final Object[][] data = new Object[imageJTable.getColumnCount()][];
+
+		for (int c = 0; c < imageJTable.getColumnCount(); c++) {
+			omeroColumns[c] = TableUtils.createOMEROColumn(imageJTable.get(c), c);
+			data[c] = TableUtils.populateOMEROColumn(imageJTable.get(c),
+				convertService);
+		}
+
+		// Create table and attach to image
+		final TableData omeroTable = new TableData(omeroColumns, data);
+		omeroTable.setNumberOfRows(imageJTable.getRowCount());
+
+		return omeroTable;
 	}
 
 	public static TableDataColumn createOMEROColumn(final Column<?> imageJColumn,
@@ -131,7 +159,7 @@ public final class TableUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void populateImageJColumn(final Class<?> type,
+	public static void populateSciJavaColumn(final Class<?> type,
 		final Object[] omeroColumnData, final Column<?> imageJColumn)
 	{
 		if (type.equals(Double.class)) {
@@ -167,7 +195,7 @@ public final class TableUtils {
 		}
 	}
 
-	public static Table<?, ?> createImageJTable(
+	public static Table<?, ?> createSciJavaTable(
 		final TableDataColumn[] omeroColumns)
 	{
 		TableDataColumn prev = omeroColumns[0];
@@ -197,37 +225,48 @@ public final class TableUtils {
 		}
 	}
 
-	public static Column<?> createImageJColumn(final TableDataColumn column) {
-		if (column.getType().equals(Boolean.class)) return new BoolColumn(column
-			.getName());
-		if (column.getType().equals(Double[].class)) return new DefaultColumn<>(
-			DoubleArray.class, column.getName());
-		if (column.getType().equals(Double.class)) return new DoubleColumn(column
-			.getName());
+	public static Column<?> createSciJavaColumn(final TableDataColumn column) {
+		if (column.getType().equals(Boolean.class)) {
+			return new BoolColumn(column .getName());
+		}
+		if (column.getType().equals(Double[].class)) {
+			return new DefaultColumn<>(DoubleArray.class, column.getName());
+		}
+		if (column.getType().equals(Double.class)) {
+			return new DoubleColumn(column.getName());
+		}
 		if (column.getType().equals(FileAnnotationData.class))
 			return new OMERORefColumn(column.getName(), OMERORef.FILE);
-		if (column.getType().equals(Float[].class)) return new DefaultColumn<>(
-			FloatArray.class, column.getName());
-		if (column.getType().equals(ImageData.class)) return new OMERORefColumn(
-			column.getName(), OMERORef.IMAGE);
-		if (column.getType().equals(Long[].class)) return new DefaultColumn<>(
-			LongArray.class, column.getName());
-		if (column.getType().equals(Long.class)) return new LongColumn(column
-			.getName());
+		if (column.getType().equals(Float[].class)) {
+			return new DefaultColumn<>(FloatArray.class, column.getName());
+		}
+		if (column.getType().equals(ImageData.class)) {
+			return new OMERORefColumn(column.getName(), OMERORef.IMAGE);
+		}
+		if (column.getType().equals(Long[].class)) {
+			return new DefaultColumn<>(LongArray.class, column.getName());
+		}
+		if (column.getType().equals(Long.class)) {
+			return new LongColumn(column.getName());
+		}
 		if (column.getType().equals(MaskData.class)) {
 			// TODO: Implement MaskColumn for efficiency.
 //		  return new GenericColumn(column.getName());
 		}
-		if (column.getType().equals(PlateData.class)) return new OMERORefColumn(
-			column.getName(), OMERORef.PLATE);
-		if (column.getType().equals(ROIData.class)) return new OMERORefColumn(column
-			.getName(), OMERORef.ROI);
-		if (column.getType().equals(String.class)) return new DefaultColumn<>(
-			String.class, column.getName());
-		if (column.getType().equals(WellSampleData.class))
+		if (column.getType().equals(PlateData.class)) {
+			return new OMERORefColumn(column.getName(), OMERORef.PLATE);
+		}
+		if (column.getType().equals(ROIData.class)) {
+			return new OMERORefColumn(column.getName(), OMERORef.ROI);
+		}
+		if (column.getType().equals(String.class)) {
+			return new DefaultColumn<>(String.class, column.getName());
+		}
+		if (column.getType().equals(WellSampleData.class)) {
 			return new OMERORefColumn(column.getName(), OMERORef.WELL);
-		throw new IllegalArgumentException("Unsupported column type: " + column
-			.getType());
+		}
+		throw new IllegalArgumentException("Unsupported column type: " + //
+			column.getType());
 	}
 
 	// -- Helper methods --

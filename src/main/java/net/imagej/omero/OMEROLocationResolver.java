@@ -34,7 +34,6 @@ package net.imagej.omero;
 import java.net.URI;
 
 import org.scijava.io.location.AbstractLocationResolver;
-import org.scijava.io.location.FileLocation;
 import org.scijava.io.location.Location;
 import org.scijava.io.location.LocationResolver;
 import org.scijava.plugin.Plugin;
@@ -53,7 +52,7 @@ public class OMEROLocationResolver extends AbstractLocationResolver {
 
 	@Override
 	public Location resolve(URI uri) {
-		if (!(supports(uri)) throw ...
+		if (!(supports(uri))) throw new IllegalArgumentException("URI not supported: " + uri);
 		return new OMEROLocation(uri);
 	}
 }

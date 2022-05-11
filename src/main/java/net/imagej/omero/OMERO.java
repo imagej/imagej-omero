@@ -25,6 +25,13 @@
 
 package net.imagej.omero;
 
+import java.lang.reflect.Array;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+
 import ome.units.UNITS;
 import ome.units.quantity.Length;
 import ome.units.quantity.Time;
@@ -33,13 +40,13 @@ import omero.model.enums.UnitsLength;
 import omero.model.enums.UnitsTime;
 
 /**
- * Utility class for working with OMERO data structures.
+ * Static utility methods for working with OMERO.
  * 
  * @author Curtis Rueden
  */
-public final class OMEROUtils {
+public final class OMERO {
 
-	private OMEROUtils() {
+	private OMERO() {
 		// NB: Prevent instantiation of utility class.
 	}
 
@@ -177,4 +184,121 @@ public final class OMEROUtils {
 		}
 	}
 
+	public static omero.RType rtype(final Object value) {
+		if (value == null) return null;
+
+		// NB: Unfortunately, omero.rtypes.rtype is not smart enough
+		// to recurse into data structures, so we do it ourselves!
+
+		// TODO: Use omero.rtypes.wrap, now that it exists!
+		// https://github.com/openmicroscopy/openmicroscopy/commit/0767a2e37996d553bbdec343488b7b385756490a
+
+		if (value.getClass().isArray()) {
+			final omero.RType[] val = new omero.RType[Array.getLength(value)];
+			for (int i = 0; i < val.length; i++) {
+				val[i] = rtype(Array.get(value, i));
+			}
+			return omero.rtypes.rarray(val);
+		}
+		if (value instanceof List) {
+			final List<?> list = (List<?>) value;
+			final omero.RType[] val = new omero.RType[list.size()];
+			for (int i = 0; i < val.length; i++) {
+				val[i] = rtype(list.get(i));
+			}
+			return omero.rtypes.rlist(val);
+		}
+		if (value instanceof Map) {
+			final Map<?, ?> map = (Map<?, ?>) value;
+			final HashMap<String, omero.RType> val = new HashMap<>();
+			for (final Object key : map.keySet()) {
+				val.put(key.toString(), rtype(map.get(key)));
+			}
+			return omero.rtypes.rmap(val);
+		}
+		if (value instanceof Set) {
+			final Set<?> set = (Set<?>) value;
+			final omero.RType[] val = new omero.RType[set.size()];
+			int index = 0;
+			for (final Object element : set) {
+				val[index++] = rtype(element);
+			}
+			return omero.rtypes.rset(val);
+		}
+
+		// try generic OMEROification routine
+		try {
+			return omero.rtypes.rtype(value);
+		}
+		catch (final omero.ClientError err) {
+			// default case: convert to string
+			return omero.rtypes.rstring(value.toString());
+		}
+	}
+
+	/**
+	 * Gets the host associated with the given OMERO client.
+	 *
+	 * @throws IllegalArgumentException if the client has no associated host.
+	 */
+	public static String host(omero.client client) {
+		final String host = client.getProperty("omero.host");
+		if (host != null && !host.isEmpty()) return host;
+		final String router = client.getProperty("Ice.Default.Router");
+		final int index = router.indexOf("-h ");
+		if (index < 0) throw new IllegalArgumentException("No host for client");
+		return router.substring(index + 3, router.length());
+	}
+
+	/**
+	 * Gets the port associated with the given OMERO client.
+	 *
+	 * @throws IllegalArgumentException if the client has no associated port.
+	 */
+	public static int port(omero.client client) {
+		final String port = client.getProperty("omero.port");
+		if (port == null || port.isEmpty()) {
+			throw new IllegalArgumentException("No port for client");
+		}
+		try {
+			return Integer.parseInt(port);
+		}
+		catch (final NumberFormatException exc) {
+			throw new IllegalArgumentException("Invalid port for client: " + port, exc);
+		}
+	}
+
+	/**
+	 * Performs the given operation that might throw OMERO-related exceptions.
+	 * 
+	 * @return The result of the execution.
+	 * @throws OMEROException if something goes wrong with OMERO.
+	 */
+	public static <T> T ask(final Callable<T> c) throws OMEROException {
+		try {
+			return c.call();
+		}
+		catch (final Exception exc) {
+			throw new OMEROException(exc);
+		}
+	}
+
+	/**
+	 * Performs the given operation that might throw OMERO-related exceptions.
+	 * 
+	 * @throws OMEROException if something goes wrong with OMERO.
+	 */
+	public static void tell(final VoidCallable c) throws OMEROException {
+		try {
+			c.call();
+		}
+		catch (final Exception exc) {
+			throw new OMEROException(exc);
+		}
+	}
+
+	/** {@link Callable}-like interface, but which returns {@code void}. */
+	public interface VoidCallable {
+		void call() throws Exception;
+	}
 }

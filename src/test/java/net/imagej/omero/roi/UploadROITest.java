@@ -35,7 +35,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.omero.DefaultOMEROSession;
+import net.imagej.omero.OMEROSession;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMask;
@@ -94,7 +94,7 @@ public class UploadROITest {
 	private List<omero.model.IObject> tags;
 
 	@Mocked
-	private DefaultOMEROSession session;
+	private OMEROSession session;
 
 	@Mocked
 	private Gateway gateway;

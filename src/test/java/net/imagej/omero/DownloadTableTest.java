@@ -73,7 +73,7 @@ public class DownloadTableTest {
 	private OMEROService service;
 
 	@Mocked
-	private DefaultOMEROSession session;
+	private OMEROSession session;
 
 	@Mocked
 	private Gateway gateway;
@@ -416,7 +416,7 @@ public class DownloadTableTest {
 		new Expectations() {
 
 			{
-				new DefaultOMEROSession(credentials, service);
+				new OMEROSession(credentials, service);
 
 				gateway.getFacility(TablesFacility.class);
 				result = tablesFacility;

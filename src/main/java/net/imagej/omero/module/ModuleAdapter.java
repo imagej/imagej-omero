@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero;
+package net.imagej.omero.module;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -40,6 +40,8 @@ import java.util.concurrent.Future;
 import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMERO;
 
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
@@ -90,8 +92,8 @@ import omero.model.Roi;
 import omero.model.Shape;
 
 /**
- * Adapts an ImageJ {@link Module} (such as a {@link Command}) to be usable as
- * an OMERO script, converting information between ImageJ- and OMERO-compatible
+ * Adapts a SciJava {@link Module} (such as a {@link Command}) to be usable as
+ * an OMERO script, converting information between ImageJ2- and OMERO-compatible
  * formats as appropriate.
  *
  * @author Curtis Rueden
@@ -200,7 +202,7 @@ public class ModuleAdapter extends AbstractContextual {
 		for (final String name : client.getInputKeys()) {
 			final ModuleItem<?> input = getInput(name);
 			final Class<?> type = input.getType();
-			final Object value = omeroService.toImageJ(client, client.getInput(name),
+			final Object value = omeroService.toImageJ(client.getInput(name),
 				type);
 			inputMap.put(input.getName(), value);
 			if (isImageType(value.getClass())) inputImages.put(input.getName(),
@@ -399,7 +401,7 @@ public class ModuleAdapter extends AbstractContextual {
 			}
 		}
 		final LoginCredentials cred = new LoginCredentials(client.getSessionId(),
-			null, host, Integer.parseInt(client.getProperty("omero.port")));
+			null, host, OMERO.port(client));
 
 		try {
 			return gateway.connect(cred);
