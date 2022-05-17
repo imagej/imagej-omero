@@ -131,6 +131,7 @@ public class ModuleAdapter extends AbstractContextual {
 	private final ModuleInfo info;
 
 	/** The OMERO client to use when communicating about a job. */
+	// TODO: This should be an OMEROSession instead of a raw omero.client now.
 	private final omero.client client;
 
 	/**
