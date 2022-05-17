@@ -71,6 +71,9 @@ public class OMEROFormatTest {
 		final OMEROFormat omeroFormat = getFormat();
 		final Checker checker = omeroFormat.createChecker();
 		assertTrue(checker.isFormat(new OMEROLocation("example.com", , sessionID)))
+		// FIXME: Do not use FileLocation for OMERO access! Ever!
+		// We have String -> OMEROLocation via the OMEROLocationResolver...
+		// But never FileLocation. It's not a file.
 		assertFalse(checker.isFormat(new FileLocation("asdf")));
 		assertFalse(checker.isFormat(new FileLocation("asdf.omero")));
 		assertFalse(checker.isFormat(new FileLocation("omero:asdf")));
