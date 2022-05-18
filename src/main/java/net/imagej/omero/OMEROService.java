@@ -25,9 +25,15 @@
 
 package net.imagej.omero;
 
-import net.imagej.ImageJService;
+import io.scif.services.DatasetIOService;
 
+import net.imagej.ImageJService;
+import net.imagej.display.ImageDisplayService;
+
+import org.scijava.convert.ConvertService;
+import org.scijava.display.DisplayService;
 import org.scijava.module.ModuleItem;
+import org.scijava.object.ObjectService;
 
 /**
  * SciJava service interface for managing OMERO server access.
@@ -70,6 +76,41 @@ public interface OMEROService extends ImageJService {
 	 */
 	OMEROSession createSession(OMEROServer server, OMEROCredentials credentials)
 		throws OMEROException;
+
+	/**
+	 * Gets this application context's {@link ConvertService}.
+	 *
+	 * @return The {@link ConvertService} of this application context.
+	 */
+	ConvertService convert();
+
+	/**
+	 * Gets this application context's {@link ImageDisplayService}.
+	 *
+	 * @return The {@link ImageDisplayService} of this application context.
+	 */
+	ImageDisplayService imageDisplay();
+
+	/**
+	 * Gets this application context's {@link DatasetIOService}.
+	 *
+	 * @return The {@link DatasetIOService} of this application context.
+	 */
+	DatasetIOService datasetIO();
+
+	/**
+	 * Gets this application context's {@link ObjectService}.
+	 *
+	 * @return The {@link ObjectService} of this application context.
+	 */
+	ObjectService object();
+
+	/**
+	 * Gets this application context's {@link DisplayService}.
+	 *
+	 * @return The {@link DisplayService} of this application context.
+	 */
+	DisplayService display();
 
 	/** Converts an ImageJ module parameter to an OMERO job parameter. */
 	omero.grid.Param getJobParam(ModuleItem<?> item);

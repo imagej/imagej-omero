@@ -30,7 +30,6 @@ import io.scif.ImageMetadata;
 import io.scif.Metadata;
 import io.scif.config.SCIFIOConfig;
 import io.scif.config.SCIFIOConfig.ImgMode;
-import io.scif.services.DatasetIOService;
 import io.scif.util.FormatTools;
 
 import java.io.Closeable;
@@ -52,7 +51,6 @@ import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
-import net.imagej.display.ImageDisplayService;
 import net.imagej.omero.roi.OMEROROICollection;
 import net.imagej.omero.roi.ROICache;
 import net.imagej.omero.roi.ROIUtils;
@@ -65,11 +63,7 @@ import net.imglib2.RealInterval;
 import net.imglib2.roi.MaskPredicate;
 import net.imglib2.util.Pair;
 
-import org.scijava.Context;
 import org.scijava.convert.ConvertService;
-import org.scijava.display.DisplayService;
-import org.scijava.log.LogService;
-import org.scijava.object.ObjectService;
 import org.scijava.table.Column;
 import org.scijava.table.GenericTable;
 import org.scijava.table.Table;
@@ -114,16 +108,7 @@ import omero.model.PixelsType;
  */
 public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 
-	// FIXME: Make these accessor methods of OMEROService interface,
-	// So that DefaultOMEROService gets recursively initialized with the
-	// necessary services, and no chance that OMEROSession immediately dies
-	// when working with an inappropriate context.
-	private final LogService log;
-	private final ConvertService convertService;
-	private final ImageDisplayService imageDisplayService;
-	private final DatasetIOService datasetIOService;
-	private final ObjectService objectService;
-	private final DisplayService displayService;
+	private final OMEROService omeroService;
 
 	private final OMEROServer server;
 	private final ROICache roiCache;
@@ -141,43 +126,36 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * Typically used to execute OMERO scripts on the server side, not to
 	 * communicate with OMERO from an ImageJ2 application.
 	 * 
-	 * @param context The SciJava context.
+	 * @param omeroService The SciJava context.
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
-	public OMEROSession(final Context context)
+	public OMEROSession(final OMEROService omeroService)
 		throws OMEROException
 	{
 		// Create client in a vacuum. Works if running on the server side.
-		this(context, new omero.client());
+		this(omeroService, new omero.client());
 	}
 
-	public OMEROSession(final Context context, final OMEROServer server,
+	public OMEROSession(final OMEROService omeroService, final OMEROServer server,
 		final OMEROCredentials credentials) throws OMEROException
 	{
-		this(context, server, credentials, //
+		this(omeroService, server, credentials, //
 			new omero.client(server.host, server.port));
 	}
 
-	private OMEROSession(final Context context, final omero.client c)
+	private OMEROSession(final OMEROService omeroService, final omero.client c)
 		throws OMEROException
 	{
-		this(context, new OMEROServer(OMERO.host(c), OMERO.port(c)), null, c);
+		this(omeroService, new OMEROServer(OMERO.host(c), OMERO.port(c)), null, c);
 	}
 
-	private OMEROSession(final Context context, final OMEROServer server,
+	private OMEROSession(final OMEROService omeroService, final OMEROServer server,
 		final OMEROCredentials credentials, final omero.client c)
 		throws OMEROException
 	{
 		credentials.validate();
 
-		// populate SciJava services
-		log = context.service(LogService.class);
-		convertService = context.service(ConvertService.class);
-		imageDisplayService = context.service(ImageDisplayService.class);
-		datasetIOService = context.service(DatasetIOService.class);
-		objectService = context.service(ObjectService.class);
-		displayService = context.service(DisplayService.class);
-
+		this.omeroService = omeroService;
 		this.server = server;
 		roiCache = new ROICache();
 
@@ -268,8 +246,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 
 			return toOMERO(imageID);
 		}
-		if (convertService.supports(value, Dataset.class)) {
-			return toOMERO(convertService.convert(value, Dataset.class));
+		if (omeroService.convert().supports(value, Dataset.class)) {
+			return toOMERO(omeroService.convert().convert(value, Dataset.class));
 		}
 		if (value instanceof DatasetView) {
 			final DatasetView datasetView = (DatasetView) value;
@@ -279,20 +257,20 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		if (value instanceof ImageDisplay) {
 			final ImageDisplay imageDisplay = (ImageDisplay) value;
 			// TODO: Support more aspects of image displays; e.g., multiple datasets.
-			return toOMERO(imageDisplayService.getActiveDataset(
+			return toOMERO(omeroService.imageDisplay().getActiveDataset(
 				imageDisplay));
 		}
 
 		// -- Table cases --
 
 		if (value instanceof Table) {
-			return TableUtils.convertOMEROTable((Table<?, ?>) value, convertService);
+			return TableUtils.convertOMEROTable((Table<?, ?>) value, omeroService.convert());
 		}
 		if (value instanceof TableDisplay) {
 			return toOMERO(((TableDisplay) value).get(0));
 		}
-		if (convertService.supports(value, Table.class)) {
-			return toOMERO(convertService.convert(value, Table.class));
+		if (omeroService.convert().supports(value, Table.class)) {
+			return toOMERO(omeroService.convert().convert(value, Table.class));
 		}
 
 		// -- ROI cases --
@@ -304,11 +282,11 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 			final Object o = toOMERO(new DefaultTreeNode<>(value, null));
 			return ((List<?>) o).get(0);
 		}
-		if (convertService.supports(value, TreeNode.class)) {
-			return toOMERO(convertService.convert(value, TreeNode.class));
+		if (omeroService.convert().supports(value, TreeNode.class)) {
+			return toOMERO(omeroService.convert().convert(value, TreeNode.class));
 		}
-		if (convertService.supports(value, MaskPredicate.class)) {
-			return toOMERO(convertService.convert(value, MaskPredicate.class));
+		if (omeroService.convert().supports(value, MaskPredicate.class)) {
+			return toOMERO(omeroService.convert().convert(value, MaskPredicate.class));
 		}
 
 		return OMERO.rtype(value);
@@ -402,7 +380,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		final SCIFIOConfig config = //
 			new SCIFIOConfig().imgOpenerSetImgModes(ImgMode.CELL);
 		try {
-			return datasetIOService.open(source, config);
+			return omeroService.datasetIO().open(source, config);
 		}
 		catch (final IOException exc) {
 			throw new OMEROException(exc);
@@ -418,7 +396,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	public long uploadImage(final Dataset dataset) throws OMEROException {
 		final OMEROLocation dest = new OMEROLocation(server, "");
 		try {
-			final Metadata metadata = datasetIOService.save(dataset, dest);
+			final Metadata metadata = omeroService.datasetIO().save(dataset, dest);
 			if (metadata instanceof OMEROFormat.Metadata) {
 				final OMEROFormat.Metadata omeroMeta = (OMEROFormat.Metadata) metadata;
 				return omeroMeta.getImageID();
@@ -563,7 +541,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		final long imageID) throws OMEROException
 	{
 		final TableData omeroTable = //
-			TableUtils.convertOMEROTable(sjTable, convertService);
+			TableUtils.convertOMEROTable(sjTable, omeroService.convert());
 
 		final BrowseFacility browseFacility = facility(BrowseFacility.class);
 		final TablesFacility tablesFacility = facility(TablesFacility.class);
@@ -591,7 +569,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		final ROIFacility roiFacility = facility(ROIFacility.class);
 		final ROIResult roi = OMERO.ask(() -> roiFacility.loadROI(ctx, roiID));
 		final ROIData rd = roi.getROIs().iterator().next();
-		final TreeNode<?> treeNode = convertService.convert(rd, TreeNode.class);
+		final TreeNode<?> treeNode = omeroService.convert().convert(rd, TreeNode.class);
 		final ROITree tree = new DefaultROITree();
 		tree.children().add(treeNode);
 		return tree;
@@ -618,7 +596,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 			final ROIResult res = r.next();
 			final Collection<ROIData> rois = res.getROIs();
 			for (final ROIData roi : rois) {
-				final TreeNode<?> ijRoi = convertService.convert(roi, TreeNode.class);
+				final TreeNode<?> ijRoi = omeroService.convert().convert(roi, TreeNode.class);
 				if (ijRoi == null) {
 					throw new IllegalArgumentException(
 						"ROIData cannot be converted to ImageJ ROI");
@@ -1014,11 +992,11 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 				!(dn.data() instanceof RealInterval) && //
 				dn.data() instanceof MaskPredicate && interval != null)
 			{
-				oR = convertService.convert(ROIUtils.interval(//
+				oR = omeroService.convert().convert(ROIUtils.interval(//
 					(MaskPredicate<?>) dn.data(), interval), ROIData.class);
 			}
 			// else convert directly
-			else oR = convertService.convert(dn, ROIData.class);
+			else oR = omeroService.convert().convert(dn, ROIData.class);
 			if (oR == null) throw new IllegalArgumentException("Unsupported type: " +
 				dn.data().getClass());
 			omeroROIs.add(oR);
@@ -1064,7 +1042,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		// CalculatorOp and ThresholdMethod.
 		if (value instanceof String) {
 			final String s = (String) value;
-			final List<T> objects = objectService.getObjects(type);
+			final List<T> objects = omeroService.object().getObjects(type);
 			for (final T object : objects) {
 				if (s.equals(object.toString())) return object;
 			}
@@ -1082,13 +1060,13 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 			if (DatasetView.class.isAssignableFrom(type)) {
 				final Dataset dataset = convert(value, Dataset.class);
 				@SuppressWarnings("unchecked")
-				final T dataView = (T) imageDisplayService.createDataView(dataset);
+				final T dataView = (T) omeroService.imageDisplay().createDataView(dataset);
 				return dataView;
 			}
 			if (ImageDisplay.class.isAssignableFrom(type)) {
 				final Dataset dataset = convert(value, Dataset.class);
 				@SuppressWarnings("unchecked")
-				final T display = (T) displayService.createDisplay(dataset);
+				final T display = (T) omeroService.display().createDisplay(dataset);
 				return display;
 			}
 			if (Table.class.isAssignableFrom(type)) {
@@ -1110,33 +1088,33 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 				@SuppressWarnings("unchecked")
 				final T omeroMP = (T) children.get(0).children().get(0).data();
 				if (children.size() > 1) {
-					log.warn("Requested OMERO ROI has more than " +
+					omeroService.log().warn("Requested OMERO ROI has more than " +
 						"one ShapeData. Only one shape will be returned.");
 				}
 				return omeroMP;
 			}
-			if (convertService.supports(Dataset.class, type)) {
+			if (omeroService.convert().supports(Dataset.class, type)) {
 				final Dataset d = convert(value, Dataset.class);
-				return convertService.convert(d, type);
+				return omeroService.convert().convert(d, type);
 			}
-			if (convertService.supports(TreeNode.class, type)) {
+			if (omeroService.convert().supports(TreeNode.class, type)) {
 				final TreeNode<?> dn = convert(value, TreeNode.class);
-				return convertService.convert(dn, type);
+				return omeroService.convert().convert(dn, type);
 			}
-			if (convertService.supports(MaskPredicate.class, type)) {
+			if (omeroService.convert().supports(MaskPredicate.class, type)) {
 				final MaskPredicate<?> mp = convert(value, MaskPredicate.class);
-				return convertService.convert(mp, type);
+				return omeroService.convert().convert(mp, type);
 			}
-			if (convertService.supports(Table.class, type)) {
+			if (omeroService.convert().supports(Table.class, type)) {
 				final Table<?, ?> t = convert(value, Table.class);
-				return convertService.convert(t, type);
+				return omeroService.convert().convert(t, type);
 			}
 		}
 
 		// use SciJava Common's automagical conversion routine
-		final T converted = convertService.convert(value, type);
+		final T converted = omeroService.convert().convert(value, type);
 		if (converted == null) {
-			log.error("Cannot convert: " + value.getClass().getName() + //
+			omeroService.log().error("Cannot convert: " + value.getClass().getName() + //
 				" to " + type.getName());
 		}
 		return converted;

@@ -125,7 +125,7 @@ public class DefaultOMEROService extends AbstractService implements
 	public OMEROSession createSession(final OMEROServer server,
 		final OMEROCredentials credentials) throws OMEROException
 	{
-		return new OMEROSession(context(), server, credentials);
+		return new OMEROSession(this, server, credentials);
 	}
 
 	@Override
@@ -143,6 +143,31 @@ public class DefaultOMEROService extends AbstractService implements
 		final Object max = item.getMaximumValue();
 		if (max != null) param.max = OMERO.rtype(max);
 		return param;
+	}
+
+	@Override
+	public ConvertService convert() {
+		return convertService;
+	}
+
+	@Override
+	public ImageDisplayService imageDisplay() {
+		return imageDisplayService;
+	}
+
+	@Override
+	public DatasetIOService datasetIO() {
+		return datasetIOService;
+	}
+
+	@Override
+	public ObjectService object() {
+		return objectService;
+	}
+
+	@Override
+	public DisplayService display() {
+		return displayService;
 	}
 
 	@Override
