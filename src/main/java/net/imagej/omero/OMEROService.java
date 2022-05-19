@@ -43,27 +43,26 @@ import org.scijava.object.ObjectService;
 public interface OMEROService extends ImageJService {
 
 	/**
+	 * @see #session(OMEROServer, OMEROCredentials)
+	 */
+	OMEROSession session(OMEROServer server) throws OMEROException;
+
+	/**
 	 * Returns an {@link OMEROSession} using the given server and access
 	 * credentials. If a session with for this server already exists it is
 	 * returned, or if not a new one is created.
 	 *
 	 * @param server OMEROServer for which a session is desired
-	 * @param credentials Credentials for obtaining access to the server
+	 * @param credentials Credentials for use if a new server session must be
+	 *          created
 	 * @return A session object for working with OMERO
 	 * @throw OMEROException if there is no existing OMERO session and a new one
 	 *        cannot be established.
+	 * @throw IllegalStateException if no active session for that server exists
+	 *        and credentials were not provided.
 	 */
 	OMEROSession session(OMEROServer server, OMEROCredentials credentials)
 		throws OMEROException;
-
-	/**
-	 * Returns the already-existing {@link OMEROSession} for the given server.
-	 *
-	 * @param server OMEROServer for which a session is desired
-	 * @return A session object for working with OMERO
-	 * @throw IllegalStateException if no active session for that server exists.
-	 */
-	OMEROSession session(OMEROServer server);
 
 	/**
 	 * Creates an OMEROSession. This <strong>does not</strong> cache the session

@@ -99,25 +99,30 @@ public class DefaultOMEROService extends AbstractService implements
 	// -- OMEROService methods --
 
 	@Override
-	public OMEROSession session(final OMEROServer server,
-		final OMEROCredentials credentials) throws OMEROException
-	{
-		// TODO: Figure out whether we can avoid synchronized every time.
-		synchronized (sessions) {
-			if (!sessions.containsKey(server)) {
-				final OMEROSession session = createSession(server, credentials);
-				sessions.put(server, session);
-			}
-			return session(server);
-		}
+	public OMEROSession session(final OMEROServer server) throws OMEROException {
+		return session(server, null);
 	}
 
 	@Override
-	public OMEROSession session(final OMEROServer server) {
-		final OMEROSession session = sessions.get(server);
-		// FIXME: If session has been closed, reopen it.
-		// Requires support in OMEROSession for reopening.
-		if (session != null) return session;
+	public OMEROSession session(final OMEROServer server,
+		final OMEROCredentials credentials) throws OMEROException
+	{
+		// Have a cache hit, use it
+		if (sessions.containsKey(server)) {
+			OMEROSession session = sessions.get(server);
+			session.restore(credentials);
+			return session;
+		}
+		synchronized (sessions) {
+			// For a cache miss we need credentials to authenticate with the server
+			if (credentials != null) {
+				if (!sessions.containsKey(server)) {
+					final OMEROSession session = createSession(server, credentials);
+					sessions.put(server, session);
+				}
+				return session(server);
+			}
+		}
 		throw new IllegalStateException("No active session for server " + server);
 	}
 

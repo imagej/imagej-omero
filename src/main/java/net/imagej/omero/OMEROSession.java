@@ -79,6 +79,7 @@ import omero.api.ServiceFactoryPrx;
 import omero.gateway.Gateway;
 import omero.gateway.LoginCredentials;
 import omero.gateway.SecurityContext;
+import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.DataManagerFacility;
 import omero.gateway.facility.Facility;
@@ -113,11 +114,12 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	private final OMEROServer server;
 	private final ROICache roiCache;
 
-	private final omero.client client;
-	private final ServiceFactoryPrx sfp;
-	private final ExperimenterData experimenter;
-	private final Gateway gateway;
-	private final SecurityContext ctx;
+	private omero.client client;
+	private ServiceFactoryPrx sfp;
+	private ExperimenterData experimenter;
+	private Gateway gateway;
+	private SecurityContext ctx;
+	private String sessionID;
 
 	// -- Constructors --
 
@@ -148,55 +150,16 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	}
 
 	private OMEROSession(final OMEROService omeroService,
-		final OMEROServer server, final OMEROCredentials credentials,
-		final omero.client c) throws OMEROException
+		final OMEROServer omeroServer, final OMEROCredentials omeroCredentials,
+		final omero.client omeroClient) throws OMEROException
 	{
-		credentials.validate();
+		omeroCredentials.validate();
 
 		this.omeroService = omeroService;
-		this.server = server;
+		this.server = omeroServer;
 		roiCache = new ROICache();
 
-		// initialize the client
-		if (c == null) {
-			if (server != null) {
-				client = new omero.client(server.host, server.port);
-			}
-			else client = new omero.client();
-		}
-		else {
-			client = c;
-		}
-
-		// log in to the server
-		final String user = credentials.getUser();
-		final String pass = credentials.getPassword();
-		final String sessionID = credentials.getSessionID();
-		sfp = sessionID == null ? //
-			OMERO.ask(() -> client.createSession(user, pass)) : OMERO.ask(() -> client
-				.joinSession(sessionID));
-
-		// create OMERO gateway
-		gateway = new Gateway(new SimpleLogger());
-
-		// set experimenter and security context
-		final String lHost = server == null ? OMERO.host(client) : server.host;
-		final int lPort = server == null ? OMERO.port(client) : server.port;
-		final String lUser = sessionID == null ? user : sessionID;
-		final String lPass = sessionID == null ? pass : sessionID;
-		final LoginCredentials loginCredentials = //
-			new LoginCredentials(lUser, lPass, lHost, lPort);
-		experimenter = OMERO.ask(() -> gateway.connect(loginCredentials));
-		ctx = new SecurityContext(experimenter.getGroupId());
-
-		// Until imagej-omero #30 is resolved; see:
-		// https://github.com/imagej/imagej-omero/issues/30
-//		if (client.isSecure() && !credentials.isEncrypted()) {
-//			client = client.createClient(false);
-//			session = client.getSession();
-//		}
-
-		OMERO.tell(() -> sfp.detachOnDestroy());
+		initializeSession(omeroCredentials, omeroClient);
 	}
 
 	// -- Data transfer --
@@ -854,15 +817,108 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		return store;
 	}
 
+	/**
+	 * @see #restore(OMEROCredentials)
+	 */
+	public void restore() throws OMEROException {
+		restore(null);
+	}
+
+	/**
+	 * Recreates the session if this session has previously had (@link
+	 * {@link #close()} called. If this session is still open this method has no
+	 * effect.
+	 *
+	 * @param credentials - Optional user credentials for logging into the server.
+	 *          If not provided, a previously cached sessionId is required.
+	 */
+	public void restore(OMEROCredentials credentials) throws OMEROException {
+		if (sfp == null || experimenter == null || ctx == null) {
+			synchronized (this) {
+				// Double lock to ensure we only re-initialize once
+				if (sfp == null || experimenter == null || ctx == null) {
+					initializeSession(credentials);
+				}
+			}
+		}
+	}
+
 	// -- Closeable methods --
 
 	@Override
 	public void close() {
 		client.__del__();
 		gateway.disconnect();
+		sfp = null;
+		experimenter = null;
+		ctx = null;
 	}
 
 	// -- Helper methods --
+
+	private void initializeSession(OMEROCredentials credentials)
+		throws OMEROException
+	{
+		initializeSession(credentials, null);
+	}
+
+	/**
+	 * (Re-)establish a connection to the OMERO server.
+	 */
+	private void initializeSession(final OMEROCredentials credentials,
+		final omero.client omeroClient) throws OMEROException
+	{
+		// initialize the client
+		if (omeroClient == null) {
+			if (server != null) {
+				client = new omero.client(server.host, server.port);
+			}
+			else client = new omero.client();
+		}
+		else {
+			client = omeroClient;
+		}
+
+		// log in to the server
+		final String user = credentials == null ? null : credentials.getUser();
+		final String pass = credentials == null ? null : credentials.getPassword();
+		sfp = credentials == null ? //
+			OMERO.ask(() -> client.createSession(user, pass)) : OMERO.ask(() -> client
+				.joinSession(sessionID));
+
+		// create OMERO gateway
+		gateway = new Gateway(new SimpleLogger());
+
+		// set experimenter and security context
+		final String lHost = server == null ? OMERO.host(client) : server.host;
+		final int lPort = server == null ? OMERO.port(client) : server.port;
+		final String lUser = user == null ? sessionID : user;
+		final String lPass = pass == null ? sessionID : pass;
+		final LoginCredentials loginCredentials = //
+			new LoginCredentials(lUser, lPass, lHost, lPort);
+		experimenter = OMERO.ask(() -> gateway.connect(loginCredentials));
+
+		// Update the sessionID if we were given credentials for authentication
+		if (credentials != null) {
+			try {
+				sessionID = gateway.getSessionId(experimenter);
+			}
+			catch (DSOutOfServiceException exc) {
+				throw new OMEROException("Failed to get session ID for experimenter: " +
+					experimenter);
+			}
+		}
+		ctx = new SecurityContext(experimenter.getGroupId());
+
+		// Until imagej-omero #30 is resolved; see:
+		// https://github.com/imagej/imagej-omero/issues/30
+		// if (client.isSecure() && !credentials.isEncrypted()) {
+		// client = client.createClient(false);
+		// session = client.getSession();
+		// }
+
+		OMERO.tell(() -> sfp.detachOnDestroy());
+	}
 
 	/** Gets an OMERO {@code Image} descriptor, loading remotely as needed. */
 	private Image loadImage(final OMEROFormat.Metadata meta) throws ServerError {

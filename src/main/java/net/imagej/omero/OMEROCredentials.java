@@ -34,8 +34,6 @@ public class OMEROCredentials {
 
 	// -- Fields --
 
-	private String sessionID;
-
 	private String user;
 
 	private String password;
@@ -47,10 +45,6 @@ public class OMEROCredentials {
 	public OMEROCredentials(final String user, final String password) {
 		this.user = user;
 		this.password = password;
-	}
-
-	public String getSessionID() {
-		return sessionID;
 	}
 
 	public String getUser() {
@@ -65,19 +59,6 @@ public class OMEROCredentials {
 		return encrypted;
 	}
 
-	public void setSessionID(final String sessionID) {
-		// TODO: This is not even used right now. Should we get rid of it?
-		// Or just have an alternate constructor? What if a session times out
-		// on the server side -- does the session ID become invalid? If so,
-		// we probably really want to keep the user/pass to relogin. But what
-		// about security concerns keeping the pass in a String field persistently?
-		this.sessionID = sessionID;
-		if (sessionID != null) {
-			// NB: Drop username & password from memory when we have a session ID.
-			user = password = null;
-		}
-	}
-
 	public void setEncrypted(final boolean encrypted) {
 		this.encrypted = encrypted;
 	}
@@ -89,7 +70,7 @@ public class OMEROCredentials {
 	 *           username+password was given either.
 	 */
 	public void validate() {
-		if (sessionID == null && (user == null || password == null)) {
+		if (user == null || password == null) {
 			throw new IllegalArgumentException("Invalid credentials: " +
 				"must specify either session ID OR username+password");
 		}
