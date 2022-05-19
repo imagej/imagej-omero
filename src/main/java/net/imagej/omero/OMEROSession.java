@@ -821,18 +821,32 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * associated with the given metadata.
 	 */
 	public RawPixelsStorePrx createPixels(final OMEROFormat.Metadata meta)
-		throws ServerError, FormatException
+		throws OMEROException
 	{
-		// TODO: Throw OMEROException instead.
 		// create a new Image which will house the written pixels
-		final ImageData newImage = createImage(meta);
+		final ImageData newImage;
+
+		try {
+			newImage = createImage(meta);
+		}
+		catch (ServerError | FormatException exc) {
+			throw new OMEROException("Error creating omero image", exc);
+		}
+
 		final long imageID = newImage.getId();
 		meta.setImageID(imageID);
 
 		// configure the raw pixels store
-		final RawPixelsStorePrx store = sfp.createRawPixelsStore();
-		final long pixelsID = newImage.getDefaultPixels().getId();
-		store.setPixelsId(pixelsID, false);
+		final long pixelsID;
+		final RawPixelsStorePrx store;
+		try {
+			store = sfp.createRawPixelsStore();
+			pixelsID = newImage.getDefaultPixels().getId();
+			store.setPixelsId(pixelsID, false);
+		}
+		catch (ServerError exc) {
+			throw new OMEROException("Error creating pixels store", exc);
+		}
 		meta.setPixelsID(pixelsID);
 
 		return store;
@@ -848,12 +862,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 
 	// -- Helper methods --
 
-	// TODO: Decide if these are better to throw OMEROException. Whatever
-	// makes the code easier to manage, read, understand, maintain!
-
 	/** Gets an OMERO {@code Image} descriptor, loading remotely as needed. */
 	private Image loadImage(final OMEROFormat.Metadata meta) throws ServerError {
-		// TODO: Throw OMEROException instead.
 		// return cached Image if available
 		Image image = meta.getImage();
 		if (image != null) return image;
