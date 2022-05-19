@@ -1,3 +1,4 @@
+
 package net.imagej.omero.roi;
 
 import java.util.Collections;
@@ -29,11 +30,11 @@ public class ROICache {
 		return downloadedROIs.get(roiDataId);
 	}
 
-	public void updateServerROIData(final long roiDataId, ROIData shape) {
+	public void updateServerROIData(final long roiDataId, final ROIData shape) {
 		downloadedROIs.put(roiDataId, shape);
 	}
 
-	public void removeDownloaded(long roiDataId) {
+	public void removeDownloaded(final long roiDataId) {
 		downloadedROIs.remove(roiDataId);
 	}
 

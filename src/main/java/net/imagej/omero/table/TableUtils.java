@@ -227,7 +227,7 @@ public final class TableUtils {
 
 	public static Column<?> createSciJavaColumn(final TableDataColumn column) {
 		if (column.getType().equals(Boolean.class)) {
-			return new BoolColumn(column .getName());
+			return new BoolColumn(column.getName());
 		}
 		if (column.getType().equals(Double[].class)) {
 			return new DefaultColumn<>(DoubleArray.class, column.getName());

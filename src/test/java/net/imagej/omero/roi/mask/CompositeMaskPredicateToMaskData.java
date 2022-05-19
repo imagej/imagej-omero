@@ -86,10 +86,10 @@ public class CompositeMaskPredicateToMaskData {
 
 	@Test
 	public void testAnd() {
-		final Box b = GeomMasks.closedBox(new double[] { 0, 0 },
-			new double[] { 20, 20 });
-		final Box b2 = GeomMasks.closedBox(new double[] { 10, 10 },
-			new double[] { 30, 30 });
+		final Box b = GeomMasks.closedBox(new double[] { 0, 0 }, new double[] { 20,
+			20 });
+		final Box b2 = GeomMasks.closedBox(new double[] { 10, 10 }, new double[] {
+			30, 30 });
 
 		final RealMaskRealInterval and = b.and(b2);
 		final Converter<?, ?> c = convert.getHandler(and, MaskData.class);
@@ -108,8 +108,7 @@ public class CompositeMaskPredicateToMaskData {
 	@Test
 	public void testMinus() {
 		final Sphere s = GeomMasks.closedSphere(new double[] { 30, 30 }, 5);
-		final Sphere s2 = GeomMasks.closedSphere(new double[] { 30, 30 },
-			2);
+		final Sphere s2 = GeomMasks.closedSphere(new double[] { 30, 30 }, 2);
 
 		final RealMaskRealInterval minus = s.minus(s2);
 		final Converter<?, ?> c = convert.getHandler(minus, MaskData.class);
@@ -127,8 +126,8 @@ public class CompositeMaskPredicateToMaskData {
 
 	@Test
 	public void testNegate() {
-		final Box b = GeomMasks.closedBox(new double[] { 0, 0 },
-			new double[] { 5, 6 });
+		final Box b = GeomMasks.closedBox(new double[] { 0, 0 }, new double[] { 5,
+			6 });
 		final RealMask negate = b.negate();
 
 		final Converter<?, ?> c = convert.getHandler(negate, MaskData.class);
@@ -176,10 +175,9 @@ public class CompositeMaskPredicateToMaskData {
 
 	@Test
 	public void testXor() {
-		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 30,
-			25 }, new double[] { 15, 20 });
-		final Sphere s = GeomMasks.closedSphere(new double[] { 14, 14 },
-			13);
+		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 30, 25 },
+			new double[] { 15, 20 });
+		final Sphere s = GeomMasks.closedSphere(new double[] { 14, 14 }, 13);
 		final RealMaskRealInterval xor = e.xor(s);
 
 		final Converter<?, ?> c = convert.getHandler(xor, MaskData.class);
@@ -197,12 +195,11 @@ public class CompositeMaskPredicateToMaskData {
 
 	@Test
 	public void testMultipleOperands() {
-		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 30,
-			25 }, new double[] { 15, 20 });
-		final Sphere s = GeomMasks.closedSphere(new double[] { 14, 14 },
-			13);
-		final Box b = GeomMasks.closedBox(new double[] { 0, 0 },
-			new double[] { 5, 6 });
+		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 30, 25 },
+			new double[] { 15, 20 });
+		final Sphere s = GeomMasks.closedSphere(new double[] { 14, 14 }, 13);
+		final Box b = GeomMasks.closedBox(new double[] { 0, 0 }, new double[] { 5,
+			6 });
 		final AffineTransform2D transform = new AffineTransform2D();
 		transform.rotate(Math.PI / 3);
 

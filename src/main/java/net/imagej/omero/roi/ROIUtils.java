@@ -1,3 +1,4 @@
+
 package net.imagej.omero.roi;
 
 import java.util.ArrayList;
@@ -25,10 +26,9 @@ import omero.gateway.model.ShapeData;
 
 /**
  * Utility class for working with converting between ImageJ and OMERO ROIs.
- * 
+ *
  * @author Alison Walter
  * @author Curtis Rueden
- *
  */
 public class ROIUtils {
 
@@ -64,8 +64,8 @@ public class ROIUtils {
 		if (dn == null) return Collections.emptyList();
 
 		if (dn.children() == null || dn.children().isEmpty()) {
-			if (dn.data() instanceof MaskPredicate) return Collections
-				.singletonList(dn);
+			if (dn.data() instanceof MaskPredicate) return Collections.singletonList(
+				dn);
 			return Collections.emptyList();
 		}
 		if (dn.data() instanceof ROIData) return Collections.singletonList(dn);

@@ -62,15 +62,15 @@ import org.scijava.util.Types;
 public class DefaultOMEROService extends AbstractService implements
 	OMEROService, Optional
 {
-	
+
 	// START HERE
 	// 1. Update unit tests to match assumptions of current main codebase.
 	// 2. Get tests passing. These don't require OMERO actually running.
 	// 3. Get Docker-based OMERO up and running with omero-test-infra et al.
 	// 4. Get ITs working with that Docker-based OMERO.
 	// 5. Fix OMERO-server-side functionality also to work again.
-	//   - This might not actually be (5), if the ITs are testing this
-	//     (which they *should* be, and if they aren't, let's do that).
+	// - This might not actually be (5), if the ITs are testing this
+	// (which they *should* be, and if they aren't, let's do that).
 
 	// -- Parameters --
 

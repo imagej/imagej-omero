@@ -37,8 +37,9 @@ import org.scijava.log.LogService;
 import org.scijava.table.Table;
 
 /**
- * A {@code List<Table>} whose elements are downloaded lazily from an
- * OMERO server.
+ * A {@code List
+ * <Table>
+ * } whose elements are downloaded lazily from an OMERO server.
  *
  * @author Alison Walter
  */

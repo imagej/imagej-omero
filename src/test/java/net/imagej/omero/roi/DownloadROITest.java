@@ -34,9 +34,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.omero.OMEROSession;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROSession;
 import net.imagej.omero.roi.transform.TransformedOMERORealMaskRealInterval;
 import net.imglib2.roi.geom.real.Box;
 import net.imglib2.roi.geom.real.Ellipsoid;

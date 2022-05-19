@@ -742,8 +742,8 @@ public class OMEROFormat extends AbstractFormat {
 		private static final List<AxisType> XYZCT = //
 			Arrays.asList(Axes.X, Axes.Y, Axes.Z, Axes.CHANNEL, Axes.TIME);
 
-		private ImageMetadata imageMeta;
-		private Map<AxisType, CalibratedAxis> map;
+		private final ImageMetadata imageMeta;
+		private final Map<AxisType, CalibratedAxis> map;
 
 		private AxisMap(final ImageMetadata imageMeta) {
 			this.imageMeta = imageMeta;
@@ -779,8 +779,8 @@ public class OMEROFormat extends AbstractFormat {
 				}
 				else if (isUnknownAxis(axisType)) {
 					// Assign the first available axis type from XYZCT.
-					final Optional<AxisType> availableAxisType =
-						XYZCT.stream().filter(at -> isAvailable(at)).findFirst();
+					final Optional<AxisType> availableAxisType = XYZCT.stream().filter(
+						at -> isAvailable(at)).findFirst();
 					if (!availableAxisType.isPresent()) {
 						throw new IllegalArgumentException(
 							"Cannot map unknown axis type, no labels free.");

@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
-import net.imagej.omero.OMEROSession;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;

@@ -1,10 +1,11 @@
+
 package net.imagej.omero;
 
 import java.util.Objects;
 
 /**
  * Helper class for storing an OMERO server address (host + port).
- * 
+ *
  * @author Curtis Rueden
  */
 public class OMEROServer {

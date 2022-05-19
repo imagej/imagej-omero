@@ -50,7 +50,7 @@ import org.scijava.table.Table;
 
 /**
  * A command to import objects from an OMERO database.
- * 
+ *
  * @author Alison Walter
  */
 @Plugin(type = Command.class, label = "Import from OMERO", menu = { //

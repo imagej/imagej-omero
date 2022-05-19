@@ -40,7 +40,7 @@ import org.scijava.plugin.Plugin;
 
 /**
  * Implementation of {@link LocationResolver} for {@link OMEROLocation}.
- * 
+ *
  * @author Curtis Rueden
  */
 @Plugin(type = LocationResolver.class)
@@ -51,8 +51,9 @@ public class OMEROLocationResolver extends AbstractLocationResolver {
 	}
 
 	@Override
-	public Location resolve(URI uri) {
-		if (!(supports(uri))) throw new IllegalArgumentException("URI not supported: " + uri);
+	public Location resolve(final URI uri) {
+		if (!(supports(uri))) throw new IllegalArgumentException(
+			"URI not supported: " + uri);
 		return new OMEROLocation(uri);
 	}
 }

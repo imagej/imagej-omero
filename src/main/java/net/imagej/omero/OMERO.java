@@ -9,15 +9,15 @@
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
- * published by the Free Software Foundation, either version 2 of the 
+ * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public 
+ *
+ * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
@@ -41,7 +41,7 @@ import omero.model.enums.UnitsTime;
 
 /**
  * Static utility methods for working with OMERO.
- * 
+ *
  * @author Curtis Rueden
  */
 public final class OMERO {
@@ -241,7 +241,7 @@ public final class OMERO {
 	 *
 	 * @throws IllegalArgumentException if the client has no associated host.
 	 */
-	public static String host(omero.client client) {
+	public static String host(final omero.client client) {
 		final String host = client.getProperty("omero.host");
 		if (host != null && !host.isEmpty()) return host;
 		final String router = client.getProperty("Ice.Default.Router");
@@ -255,7 +255,7 @@ public final class OMERO {
 	 *
 	 * @throws IllegalArgumentException if the client has no associated port.
 	 */
-	public static int port(omero.client client) {
+	public static int port(final omero.client client) {
 		final String port = client.getProperty("omero.port");
 		if (port == null || port.isEmpty()) {
 			throw new IllegalArgumentException("No port for client");
@@ -264,13 +264,14 @@ public final class OMERO {
 			return Integer.parseInt(port);
 		}
 		catch (final NumberFormatException exc) {
-			throw new IllegalArgumentException("Invalid port for client: " + port, exc);
+			throw new IllegalArgumentException("Invalid port for client: " + port,
+				exc);
 		}
 	}
 
 	/**
 	 * Performs the given operation that might throw OMERO-related exceptions.
-	 * 
+	 *
 	 * @return The result of the execution.
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
@@ -285,7 +286,7 @@ public final class OMERO {
 
 	/**
 	 * Performs the given operation that might throw OMERO-related exceptions.
-	 * 
+	 *
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public static void tell(final VoidCallable c) throws OMEROException {
@@ -299,6 +300,7 @@ public final class OMERO {
 
 	/** {@link Callable}-like interface, but which returns {@code void}. */
 	public interface VoidCallable {
+
 		void call() throws Exception;
 	}
 }

@@ -65,8 +65,7 @@ public class OMEROROIElementToROIData extends
 		final OMEROROIElement ore = (OMEROROIElement) src;
 		final ROIData r = new ROIData();
 		if (ore.parent() instanceof OMEROROICollection) {
-			final Roi parent = (Roi) ((ROIData) ore.parent().data())
-				.asIObject();
+			final Roi parent = (Roi) ((ROIData) ore.parent().data()).asIObject();
 			((Roi) r.asIObject()).setDescription(parent.getDescription());
 			((Roi) r.asIObject()).setName(parent.getName());
 		}

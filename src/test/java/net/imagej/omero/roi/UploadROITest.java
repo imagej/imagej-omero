@@ -35,9 +35,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.omero.OMEROSession;
 import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROSession;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMask;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMaskRealInterval;
 import net.imagej.roi.DefaultROITree;
@@ -298,7 +298,7 @@ public class UploadROITest {
 		final TreeNode<?> parent = new DefaultROITree();
 
 		final List<ROIData> test = new ArrayList<>(5);
-		for (TreeNode<?> t : rois) {
+		for (final TreeNode<?> t : rois) {
 			final ShapeData r = service.getContext().getService(ConvertService.class)
 				.convert(t.data(), ShapeData.class);
 			final ROIData roi = new ROIData();
@@ -321,9 +321,9 @@ public class UploadROITest {
 
 	@SuppressWarnings({ "unchecked", "resource" })
 	private void setUpMethodCalls(final boolean needInterval,
-		final int numROIData, final List<ROIData> rois) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+		final int numROIData, final List<ROIData> rois) throws ServerError,
+		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
+		DSOutOfServiceException, DSAccessException
 	{
 
 		new Expectations() {
@@ -390,7 +390,7 @@ public class UploadROITest {
 		new Verifications() {
 
 			{
-				Collection<ROIData> rois = new ArrayList<>(numROIData);
+				final Collection<ROIData> rois = new ArrayList<>(numROIData);
 				for (int i = 0; i < numROIData; i++) {
 					Collection<ROIData> rd;
 					roiFac.saveROIs((SecurityContext) any, anyLong, rd = withCapture());

@@ -209,8 +209,8 @@ public class DownloadTableTest {
 
 		for (int r = 0; r < imageJTable.getRowCount(); r++) {
 			for (int c = 0; c < imageJTable.getColumnCount(); c++) {
-				assertEquals((double) data[c][r], ((DoubleTable) imageJTable).get(c,
-					r), 0);
+				assertEquals((double) data[c][r], ((DoubleTable) imageJTable).get(c, r),
+					0);
 			}
 		}
 	}
