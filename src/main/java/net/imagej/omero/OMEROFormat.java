@@ -448,6 +448,9 @@ public class OMEROFormat extends AbstractFormat {
 			catch (final Ice.LocalException exc) {
 				throw versionException(exc);
 			}
+			catch (OMEROException exc) {
+				throw new FormatException("Error creating OMERO session", exc);
+			}
 
 			// Set table and ROIs to lazy loaders
 			meta.setRois(new LazyROITree(meta.getImageID(), session));
@@ -696,7 +699,7 @@ public class OMEROFormat extends AbstractFormat {
 				session = omeroService.session(meta.server());
 				store = session.createPixels(meta);
 			}
-			catch (final ServerError err) {
+			catch (final OMEROException err) {
 				throw communicationException(err);
 			}
 		}
