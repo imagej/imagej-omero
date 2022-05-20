@@ -490,7 +490,6 @@ public class OMEROFormat extends AbstractFormat {
 			final ByteArrayPlane plane, final Interval bounds,
 			final SCIFIOConfig config) throws FormatException, IOException
 		{
-			// TODO: Consider whether to reuse OMERO session from the parsing step.
 			try {
 				session = omeroService.session(getMetadata().server());
 				store = session.openPixels(getMetadata());
