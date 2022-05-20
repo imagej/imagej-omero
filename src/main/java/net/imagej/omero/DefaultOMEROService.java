@@ -64,6 +64,7 @@ public class DefaultOMEROService extends AbstractService implements
 {
 
 	// START HERE
+	// 0. Fix compilation errors - how to expose ROICache?
 	// 1. Update unit tests to match assumptions of current main codebase.
 	// 2. Get tests passing. These don't require OMERO actually running.
 	// 3. Get Docker-based OMERO up and running with omero-test-infra et al.
