@@ -63,7 +63,9 @@ import net.imglib2.RealInterval;
 import net.imglib2.roi.MaskPredicate;
 import net.imglib2.util.Pair;
 
+import org.scijava.Context;
 import org.scijava.convert.ConvertService;
+import org.scijava.log.LogService;
 import org.scijava.table.Column;
 import org.scijava.table.GenericTable;
 import org.scijava.table.Table;
@@ -642,6 +644,14 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		}
 
 		return savedOMERORois;
+	}
+
+	/**
+	 * Convenience method to access the {@link LogService} from the
+	 * {@link Context} in which this session was started.
+	 */
+	public LogService log() {
+		return omeroService.log();
 	}
 
 	/**

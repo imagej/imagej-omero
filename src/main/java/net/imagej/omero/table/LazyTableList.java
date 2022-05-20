@@ -53,7 +53,7 @@ public class LazyTableList implements List<Table<?, ?>> {
 	public LazyTableList(final long imageID, final OMEROSession session) {
 		this.imageID = imageID;
 		this.session = session;
-		log = session.log;
+		log = session.log();
 	}
 
 	@Override

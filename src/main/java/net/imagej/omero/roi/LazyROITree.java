@@ -53,7 +53,7 @@ public class LazyROITree implements ROITree {
 	public LazyROITree(final long imageID, final OMEROSession session) {
 		this.imageID = imageID;
 		this.session = session;
-		this.log = session.log;
+		this.log = session.log();
 		roisLoaded = false;
 	}
 
