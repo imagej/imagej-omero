@@ -96,6 +96,8 @@ public class DefaultOMEROService extends AbstractService implements
 //-- Fields --
 
 	private final HashMap<OMEROServer, OMEROSession> sessions = new HashMap<>();
+	private final ThreadLocal<List<OMEROSession>> localSessions =
+		new ThreadLocal<>();
 
 	// -- OMEROService methods --
 
@@ -132,6 +134,27 @@ public class DefaultOMEROService extends AbstractService implements
 		final OMEROCredentials credentials) throws OMEROException
 	{
 		return new OMEROSession(this, server, credentials);
+	}
+
+	@Override
+	public OMEROSession session() {
+		List<OMEROSession> sessionList = localSessions.get();
+		if (sessionList.isEmpty()) {
+			throw new IllegalStateException(
+				"No active OMEROSession. OMEROService.pushSession must be called first.");
+		}
+		return sessionList.get(sessionList.size() - 1);
+	}
+
+	@Override
+	public void pushSession(final OMEROSession omeroSession) {
+		localSessions.get().add(omeroSession);
+	}
+
+	@Override
+	public void popSession() {
+		List<OMEROSession> sessionList = localSessions.get();
+		sessionList.remove(sessionList.size() - 1);
 	}
 
 	@Override

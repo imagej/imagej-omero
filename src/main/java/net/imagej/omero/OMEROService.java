@@ -77,6 +77,27 @@ public interface OMEROService extends ImageJService {
 		throws OMEROException;
 
 	/**
+	 * Get the current {@link OMEROSession} for this thread
+	 *
+	 * @see #pushSession(OMEROSession)
+	 * @return The top OMEROSession of the current thread's session stack.
+	 */
+	OMEROSession session();
+
+	/**
+	 * Push an {@link OMEROSession} onto this thread's session stack.
+	 *
+	 * @param omeroSession OMEROSession to push
+	 */
+	void pushSession(OMEROSession omeroSession);
+
+	/**
+	 * Removes the most recent session pushed with
+	 * {@link #pushSession(OMEROSession)} from this thread's session stack.
+	 */
+	void popSession();
+
+	/**
 	 * Gets this application context's {@link ConvertService}.
 	 *
 	 * @return The {@link ConvertService} of this application context.
