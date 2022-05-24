@@ -75,7 +75,7 @@ public class OMEROROICollectionToROIData extends
 		}
 
 		final ROIData r = ((OMEROROICollection) src).data();
-		final ROIData roiToUpdate = omero.getUpdatedServerROIData(r.getId());
+		final ROIData roiToUpdate = omero.session().roiCache().getUpdatedServerROIData(r.getId());
 
 		final Iterator<List<ShapeData>> itr = r.getIterator();
 		while (itr.hasNext()) {

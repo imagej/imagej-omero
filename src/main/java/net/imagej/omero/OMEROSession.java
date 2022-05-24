@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import net.imagej.Dataset;
 import net.imagej.axis.Axes;
@@ -655,6 +656,40 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	}
 
 	/**
+	 * @return The {@link ROICache} for this session
+	 */
+	public ROICache roiCache() {
+		return roiCache;
+	}
+
+	/**
+	 * Helper method to ensure a given {@link Callable} is executed with the
+	 * current {@code OMEROSession} as the active session in its {@link Context}'s
+	 * {@link OMEROService}. This is necessary for some contextual actions (e.g.
+	 * converters) that may need to connect with OMERO but whose only access is
+	 * via an OMEROService.
+	 * 
+	 * @param callable Function to execute within this session's context.
+	 * @return The result of the given callable
+	 * @throws OMEROException
+	 */
+	public <T> T with(Callable<T> callable) throws OMEROException {
+		omeroService.pushSession(this);
+
+		T result;
+		try {
+			result = callable.call();
+		}
+		catch (Exception e) {
+			throw new OMEROException(e);
+		}
+		finally {
+			omeroService.popSession();
+		}
+		return result;
+	}
+
+	/**
 	 * Converts the given {@link TreeNode} to OMERO ROI(s), creating new Objects
 	 * on the server only for ROIs which didn't previously exist. ROIs which
 	 * originated from OMERO are updated on the server. A collection of the new
@@ -1056,7 +1091,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * exception is thrown.
 	 */
 	private List<ROIData> convertOMEROROI(final TreeNode<?> dataNodeRois,
-		final Interval interval)
+		final Interval interval) throws OMEROException
 	{
 		final List<ROIData> omeroROIs = new ArrayList<>();
 		final List<TreeNode<?>> roiTreeNodes = //
@@ -1070,11 +1105,11 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 				!(dn.data() instanceof RealInterval) && //
 				dn.data() instanceof MaskPredicate && interval != null)
 			{
-				oR = omeroService.convert().convert(ROIUtils.interval(//
-					(MaskPredicate<?>) dn.data(), interval), ROIData.class);
+				oR = with(() -> omeroService.convert().convert(ROIUtils.interval(//
+					(MaskPredicate<?>) dn.data(), interval), ROIData.class));
 			}
 			// else convert directly
-			else oR = omeroService.convert().convert(dn, ROIData.class);
+			else oR = with(() -> omeroService.convert().convert(dn, ROIData.class));
 			if (oR == null) throw new IllegalArgumentException("Unsupported type: " +
 				dn.data().getClass());
 			omeroROIs.add(oR);

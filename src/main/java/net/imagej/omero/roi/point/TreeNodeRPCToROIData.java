@@ -106,8 +106,8 @@ public class TreeNodeRPCToROIData extends
 		while (pts.hasNext())
 			r.addShapeData(createPoint((RealLocalizable) pts.next(), bt));
 
-		if (omero.getROIMapping(rpc) != null) {
-			final ROIData prev = omero.getROIMapping(rpc);
+		if (omero.session().roiCache().getROIMapping(rpc) != null) {
+			final ROIData prev = omero.session().roiCache().getROIMapping(rpc);
 			r.setId(prev.getId());
 
 			// FIXME: The ID equivalence isn't maintained! If a point is moved, the ID
