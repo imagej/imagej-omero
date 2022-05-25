@@ -29,7 +29,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.After;
@@ -47,11 +46,8 @@ import org.scijava.table.Table;
 import org.scijava.util.DoubleArray;
 import org.scijava.util.LongArray;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import mockit.Expectations;
 import mockit.Mocked;
-import omero.ServerError;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
@@ -63,13 +59,13 @@ import omero.gateway.model.TableDataColumn;
 import omero.model.ImageI;
 
 /**
- * Tests {@link DefaultOMEROService#downloadTable(OMEROLocation, long)}.
+ * Tests {@link OMEROSession#downloadTable(long)}.
  *
  * @author Alison Walter
  */
 public class DownloadTableTest {
 
-	private OMEROLocation credentials;
+	private OMEROLocation location;
 	private OMEROService service;
 
 	@Mocked
@@ -83,12 +79,7 @@ public class DownloadTableTest {
 
 	@Before
 	public void setUp() {
-		try {
-			credentials = new OMEROLocation("localhost", 4064, "omero", "omero");
-		}
-		catch (final URISyntaxException exc) {
-			exc.printStackTrace();
-		}
+		location = new OMEROLocation(new OMEROServer("localhost", 4064), "omero");
 		service = new Context(OMEROService.class).getService(OMEROService.class);
 	}
 
@@ -98,9 +89,8 @@ public class DownloadTableTest {
 	}
 
 	@Test
-	public void downloadBoolTable() throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+	public void downloadBoolTable() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		// Setup OMERO data structures
 		final TableDataColumn[] tdc = new TableDataColumn[] { new TableDataColumn(
@@ -118,8 +108,7 @@ public class DownloadTableTest {
 
 		setUpMethodCalls(table);
 
-		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
-			.downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = session.downloadTable(0);
 
 		// Tests
 		assertTrue(BoolTable.class.isInstance(imageJTable));
@@ -138,9 +127,8 @@ public class DownloadTableTest {
 	}
 
 	@Test
-	public void downloadLongTable() throws PermissionDeniedException,
-		CannotCreateSessionException, ServerError, DSOutOfServiceException,
-		ExecutionException, DSAccessException
+	public void downloadLongTable() throws DSOutOfServiceException,
+		ExecutionException, DSAccessException, OMEROException
 	{
 		// Setup OMERO data structures
 		final TableDataColumn[] tdc = new TableDataColumn[] { new TableDataColumn(
@@ -158,8 +146,7 @@ public class DownloadTableTest {
 		// Create expectations
 		setUpMethodCalls(table);
 
-		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
-			.downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = session.downloadTable(0);
 
 		// Tests
 		assertTrue(LongTable.class.isInstance(imageJTable));
@@ -179,9 +166,8 @@ public class DownloadTableTest {
 	}
 
 	@Test
-	public void downloadDoubleTable() throws PermissionDeniedException,
-		CannotCreateSessionException, ServerError, DSOutOfServiceException,
-		ExecutionException, DSAccessException
+	public void downloadDoubleTable() throws DSOutOfServiceException,
+		ExecutionException, DSAccessException, OMEROException
 	{
 		// Setup OMERO data structures
 		final TableDataColumn[] tdc = new TableDataColumn[] { new TableDataColumn(
@@ -196,8 +182,7 @@ public class DownloadTableTest {
 		// Create expectations
 		setUpMethodCalls(table);
 
-		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
-			.downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = session.downloadTable(0);
 
 		// Tests
 		assertTrue(DoubleTable.class.isInstance(imageJTable));
@@ -217,9 +202,8 @@ public class DownloadTableTest {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void downloadLongArrayTable() throws PermissionDeniedException,
-		CannotCreateSessionException, ServerError, DSOutOfServiceException,
-		ExecutionException, DSAccessException
+	public void downloadLongArrayTable() throws DSOutOfServiceException,
+		ExecutionException, DSAccessException, OMEROException
 	{
 		// Setup OMERO data structures
 		final TableDataColumn[] tdc = new TableDataColumn[] { new TableDataColumn(
@@ -235,8 +219,7 @@ public class DownloadTableTest {
 		// Create expectations
 		setUpMethodCalls(table);
 
-		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
-			.downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = session.downloadTable(0);
 
 		// Tests
 		assertTrue(GenericTable.class.isInstance(imageJTable));
@@ -261,9 +244,8 @@ public class DownloadTableTest {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void downloadStringTable() throws PermissionDeniedException,
-		CannotCreateSessionException, ServerError, DSOutOfServiceException,
-		ExecutionException, DSAccessException
+	public void downloadStringTable() throws DSOutOfServiceException,
+		ExecutionException, DSAccessException, OMEROException
 	{
 		/// Setup OMERO data structures
 		final TableDataColumn[] tdc = new TableDataColumn[] { new TableDataColumn(
@@ -280,8 +262,7 @@ public class DownloadTableTest {
 		// Create expectations
 		setUpMethodCalls(table);
 
-		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
-			.downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = session.downloadTable(0);
 
 		// Tests
 		assertTrue(GenericTable.class.isInstance(imageJTable));
@@ -304,9 +285,8 @@ public class DownloadTableTest {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void downloadMixedTable() throws PermissionDeniedException,
-		CannotCreateSessionException, ServerError, DSOutOfServiceException,
-		ExecutionException, DSAccessException
+	public void downloadMixedTable() throws DSOutOfServiceException,
+		ExecutionException, DSAccessException, OMEROException
 	{
 		/// Setup OMERO data structures
 		final TableDataColumn[] tdc = new TableDataColumn[] { new TableDataColumn(
@@ -326,8 +306,7 @@ public class DownloadTableTest {
 		// Create expectations
 		setUpMethodCalls(table);
 
-		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
-			.downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = session.downloadTable(0);
 
 		// Tests
 		assertTrue(GenericTable.class.isInstance(imageJTable));
@@ -362,9 +341,8 @@ public class DownloadTableTest {
 	}
 
 	@Test
-	public void downloadRefTable() throws PermissionDeniedException,
-		CannotCreateSessionException, ServerError, DSOutOfServiceException,
-		ExecutionException, DSAccessException
+	public void downloadRefTable() throws DSOutOfServiceException,
+		ExecutionException, DSAccessException, OMEROException
 	{
 		final TableDataColumn[] tdc = new TableDataColumn[] { new TableDataColumn(
 			"Header 1", 0, ImageData.class), new TableDataColumn("Header 2", 1,
@@ -383,8 +361,7 @@ public class DownloadTableTest {
 		// Create expectations
 		setUpMethodCalls(table);
 
-		final Table<?, ?> imageJTable = ((DefaultOMEROService) service)
-			.downloadTable(credentials, 0);
+		final Table<?, ?> imageJTable = session.downloadTable(0);
 
 		// Tests
 		assertTrue(GenericTable.class.isInstance(imageJTable));
@@ -409,14 +386,13 @@ public class DownloadTableTest {
 
 	// -- Helper methods --
 
-	private void setUpMethodCalls(final TableData table) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	private void setUpMethodCalls(final TableData table) throws OMEROException,
+		ExecutionException, DSOutOfServiceException, DSAccessException
 	{
 		new Expectations() {
 
 			{
-				new OMEROSession(credentials, service);
+				session = service.session(location.getServer());
 
 				gateway.getFacility(TablesFacility.class);
 				result = tablesFacility;
