@@ -28,13 +28,14 @@ package net.imagej.omero.roi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
+import net.imagej.omero.OMEROException;
 import net.imagej.omero.OMEROLocation;
+import net.imagej.omero.OMEROServer;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
 import net.imagej.omero.roi.transform.TransformedOMERORealMaskRealInterval;
@@ -51,11 +52,8 @@ import org.scijava.Context;
 import org.scijava.convert.ConvertService;
 import org.scijava.util.TreeNode;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import mockit.Expectations;
 import mockit.Mocked;
-import omero.ServerError;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
@@ -76,10 +74,8 @@ import omero.model.RoiI;
 import omero.model.Shape;
 
 /**
- * Tests
- * {@link OMEROService#downloadROIs(net.imagej.omero.OMEROLocation, long)}.
- * Note, that the actual data structure conversions are not tested here as they
- * are tested elsewhere.
+ * Tests {@link OMEROSession#downloadROIs(long)}. Note, that the actual data
+ * structure conversions are not tested here as they are tested elsewhere.
  *
  * @author Alison Walter
  */
@@ -101,8 +97,8 @@ public class DownloadROITest {
 	private ROIFacility roiFac;
 
 	@Before
-	public void setup() throws URISyntaxException {
-		location = new OMEROLocation("localhost", 4064, "omero", "omero");
+	public void setup() {
+		location = new OMEROLocation(new OMEROServer("localhost", 4064), "omero");
 		service = new Context(OMEROService.class, ConvertService.class).getService(
 			OMEROService.class);
 	}
@@ -115,15 +111,14 @@ public class DownloadROITest {
 	// -- test omeroService.downloadROIs(...) --
 
 	@Test
-	public void testDownloadSingleROI() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testDownloadSingleROI() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final EllipseData ed = new EllipseData(22, 22, 3, 5);
 		final ROIResult rr = createROIResult(createROIData(ed));
 		setUpMethodCalls(1, rr);
 
-		final TreeNode<?> dn = service.downloadROIs(location, 1);
+		final TreeNode<?> dn = session.downloadROIs(1);
 		assertTrue(dn.children().get(0) instanceof OMEROROICollection);
 
 		final OMEROROICollection orc = (OMEROROICollection) dn.children().get(0);
@@ -136,9 +131,8 @@ public class DownloadROITest {
 	}
 
 	@Test
-	public void testDownloadMultipleROIData() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testDownloadMultipleROIData() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final EllipseData ed = new EllipseData(13, 15, 0.5, 6);
 		final RectangleData rd = new RectangleData(4, 3.5, 90, 65.5);
@@ -147,7 +141,7 @@ public class DownloadROITest {
 			createROIData(pd));
 		setUpMethodCalls(4, rr);
 
-		final TreeNode<?> dn = service.downloadROIs(location, 1);
+		final TreeNode<?> dn = session.downloadROIs(1);
 
 		assertEquals(3, dn.children().size());
 		for (final TreeNode<?> child : dn.children()) {
@@ -164,9 +158,8 @@ public class DownloadROITest {
 	}
 
 	@Test
-	public void testDownloadROIDataWithManyShapeData() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testDownloadROIDataWithManyShapeData() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final RectangleData rdZero = new RectangleData(10, 22.25, 67, 94);
 		final RectangleData rdOne = new RectangleData(10, 22.25, 67, 94);
@@ -177,7 +170,7 @@ public class DownloadROITest {
 			rdThree, rdFour));
 		setUpMethodCalls(5, rr);
 
-		final TreeNode<?> dn = service.downloadROIs(session, 1);
+		final TreeNode<?> dn = session.downloadROIs(1);
 
 		assertEquals(1, dn.children().size());
 		assertTrue(dn.children().get(0) instanceof OMEROROICollection);
@@ -192,9 +185,8 @@ public class DownloadROITest {
 	}
 
 	@Test
-	public void testDownloadManyROIResults() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testDownloadManyROIResults() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final RectangleData rdZero = new RectangleData(10, 10, 20, 20);
 		final RectangleData rdOne = new RectangleData(10, 10, 20, 20);
@@ -210,7 +202,7 @@ public class DownloadROITest {
 			pdTwo));
 		setUpMethodCalls(10, rrZero, rrOne, rrTwo);
 
-		final TreeNode<?> dn = service.downloadROIs(location, 1);
+		final TreeNode<?> dn = session.downloadROIs(1);
 		assertEquals(5, dn.children().size());
 
 		for (final TreeNode<?> node : dn.children()) {
@@ -238,9 +230,8 @@ public class DownloadROITest {
 	}
 
 	@Test
-	public void testDownloadTransformedROIData() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testDownloadTransformedROIData() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final RectangleData rd = new RectangleData(150, 200, 30.25, 14);
 		final omero.model.AffineTransform transform = new AffineTransformI();
@@ -254,7 +245,7 @@ public class DownloadROITest {
 		final ROIResult rr = createROIResult(createROIData(rd));
 		setUpMethodCalls(1, rr);
 
-		final TreeNode<?> dn = service.downloadROIs(location, 1);
+		final TreeNode<?> dn = session.downloadROIs(1);
 
 		assertEquals(1, dn.children().size());
 		assertTrue(dn.children().get(0) instanceof OMEROROICollection);
@@ -269,9 +260,8 @@ public class DownloadROITest {
 	}
 
 	@Test
-	public void testDownloadTextData() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testDownloadTextData() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		// NB: Currently this test should fail, as TextData is not supported
 		final TextData td = new TextData("Hello", 121, 68.5);
@@ -279,21 +269,20 @@ public class DownloadROITest {
 		setUpMethodCalls(1, rr);
 
 		exception.expect(IllegalArgumentException.class);
-		service.downloadROIs(location, 1);
+		session.downloadROIs(1);
 	}
 
 	// -- test downloadROI(...) --
 
 	@Test
-	public void testDownloadROIDataViaID() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testDownloadROIDataViaID() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final EllipseData ed = new EllipseData(22, 22, 3, 5);
 		final ROIResult rr = createROIResult(createROIData(ed));
 		setUpMethodCallsTwo(rr);
 
-		final TreeNode<?> dn = service.downloadROI(location, 1);
+		final TreeNode<?> dn = session.downloadROI(1);
 
 		assertTrue(dn.children().get(0) instanceof OMEROROICollection);
 
@@ -307,9 +296,9 @@ public class DownloadROITest {
 	}
 
 	@Test
-	public void testDownloadROIDataWithManyShapesViaID() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testDownloadROIDataWithManyShapesViaID()
+		throws ExecutionException, DSOutOfServiceException, DSAccessException,
+		OMEROException
 	{
 		final RectangleData rdZero = new RectangleData(10, 22.25, 67, 94);
 		final RectangleData rdOne = new RectangleData(10, 22.25, 67, 94);
@@ -320,7 +309,7 @@ public class DownloadROITest {
 			rdThree, rdFour));
 		setUpMethodCallsTwo(rr);
 
-		final TreeNode<?> dn = service.downloadROI(location, 1);
+		final TreeNode<?> dn = session.downloadROI(1);
 
 		assertEquals(1, dn.children().size());
 		assertTrue(dn.children().get(0) instanceof OMEROROICollection);
@@ -337,14 +326,14 @@ public class DownloadROITest {
 	// -- Helper methods --
 
 	private void setUpMethodCalls(final int numROIs, final ROIResult... results)
-		throws ServerError, PermissionDeniedException, CannotCreateSessionException,
-		ExecutionException, DSOutOfServiceException, DSAccessException
+		throws ExecutionException, DSOutOfServiceException, DSAccessException,
+		OMEROException
 	{
 		final List<ROIResult> rr = Arrays.asList(results);
 		new Expectations() {
 
 			{
-				new OMEROSession(location, service);
+				session = service.session(location.getServer());
 
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;
@@ -358,14 +347,14 @@ public class DownloadROITest {
 		};
 	}
 
-	private void setUpMethodCallsTwo(final ROIResult rr) throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	private void setUpMethodCallsTwo(final ROIResult rr)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException,
+		OMEROException
 	{
 		new Expectations() {
 
 			{
-				new OMEROSession(location, service);
+				session = service.session(location.getServer());
 
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;
