@@ -27,7 +27,6 @@ package net.imagej.omero;
 
 import static org.junit.Assert.assertEquals;
 
-import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.After;
@@ -55,12 +54,9 @@ import org.scijava.util.DoubleArray;
 import org.scijava.util.IntArray;
 import org.scijava.util.PrimitiveArray;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
-import omero.ServerError;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
@@ -77,13 +73,13 @@ import omero.model.RoiI;
 import omero.model.WellSampleI;
 
 /**
- * Tests {@link DefaultOMEROService#uploadTable}.
+ * Tests {@link OMEROSession#uploadTable}.
  *
  * @author Alison Walter
  */
 public class UploadTableTest {
 
-	private OMEROLocation credentials;
+	private OMEROLocation location;
 	private OMEROService service;
 
 	@Mocked
@@ -100,12 +96,7 @@ public class UploadTableTest {
 
 	@Before
 	public void setUp() {
-		try {
-			credentials = new OMEROLocation("localhost", 4064, "omero", "omero");
-		}
-		catch (final URISyntaxException exc) {
-			exc.printStackTrace();
-		}
+		location = new OMEROLocation(new OMEROServer("localhost", 4064), "omero");
 		service = new Context(OMEROService.class).getService(OMEROService.class);
 	}
 
@@ -115,9 +106,8 @@ public class UploadTableTest {
 	}
 
 	@Test
-	public void testBoolTable() throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+	public void testBoolTable() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final BoolTable table = new DefaultBoolTable(2, 4);
 		table.get(0).fill(new boolean[] { true, true, false, false });
@@ -126,7 +116,7 @@ public class UploadTableTest {
 		// Create expectations
 		setUpMethodCalls();
 
-		final long id = service.uploadTable(credentials, "table", table, 0);
+		final long id = session.uploadTable("table", table, 0);
 		assertEquals(id, -1);
 
 		// NB: Can only capture in a Verifications block
@@ -143,9 +133,8 @@ public class UploadTableTest {
 	}
 
 	@Test
-	public void testShortTable() throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+	public void testShortTable() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final ShortTable table = new DefaultShortTable(6, 3);
 		table.get(0).fill(new short[] { -32768, 0, 32767 });
@@ -158,7 +147,7 @@ public class UploadTableTest {
 		// Create expectations
 		setUpMethodCalls();
 
-		final long id = service.uploadTable(credentials, "table", table, 0);
+		final long id = session.uploadTable("table", table, 0);
 		assertEquals(id, -1);
 
 		// NB: Can only capture in a Verifications block
@@ -175,9 +164,8 @@ public class UploadTableTest {
 	}
 
 	@Test
-	public void testLongTable() throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+	public void testLongTable() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final LongTable table = new DefaultLongTable(2, 2);
 		table.get(0).fill(new long[] { 9223372036854775807l, 0 });
@@ -186,7 +174,7 @@ public class UploadTableTest {
 		// Create expectations
 		setUpMethodCalls();
 
-		final long id = service.uploadTable(credentials, "table", table, 0);
+		final long id = session.uploadTable("table", table, 0);
 		assertEquals(id, -1);
 
 		// NB: Can only capture in a Verifications block
@@ -203,9 +191,8 @@ public class UploadTableTest {
 	}
 
 	@Test
-	public void testFloatTable() throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+	public void testFloatTable() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final FloatTable table = new DefaultFloatTable(4, 2);
 		table.get(0).fill(new float[] { -380129.125f, 0.25f });
@@ -222,7 +209,7 @@ public class UploadTableTest {
 		// Create expectations
 		setUpMethodCalls();
 
-		final long id = service.uploadTable(credentials, "table", table, 0);
+		final long id = session.uploadTable("table", table, 0);
 		assertEquals(id, -1);
 
 		// NB: Can only capture in a Verifications block
@@ -239,9 +226,8 @@ public class UploadTableTest {
 	}
 
 	@Test
-	public void testDoubleArrayTable() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testDoubleArrayTable() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final GenericTable table = new DefaultGenericTable();
 		final DefaultColumn<DoubleArray> ij0 = new DefaultColumn<>(
@@ -256,7 +242,7 @@ public class UploadTableTest {
 		// Create expectations
 		setUpMethodCalls();
 
-		final long id = service.uploadTable(credentials, "table", table, 0);
+		final long id = session.uploadTable("table", table, 0);
 		assertEquals(id, -1);
 
 		// NB: Can only capture in a Verifications block
@@ -273,9 +259,8 @@ public class UploadTableTest {
 	}
 
 	@Test
-	public void testByteArrayTable() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testByteArrayTable() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final GenericTable table = new DefaultGenericTable();
 		final DefaultColumn<ByteArray> ij0 = new DefaultColumn<>(ByteArray.class);
@@ -292,7 +277,7 @@ public class UploadTableTest {
 		// Create expectations
 		setUpMethodCalls();
 
-		final long id = service.uploadTable(credentials, "table", table, 0);
+		final long id = session.uploadTable("table", table, 0);
 		assertEquals(id, -1);
 
 		// NB: Can only capture in a Verifications block
@@ -309,9 +294,8 @@ public class UploadTableTest {
 	}
 
 	@Test
-	public void testCharTable() throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+	public void testCharTable() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final CharTable table = new DefaultCharTable(5, 2);
 		table.get(0).fill(new char[] { 'q', 'V' });
@@ -323,7 +307,7 @@ public class UploadTableTest {
 		// Create expectations
 		setUpMethodCalls();
 
-		final long id = service.uploadTable(credentials, "table", table, 0);
+		final long id = session.uploadTable("table", table, 0);
 		assertEquals(id, -1);
 
 		// NB: Can only capture in a Verifications block
@@ -340,9 +324,8 @@ public class UploadTableTest {
 	}
 
 	@Test
-	public void testReferenceTable() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testReferenceTable() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final GenericTable table = new DefaultGenericTable();
 		final OMERORefColumn rc0 = new OMERORefColumn(OMERORef.WELL);
@@ -367,7 +350,7 @@ public class UploadTableTest {
 		// Create expectations
 		setUpMethodCalls();
 
-		final long id = service.uploadTable(credentials, "table", table, 0);
+		final long id = session.uploadTable("table", table, 0);
 		assertEquals(id, -1);
 
 		// NB: Can only capture in a Verifications block
@@ -384,9 +367,8 @@ public class UploadTableTest {
 	}
 
 	@Test
-	public void testMixedTable() throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+	public void testMixedTable() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final GenericTable table = new DefaultGenericTable();
 		final BoolColumn ijc0 = new BoolColumn("h0");
@@ -413,7 +395,7 @@ public class UploadTableTest {
 		// Create expectations
 		setUpMethodCalls();
 
-		final long id = service.uploadTable(credentials, "table", table, 0);
+		final long id = session.uploadTable("table", table, 0);
 		assertEquals(id, -1);
 
 		// NB: Can only capture in a Verifications block
@@ -432,14 +414,13 @@ public class UploadTableTest {
 
 	// -- Helper methods --
 
-	private void setUpMethodCalls() throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, DSOutOfServiceException, ExecutionException,
-		DSAccessException
+	private void setUpMethodCalls() throws DSOutOfServiceException,
+		ExecutionException, DSAccessException, OMEROException
 	{
 		new Expectations() {
 
 			{
-				new OMEROSession(credentials, service);
+				session = service.session(location.getServer());
 
 				gateway.getFacility(BrowseFacility.class);
 				result = browseFacility;
