@@ -139,14 +139,25 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * Typically used to execute OMERO scripts on the server side, not to
 	 * communicate with OMERO from an ImageJ2 application.
 	 *
-	 * @param omeroService The SciJava context.
+	 * @param omeroService The OMEROService of a containing SciJava context.
+	 * @param client The OMERO client.
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
-	public OMEROSession(final OMEROService omeroService) throws OMEROException {
-		// Create client in a vacuum. Works if running on the server side.
-		this(omeroService, new omero.client());
+	public OMEROSession(final OMEROService omeroService, final omero.client client)
+		throws OMEROException
+	{
+		this(omeroService, new OMEROServer(OMERO.host(client), OMERO.port(client)), null, client);
 	}
 
+	/**
+	 * Constructs an OMERO session with server specified in the environment.
+	 * Typically used to execute OMERO scripts from an ImageJ2 application.
+	 *
+	 * @param omeroService The OMEROService of a containing SciJava context.
+	 * @param server The OMERO server to connect to.
+	 * @param credentials The credentials to use in creating this session.
+	 * @throws OMEROException if something goes wrong with OMERO.
+	 */
 	public OMEROSession(final OMEROService omeroService, final OMEROServer server,
 		final OMEROCredentials credentials) throws OMEROException
 	{
