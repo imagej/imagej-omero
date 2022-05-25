@@ -65,8 +65,7 @@ public interface OMEROService extends ImageJService {
 		throws OMEROException;
 
 	/**
-	 * Creates an OMEROSession. This <strong>does not</strong> cache the session
-	 * nor does it associate this session with the thread.
+	 * Creates an OMEROSession. This <strong>does not</strong> cache the session.
 	 *
 	 * @param server OMEROServer for which a session is desired
 	 * @param credentials Credentials for obtaining access to the server
