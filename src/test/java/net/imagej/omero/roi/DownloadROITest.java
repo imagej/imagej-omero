@@ -34,7 +34,6 @@ import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROException;
-import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROServer;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
@@ -81,7 +80,7 @@ import omero.model.Shape;
  */
 public class DownloadROITest {
 
-	private OMEROLocation location;
+	private OMEROServer server;
 	private OMEROService service;
 
 	@Rule
@@ -98,7 +97,7 @@ public class DownloadROITest {
 
 	@Before
 	public void setup() {
-		location = new OMEROLocation(new OMEROServer("localhost", 4064), "omero");
+		server = new OMEROServer("localhost", 4064);
 		service = new Context(OMEROService.class, ConvertService.class).getService(
 			OMEROService.class);
 	}
@@ -333,7 +332,7 @@ public class DownloadROITest {
 		new Expectations() {
 
 			{
-				session = service.session(location.getServer());
+				session = service.session(server);
 
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;
@@ -354,7 +353,7 @@ public class DownloadROITest {
 		new Expectations() {
 
 			{
-				session = service.session(location.getServer());
+				session = service.session(server);
 
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;

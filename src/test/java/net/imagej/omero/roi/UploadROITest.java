@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROException;
-import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROServer;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
@@ -86,7 +85,7 @@ import omero.model.Shape;
  */
 public class UploadROITest {
 
-	private OMEROLocation location;
+	private OMEROServer server;
 	private OMEROService service;
 	private List<omero.model.IObject> tags;
 
@@ -110,7 +109,7 @@ public class UploadROITest {
 
 	@Before
 	public void setUp() {
-		location = new OMEROLocation(new OMEROServer("localhost", 4064), "omero");
+		server = new OMEROServer("localhost", 4064);
 		service = new Context(OMEROService.class, ConvertService.class).getService(
 			OMEROService.class);
 
@@ -319,7 +318,7 @@ public class UploadROITest {
 		new Expectations() {
 
 			{
-				session = service.session(location.getServer());
+				session = service.session(server);
 				result = session;
 				session.getGateway();
 				result = gateway;

@@ -79,7 +79,7 @@ import omero.model.WellSampleI;
  */
 public class UploadTableTest {
 
-	private OMEROLocation location;
+	private OMEROServer server;
 	private OMEROService service;
 
 	@Mocked
@@ -96,7 +96,7 @@ public class UploadTableTest {
 
 	@Before
 	public void setUp() {
-		location = new OMEROLocation(new OMEROServer("localhost", 4064), "omero");
+		server = new OMEROServer("localhost", 4064);
 		service = new Context(OMEROService.class).getService(OMEROService.class);
 	}
 
@@ -420,7 +420,7 @@ public class UploadTableTest {
 		new Expectations() {
 
 			{
-				session = service.session(location.getServer());
+				session = service.session(server);
 
 				gateway.getFacility(BrowseFacility.class);
 				result = browseFacility;
