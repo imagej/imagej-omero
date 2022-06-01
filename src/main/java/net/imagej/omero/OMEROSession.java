@@ -143,10 +143,11 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * @param client The OMERO client.
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
-	public OMEROSession(final OMEROService omeroService, final omero.client client)
-		throws OMEROException
+	public OMEROSession(final OMEROService omeroService,
+		final omero.client client) throws OMEROException
 	{
-		this(omeroService, new OMEROServer(OMERO.host(client), OMERO.port(client)), null, client);
+		this(omeroService, new OMEROServer(OMERO.host(client), OMERO.port(client)),
+			null, client);
 	}
 
 	/**
