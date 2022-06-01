@@ -61,6 +61,13 @@ You will then have the following new menu items:
 * File > Import > OMERO...
 * File > Export > OMERO...
 
+### OMERO Setup
+
+If you do not already have access to a local OMERO server, the quickest method
+to get one up and running is [to use the Docker
+example](https://github.com/ome/docker-example-omero). This will create a
+server + web client.
+
 ### Demonstration Video
 
 [![](resources/ij2-update-roi-demo-icon.PNG)](https://www.youtube.com/watch?v=st1E9Qxu0-s)
