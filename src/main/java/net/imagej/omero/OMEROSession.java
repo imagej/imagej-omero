@@ -941,8 +941,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		final String user = credentials == null ? null : credentials.getUser();
 		final String pass = credentials == null ? null : credentials.getPassword();
 		sfp = credentials == null ? //
-			OMERO.ask(() -> client.createSession(user, pass)) : OMERO.ask(() -> client
-				.joinSession(sessionID));
+			OMERO.ask(() -> client.joinSession(sessionID)) : OMERO.ask(() -> client
+				.createSession(user, pass));
 
 		// create OMERO gateway
 		gateway = new Gateway(new SimpleLogger());
