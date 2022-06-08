@@ -47,7 +47,9 @@ import org.scijava.util.DoubleArray;
 import org.scijava.util.LongArray;
 
 import mockit.Expectations;
+import mockit.Injectable;
 import mockit.Mocked;
+import mockit.Tested;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
@@ -65,21 +67,19 @@ import omero.model.ImageI;
  */
 public class DownloadTableTest {
 
-	private OMEROServer server;
 	private OMEROService service;
 
-	@Mocked
-	private OMEROSession session;
-
-	@Mocked
+	@Injectable
 	private Gateway gateway;
 
 	@Mocked
 	private TablesFacility tablesFacility;
 
+	@Tested
+	private OMEROSession session;
+
 	@Before
 	public void setUp() {
-		server = new OMEROServer("localhost", 4064);
 		service = new Context(OMEROService.class).getService(OMEROService.class);
 	}
 
@@ -386,16 +386,15 @@ public class DownloadTableTest {
 
 	// -- Helper methods --
 
-	private void setUpMethodCalls(final TableData table) throws OMEROException,
-		ExecutionException, DSOutOfServiceException, DSAccessException
+	private void setUpMethodCalls(final TableData table)
+		throws ExecutionException, DSOutOfServiceException, DSAccessException
 	{
 		new Expectations() {
 
 			{
-				session = service.session(server);
-
 				gateway.getFacility(TablesFacility.class);
 				result = tablesFacility;
+
 				tablesFacility.getTable((SecurityContext) any, anyLong, anyLong,
 					anyLong);
 				result = table;
