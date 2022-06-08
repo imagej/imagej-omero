@@ -28,13 +28,13 @@ package net.imagej.omero.roi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROException;
-import net.imagej.omero.OMEROServer;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
 import net.imagej.omero.roi.transform.TransformedOMERORealMaskRealInterval;
@@ -52,7 +52,9 @@ import org.scijava.convert.ConvertService;
 import org.scijava.util.TreeNode;
 
 import mockit.Expectations;
+import mockit.Injectable;
 import mockit.Mocked;
+import mockit.Tested;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
@@ -80,16 +82,15 @@ import omero.model.Shape;
  */
 public class DownloadROITest {
 
-	private OMEROServer server;
 	private OMEROService service;
 
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 
-	@Mocked
+	@Tested
 	private OMEROSession session;
 
-	@Mocked
+	@Injectable
 	private Gateway gateway;
 
 	@Mocked
@@ -97,7 +98,6 @@ public class DownloadROITest {
 
 	@Before
 	public void setup() {
-		server = new OMEROServer("localhost", 4064);
 		service = new Context(OMEROService.class, ConvertService.class).getService(
 			OMEROService.class);
 	}
@@ -111,8 +111,11 @@ public class DownloadROITest {
 
 	@Test
 	public void testDownloadSingleROI() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		IllegalArgumentException, IllegalAccessException, NoSuchFieldException,
+		SecurityException
 	{
+		setUpSession();
 		final EllipseData ed = new EllipseData(22, 22, 3, 5);
 		final ROIResult rr = createROIResult(createROIData(ed));
 		setUpMethodCalls(1, rr);
@@ -131,8 +134,11 @@ public class DownloadROITest {
 
 	@Test
 	public void testDownloadMultipleROIData() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		IllegalArgumentException, IllegalAccessException, NoSuchFieldException,
+		SecurityException
 	{
+		setUpSession();
 		final EllipseData ed = new EllipseData(13, 15, 0.5, 6);
 		final RectangleData rd = new RectangleData(4, 3.5, 90, 65.5);
 		final PointData pd = new PointData(14, 6);
@@ -158,8 +164,11 @@ public class DownloadROITest {
 
 	@Test
 	public void testDownloadROIDataWithManyShapeData() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		IllegalArgumentException, IllegalAccessException, NoSuchFieldException,
+		SecurityException
 	{
+		setUpSession();
 		final RectangleData rdZero = new RectangleData(10, 22.25, 67, 94);
 		final RectangleData rdOne = new RectangleData(10, 22.25, 67, 94);
 		final RectangleData rdTwo = new RectangleData(10, 22.25, 67, 94);
@@ -185,8 +194,11 @@ public class DownloadROITest {
 
 	@Test
 	public void testDownloadManyROIResults() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		IllegalArgumentException, IllegalAccessException, NoSuchFieldException,
+		SecurityException
 	{
+		setUpSession();
 		final RectangleData rdZero = new RectangleData(10, 10, 20, 20);
 		final RectangleData rdOne = new RectangleData(10, 10, 20, 20);
 		final RectangleData rdTwo = new RectangleData(10, 10, 20, 20);
@@ -230,8 +242,11 @@ public class DownloadROITest {
 
 	@Test
 	public void testDownloadTransformedROIData() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		IllegalArgumentException, IllegalAccessException, NoSuchFieldException,
+		SecurityException
 	{
+		setUpSession();
 		final RectangleData rd = new RectangleData(150, 200, 30.25, 14);
 		final omero.model.AffineTransform transform = new AffineTransformI();
 		transform.setA00(omero.rtypes.rdouble(1));
@@ -260,8 +275,11 @@ public class DownloadROITest {
 
 	@Test
 	public void testDownloadTextData() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
+		setUpSession();
 		// NB: Currently this test should fail, as TextData is not supported
 		final TextData td = new TextData("Hello", 121, 68.5);
 		final ROIResult rr = createROIResult(createROIData(td));
@@ -275,8 +293,11 @@ public class DownloadROITest {
 
 	@Test
 	public void testDownloadROIDataViaID() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		IllegalArgumentException, IllegalAccessException, NoSuchFieldException,
+		SecurityException
 	{
+		setUpSession();
 		final EllipseData ed = new EllipseData(22, 22, 3, 5);
 		final ROIResult rr = createROIResult(createROIData(ed));
 		setUpMethodCallsTwo(rr);
@@ -297,8 +318,10 @@ public class DownloadROITest {
 	@Test
 	public void testDownloadROIDataWithManyShapesViaID()
 		throws ExecutionException, DSOutOfServiceException, DSAccessException,
-		OMEROException
+		OMEROException, IllegalArgumentException, IllegalAccessException,
+		NoSuchFieldException, SecurityException
 	{
+		setUpSession();
 		final RectangleData rdZero = new RectangleData(10, 22.25, 67, 94);
 		final RectangleData rdOne = new RectangleData(10, 22.25, 67, 94);
 		final RectangleData rdTwo = new RectangleData(10, 22.25, 67, 94);
@@ -324,16 +347,22 @@ public class DownloadROITest {
 
 	// -- Helper methods --
 
+	private void setUpSession() throws IllegalArgumentException,
+		IllegalAccessException, NoSuchFieldException, SecurityException
+	{
+		Field field = session.getClass().getDeclaredField("omeroService");
+		field.setAccessible(true);
+		field.set(session, service);
+		service.pushSession(session);
+	}
+
 	private void setUpMethodCalls(final int numROIs, final ROIResult... results)
-		throws ExecutionException, DSOutOfServiceException, DSAccessException,
-		OMEROException
+		throws ExecutionException, DSOutOfServiceException, DSAccessException
 	{
 		final List<ROIResult> rr = Arrays.asList(results);
 		new Expectations() {
 
 			{
-				session = service.session(server);
-
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;
 
@@ -348,13 +377,11 @@ public class DownloadROITest {
 
 	private void setUpMethodCallsTwo(final ROIResult rr)
 		throws ExecutionException, DSOutOfServiceException, DSAccessException,
-		OMEROException
+		IllegalArgumentException, SecurityException
 	{
 		new Expectations() {
 
 			{
-				session = service.session(server);
-
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;
 
