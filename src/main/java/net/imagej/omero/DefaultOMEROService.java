@@ -27,6 +27,7 @@ package net.imagej.omero;
 
 import io.scif.services.DatasetIOService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,7 +98,13 @@ public class DefaultOMEROService extends AbstractService implements
 
 	private final HashMap<OMEROServer, OMEROSession> sessions = new HashMap<>();
 	private final ThreadLocal<List<OMEROSession>> localSessions =
-		new ThreadLocal<>();
+		new ThreadLocal<List<OMEROSession>>()
+		{
+			@Override
+			public List<OMEROSession> initialValue() {
+				return new ArrayList<>();
+			}
+		};
 
 	// -- OMEROService methods --
 
