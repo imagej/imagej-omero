@@ -85,7 +85,7 @@ public class OmeroIT {
 	private Context context;
 	private OMEROService omero;
 
-	private static final String OMERO_SERVER = "omero";
+	private static final String OMERO_SERVER = "localhost";
 	private static final int OMERO_PORT = 4064;
 	private static final String OMERO_USER = "root";
 	private static final String OMERO_PASSWORD = "omero";
