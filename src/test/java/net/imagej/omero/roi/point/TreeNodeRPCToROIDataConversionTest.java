@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROSession;
 import net.imagej.omero.roi.ROIConverters;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
@@ -51,6 +52,7 @@ import org.scijava.log.LogService;
 import org.scijava.util.DefaultTreeNode;
 import org.scijava.util.TreeNode;
 
+import mockit.Tested;
 import omero.gateway.model.PointData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.ShapeData;
@@ -63,13 +65,18 @@ import omero.gateway.model.ShapeData;
 public class TreeNodeRPCToROIDataConversionTest {
 
 	private List<RealLocalizable> pts;
+	private OMEROService omeroService;
 	private ConvertService convert;
+
+	@Tested
+	private OMEROSession session;
 
 	@Before
 	public void setUp() {
 		final Context c = new Context(ConvertService.class, OMEROService.class,
 			LogService.class);
-		convert = c.getService(ConvertService.class);
+		omeroService = c.getService(OMEROService.class);
+		convert = omeroService.convert();
 		pts = new ArrayList<>(5);
 		pts.add(new RealPoint(new double[] { 1.5, 2.25 }));
 		pts.add(new RealPoint(new double[] { 6, 392 }));
@@ -108,6 +115,7 @@ public class TreeNodeRPCToROIDataConversionTest {
 
 	@Test
 	public void testDefaultConversion() {
+		omeroService.pushSession(session);
 		final RealPointCollection<?> rpc = new DefaultWritableRealPointCollection<>(
 			pts);
 
@@ -120,6 +128,7 @@ public class TreeNodeRPCToROIDataConversionTest {
 
 	@Test
 	public void testRealPointSampleListConversion() {
+		omeroService.pushSession(session);
 		final RealPointCollection<?> rpc =
 			new RealPointSampleListWritableRealPointCollection<>(pts);
 
@@ -132,6 +141,7 @@ public class TreeNodeRPCToROIDataConversionTest {
 
 	@Test
 	public void testKDTreeConversion() {
+		omeroService.pushSession(session);
 		final RealPointCollection<?> rpc = new KDTreeRealPointCollection<>(pts);
 
 		final TreeNode<?> dn = new DefaultTreeNode<>(rpc, null);
