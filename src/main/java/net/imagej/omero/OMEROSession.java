@@ -127,6 +127,16 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	// -- Constructors --
 
 	/**
+	 * Empty constructor which creates a disconnected dummy session.
+	 */
+	@SuppressWarnings("unused")
+	private OMEROSession() {
+		omeroService = null;
+		server = null;
+		roiCache = null;
+	}
+
+	/**
 	 * @see #OMEROSession(OMEROService, omero.client)
 	 */
 	public OMEROSession(final OMEROService omeroService) throws OMEROException {
