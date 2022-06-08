@@ -27,6 +27,7 @@ package net.imagej.omero.roi;
 
 import static org.junit.Assert.assertEquals;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,7 +36,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.omero.OMEROException;
-import net.imagej.omero.OMEROServer;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMask;
@@ -57,7 +57,9 @@ import org.scijava.util.DefaultTreeNode;
 import org.scijava.util.TreeNode;
 
 import mockit.Expectations;
+import mockit.Injectable;
 import mockit.Mocked;
+import mockit.Tested;
 import mockit.Verifications;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
@@ -85,14 +87,13 @@ import omero.model.Shape;
  */
 public class UploadROITest {
 
-	private OMEROServer server;
 	private OMEROService service;
 	private List<omero.model.IObject> tags;
 
-	@Mocked
+	@Tested
 	private OMEROSession session;
 
-	@Mocked
+	@Injectable
 	private Gateway gateway;
 
 	@Mocked
@@ -109,7 +110,6 @@ public class UploadROITest {
 
 	@Before
 	public void setUp() {
-		server = new OMEROServer("localhost", 4064);
 		service = new Context(OMEROService.class, ConvertService.class).getService(
 			OMEROService.class);
 
@@ -126,7 +126,9 @@ public class UploadROITest {
 
 	@Test
 	public void testUploadSingleRMRI() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final Box b = GeomMasks.closedBox(new double[] { 12.5, 16 }, new double[] {
 			83, 92 });
@@ -144,7 +146,9 @@ public class UploadROITest {
 
 	@Test
 	public void testUploadCompositeMaskPredicate() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final Box b = GeomMasks.openBox(new double[] { 10, 11.25 }, new double[] {
 			66, 92.5 });
@@ -165,7 +169,9 @@ public class UploadROITest {
 
 	@Test
 	public void testUploadOMERORoiCollecton() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final RectangleData rd = new RectangleData(12, 15.5, 4, 6);
 		rd.setId(122);
@@ -205,7 +211,9 @@ public class UploadROITest {
 
 	@Test
 	public void testUploadOMERORoiElement() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final RectangleData rd = new RectangleData(12, 15.5, 4, 6);
 		rd.setId(122);
@@ -246,7 +254,9 @@ public class UploadROITest {
 
 	@Test
 	public void testUploadUnboundedMaskPredicate() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 14, 15.5 },
 			new double[] { 2, 3 });
@@ -265,7 +275,9 @@ public class UploadROITest {
 
 	@Test
 	public void testUploadMultipleRois() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 33, 27 },
 			new double[] { 8, 3.5 });
@@ -312,17 +324,16 @@ public class UploadROITest {
 	@SuppressWarnings({ "unchecked", "resource" })
 	private void setUpMethodCalls(final boolean needInterval,
 		final int numROIData, final List<ROIData> rois) throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, NoSuchFieldException,
+		SecurityException, IllegalArgumentException, IllegalAccessException
 	{
 
+		Field field = session.getClass().getDeclaredField("omeroService");
+		field.setAccessible(true);
+		field.set(session, service);
 		new Expectations() {
 
 			{
-				session = service.session(server);
-				result = session;
-				session.getGateway();
-				result = gateway;
-
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;
 
@@ -380,6 +391,7 @@ public class UploadROITest {
 		new Verifications() {
 
 			{
+
 				final Collection<ROIData> rois = new ArrayList<>(numROIData);
 				for (int i = 0; i < numROIData; i++) {
 					Collection<ROIData> rd;
