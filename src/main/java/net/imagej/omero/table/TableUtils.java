@@ -57,7 +57,7 @@ import omero.gateway.model.PlateData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.TableData;
 import omero.gateway.model.TableDataColumn;
-import omero.gateway.model.WellSampleData;
+import omero.gateway.model.WellData;
 
 /**
  * Utility class for working with converting between ImageJ and OMERO tables.
@@ -186,7 +186,7 @@ public final class TableUtils {
 		}
 		else if (type.equals(FileAnnotationData.class) || type.equals(
 			ImageData.class) || type.equals(PlateData.class) || type.equals(
-				ROIData.class) || type.equals(WellSampleData.class))
+				ROIData.class) || type.equals(WellData.class))
 		{
 			populateOMERORefColumn((OMERORefColumn) imageJColumn, omeroColumnData);
 		}
@@ -262,7 +262,7 @@ public final class TableUtils {
 		if (column.getType().equals(String.class)) {
 			return new DefaultColumn<>(String.class, column.getName());
 		}
-		if (column.getType().equals(WellSampleData.class)) {
+		if (column.getType().equals(WellData.class)) {
 			return new OMERORefColumn(column.getName(), OMERORef.WELL);
 		}
 		throw new IllegalArgumentException("Unsupported column type: " + //
@@ -311,7 +311,7 @@ public final class TableUtils {
 		if (refType == OMERORef.IMAGE) return ImageData.class;
 		if (refType == OMERORef.PLATE) return PlateData.class;
 		if (refType == OMERORef.ROI) return ROIData.class;
-		if (refType == OMERORef.WELL) return WellSampleData.class;
+		if (refType == OMERORef.WELL) return WellData.class;
 		throw new UnsupportedOperationException(
 			"Not yet implemented reference column for " + refType.name());
 	}

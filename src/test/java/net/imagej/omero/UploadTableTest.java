@@ -68,9 +68,9 @@ import omero.gateway.model.ImageData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.TableData;
 import omero.gateway.model.TableDataColumn;
-import omero.gateway.model.WellSampleData;
+import omero.gateway.model.WellData;
 import omero.model.RoiI;
-import omero.model.WellSampleI;
+import omero.model.WellI;
 
 /**
  * Tests {@link OMEROSession#uploadTable}.
@@ -341,7 +341,7 @@ public class UploadTableTest {
 		final Object[][] wells = new Object[3][3];
 		for (int c = 0; c < table.getColumnCount(); c++) {
 			for (int r = 0; r < table.getRowCount(); r++) {
-				wells[c][r] = new WellSampleData(new WellSampleI((long) table.get(c, r),
+				wells[c][r] = new WellData(new WellI((long) table.get(c, r),
 					false));
 			}
 			((OMERORefColumn) table.get(c)).setOriginalData(wells[c]);
@@ -361,7 +361,7 @@ public class UploadTableTest {
 				tablesFacility.addTable((SecurityContext) any, (ImageData) any,
 					anyString, td = withCapture());
 
-				tableEquals(table, td, WellSampleData.class);
+				tableEquals(table, td, WellData.class);
 			}
 		};
 	}
