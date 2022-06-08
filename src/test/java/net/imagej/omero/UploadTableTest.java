@@ -27,6 +27,7 @@ package net.imagej.omero;
 
 import static org.junit.Assert.assertEquals;
 
+import java.lang.reflect.Field;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.After;
@@ -55,7 +56,9 @@ import org.scijava.util.IntArray;
 import org.scijava.util.PrimitiveArray;
 
 import mockit.Expectations;
+import mockit.Injectable;
 import mockit.Mocked;
+import mockit.Tested;
 import mockit.Verifications;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
@@ -79,14 +82,7 @@ import omero.model.WellI;
  */
 public class UploadTableTest {
 
-	private OMEROServer server;
 	private OMEROService service;
-
-	@Mocked
-	private OMEROSession session;
-
-	@Mocked
-	private Gateway gateway;
 
 	@Mocked
 	private TablesFacility tablesFacility;
@@ -94,9 +90,14 @@ public class UploadTableTest {
 	@Mocked
 	private BrowseFacility browseFacility;
 
+	@Injectable
+	private Gateway gateway;
+
+	@Tested
+	private OMEROSession session;
+
 	@Before
-	public void setUp() {
-		server = new OMEROServer("localhost", 4064);
+	public void setUp() throws SecurityException, IllegalArgumentException {
 		service = new Context(OMEROService.class).getService(OMEROService.class);
 	}
 
@@ -107,7 +108,9 @@ public class UploadTableTest {
 
 	@Test
 	public void testBoolTable() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final BoolTable table = new DefaultBoolTable(2, 4);
 		table.get(0).fill(new boolean[] { true, true, false, false });
@@ -134,7 +137,9 @@ public class UploadTableTest {
 
 	@Test
 	public void testShortTable() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final ShortTable table = new DefaultShortTable(6, 3);
 		table.get(0).fill(new short[] { -32768, 0, 32767 });
@@ -165,7 +170,9 @@ public class UploadTableTest {
 
 	@Test
 	public void testLongTable() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final LongTable table = new DefaultLongTable(2, 2);
 		table.get(0).fill(new long[] { 9223372036854775807l, 0 });
@@ -192,7 +199,9 @@ public class UploadTableTest {
 
 	@Test
 	public void testFloatTable() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final FloatTable table = new DefaultFloatTable(4, 2);
 		table.get(0).fill(new float[] { -380129.125f, 0.25f });
@@ -227,7 +236,9 @@ public class UploadTableTest {
 
 	@Test
 	public void testDoubleArrayTable() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final GenericTable table = new DefaultGenericTable();
 		final DefaultColumn<DoubleArray> ij0 = new DefaultColumn<>(
@@ -260,7 +271,9 @@ public class UploadTableTest {
 
 	@Test
 	public void testByteArrayTable() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final GenericTable table = new DefaultGenericTable();
 		final DefaultColumn<ByteArray> ij0 = new DefaultColumn<>(ByteArray.class);
@@ -295,7 +308,9 @@ public class UploadTableTest {
 
 	@Test
 	public void testCharTable() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final CharTable table = new DefaultCharTable(5, 2);
 		table.get(0).fill(new char[] { 'q', 'V' });
@@ -325,7 +340,9 @@ public class UploadTableTest {
 
 	@Test
 	public void testReferenceTable() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final GenericTable table = new DefaultGenericTable();
 		final OMERORefColumn rc0 = new OMERORefColumn(OMERORef.WELL);
@@ -368,7 +385,9 @@ public class UploadTableTest {
 
 	@Test
 	public void testMixedTable() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final GenericTable table = new DefaultGenericTable();
 		final BoolColumn ijc0 = new BoolColumn("h0");
@@ -411,24 +430,28 @@ public class UploadTableTest {
 			}
 		};
 	}
-
 	// -- Helper methods --
 
 	private void setUpMethodCalls() throws DSOutOfServiceException,
-		ExecutionException, DSAccessException, OMEROException
+		ExecutionException, DSAccessException, NoSuchFieldException,
+		SecurityException, IllegalArgumentException, IllegalAccessException
 	{
+
+		Field field = session.getClass().getDeclaredField("omeroService");
+		field.setAccessible(true);
+		field.set(session, service);
 		new Expectations() {
 
 			{
-				session = service.session(server);
-
 				gateway.getFacility(BrowseFacility.class);
 				result = browseFacility;
-				browseFacility.getImage((SecurityContext) any, anyLong);
-				result = new ImageData();
 
 				gateway.getFacility(TablesFacility.class);
 				result = tablesFacility;
+
+				browseFacility.getImage((SecurityContext) any, anyLong);
+				result = new ImageData();
+
 				tablesFacility.addTable((SecurityContext) any, (ImageData) any,
 					anyString, (TableData) any);
 				result = new TableData((TableDataColumn[]) any, (Object[][]) any);
