@@ -133,7 +133,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	private OMEROSession() {
 		omeroService = null;
 		server = null;
-		roiCache = null;
+		roiCache = new ROICache();
 	}
 
 	/**
