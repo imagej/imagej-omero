@@ -978,6 +978,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 			}
 		}
 		ctx = new SecurityContext(experimenter.getGroupId());
+		ctx.setExperimenter(experimenter);
 
 		// Until imagej-omero #30 is resolved; see:
 		// https://github.com/imagej/imagej-omero/issues/30
