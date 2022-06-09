@@ -39,7 +39,9 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import net.imagej.Dataset;
+import net.imagej.omero.OMEROCredentials;
 import net.imagej.omero.OMEROException;
+import net.imagej.omero.OMEROServer;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
 import net.imagej.omero.roi.OMEROROICollection;
@@ -63,12 +65,10 @@ import org.scijava.table.Table;
 import org.scijava.util.DefaultTreeNode;
 import org.scijava.util.TreeNode;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-import omero.ServerError;
 import omero.gateway.exception.DSAccessException;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.TablesFacility;
+import omero.gateway.model.ExperimenterData;
 import omero.gateway.model.TableData;
 
 /**
@@ -81,9 +81,9 @@ import omero.gateway.model.TableData;
 @Category(IntegrationTest.class)
 public class OmeroIT {
 
-	private omero.client client;
 	private Context context;
 	private OMEROService omero;
+	private OMEROSession session;
 
 	private static final String OMERO_SERVER = "localhost";
 	private static final int OMERO_PORT = 4064;
@@ -91,11 +91,12 @@ public class OmeroIT {
 	private static final String OMERO_PASSWORD = "omero";
 
 	@Before
-	public void setup() {
-		client = new omero.client(OMERO_SERVER, OMERO_PORT);
-
+	public void setup() throws OMEROException {
 		context = new Context();
 		omero = context.getService(OMEROService.class);
+		session = new OMEROSession(omero, new OMEROServer(OMERO_SERVER, OMERO_PORT),
+			new OMEROCredentials(OMERO_USER, OMERO_PASSWORD));
+
 	}
 
 	@After
@@ -104,87 +105,50 @@ public class OmeroIT {
 	}
 
 	@Test
-	public void testConnectingToServer() throws CannotCreateSessionException,
-		PermissionDeniedException, ServerError
-	{
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
-
-		assertNotNull(client.getSessionId());
-		client.closeSession();
+	public void testConnectingToServer() throws DSOutOfServiceException {
+		ExperimenterData experimenter = session.getSecurityContext()
+			.getExperimenterData();
+		String sessionId = session.getGateway().getSessionId(experimenter);
+		assertNotNull(sessionId);
 	}
 
 	@Test
-	public void testDownloadImage() throws ServerError,
-		CannotCreateSessionException, PermissionDeniedException, OMEROException
-	{
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
-		try (OMEROSession session = new OMEROSession(omero, client)) {
-			final Dataset d = session.downloadImage(1);
-			assertNotNull(d.getImgPlus());
-		}
-		finally {
-			client.closeSession();
-		}
-
+	public void testDownloadImage() throws OMEROException {
+		final Dataset d = session.downloadImage(1);
+		assertNotNull(d.getImgPlus());
 	}
 
 	@Test
-	public void testUploadImage() throws IOException, ServerError,
-		CannotCreateSessionException, PermissionDeniedException, OMEROException
-	{
+	public void testUploadImage() throws IOException, OMEROException {
 		final DatasetIOService io = context.getService(DatasetIOService.class);
 		final Dataset d = io.open("http://imagej.net/images/blobs.gif");
 
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
-		try (final OMEROSession session = new OMEROSession(omero, client)) {
-			final long id = session.uploadImage(d);
-			assertTrue(id > 0);
-		}
-		finally {
-			client.closeSession();
-		}
-
+		final long id = session.uploadImage(d);
+		assertTrue(id > 0);
 	}
 
 	@Test
-	public void testDownloadThenUploadImage() throws CannotCreateSessionException,
-		PermissionDeniedException, ServerError, OMEROException
-	{
+	public void testDownloadThenUploadImage() throws OMEROException {
 		final long originalId = 1;
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
 
-		try (final OMEROSession session = new OMEROSession(omero, client)) {
-			final Dataset d = session.downloadImage(originalId);
-			final long newId = session.uploadImage(d);
-			assertTrue(originalId != newId);
-		}
-		finally {
-			client.closeSession();
-		}
+		final Dataset d = session.downloadImage(originalId);
+		final long newId = session.uploadImage(d);
+		assertTrue(originalId != newId);
 	}
 
 	@Test
-	public void testDownloadTable() throws OMEROException,
-		CannotCreateSessionException, PermissionDeniedException, ServerError
-	{
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
-		try (final OMEROSession session = new OMEROSession(omero, client)) {
-			// now download the table
-			final Table<?, ?> ijTable = session.downloadTable(83);
+	public void testDownloadTable() throws OMEROException {
+		// now download the table
+		final Table<?, ?> ijTable = session.downloadTable(83);
 
-			assertNotNull(ijTable);
-			assertEquals(3, ijTable.getColumnCount());
-			assertEquals(3, ijTable.getRowCount());
-		}
-		finally {
-			client.closeSession();
-		}
+		assertNotNull(ijTable);
+		assertEquals(3, ijTable.getColumnCount());
+		assertEquals(3, ijTable.getRowCount());
 	}
 
 	@Test
 	public void testUploadTable() throws ExecutionException,
-		DSOutOfServiceException, DSAccessException, OMEROException,
-		CannotCreateSessionException, PermissionDeniedException, ServerError
+		DSOutOfServiceException, DSAccessException, OMEROException
 	{
 		final byte[][] d = new byte[][] { { 127, 0, -128 }, { -1, -6, -23 }, { 100,
 			87, 4 } };
@@ -195,93 +159,61 @@ public class OmeroIT {
 				table.set(c, r, d[c][r]);
 		}
 
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
-		try (final OMEROSession session = new OMEROSession(omero, client)) {
-			final long tableId = session.uploadTable("test-table-upload", table, 1);
-			final TablesFacility tablesFacility = session.getGateway().getFacility(
-				TablesFacility.class);
-			final TableData td = tablesFacility.getTableInfo(session
-				.getSecurityContext(), tableId);
+		final long tableId = session.uploadTable("test-table-upload", table, 1);
+		final TablesFacility tablesFacility = session.getGateway().getFacility(
+			TablesFacility.class);
+		final TableData td = tablesFacility.getTableInfo(session
+			.getSecurityContext(), tableId);
 
-			assertEquals(td.getColumns().length, 3);
-			assertEquals(td.getColumns()[0].getName(), "Heading 1");
-			assertEquals(td.getColumns()[1].getName(), "Heading 2");
-			assertEquals(td.getColumns()[2].getName(), "Heading 3");
-			assertEquals(td.getNumberOfRows(), 3);
-		}
-		finally {
-			client.closeSession();
-		}
+		assertEquals(td.getColumns().length, 3);
+		assertEquals(td.getColumns()[0].getName(), "Heading 1");
+		assertEquals(td.getColumns()[1].getName(), "Heading 2");
+		assertEquals(td.getColumns()[2].getName(), "Heading 3");
+		assertEquals(td.getNumberOfRows(), 3);
 	}
 
 	@Test
-	public void testDownloadThenUploadTable() throws OMEROException,
-		CannotCreateSessionException, PermissionDeniedException, ServerError
-	{
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
-		try (final OMEROSession session = new OMEROSession(omero, client)) {
-			final long originalId = 83;
-			final Table<?, ?> ijTable = session.downloadTable(originalId);
+	public void testDownloadThenUploadTable() throws OMEROException {
+		final long originalId = 83;
+		final Table<?, ?> ijTable = session.downloadTable(originalId);
 
-			final long newId = session.uploadTable("table-version2", ijTable, 1);
+		final long newId = session.uploadTable("table-version2", ijTable, 1);
 
-			assertTrue(originalId != newId);
-		}
-		finally {
-			client.closeSession();
-		}
+		assertTrue(originalId != newId);
 	}
 
 	@Test
-	public void testDownloadROIs() throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, OMEROException
-	{
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
-		try (final OMEROSession session = new OMEROSession(omero, client)) {
-			final TreeNode<?> dns = session.downloadROIs(1);
+	public void testDownloadROIs() throws OMEROException {
+		final TreeNode<?> dns = session.downloadROIs(1);
 
-			assertNotNull(dns);
-			assertFalse(dns.children().isEmpty());
-			assertEquals(10, dns.children().size());
+		assertNotNull(dns);
+		assertFalse(dns.children().isEmpty());
+		assertEquals(10, dns.children().size());
 
-			for (final TreeNode<?> dn : dns.children()) {
-				assertTrue(dn instanceof OMEROROICollection);
-				final List<TreeNode<?>> children = dn.children();
-				assertEquals(1, children.size());
-				assertTrue(children.get(0).data() instanceof PointMask);
-			}
-		}
-		finally {
-			client.closeSession();
-		}
-	}
-
-	@Test
-	public void testDownloadROI() throws OMEROException,
-		CannotCreateSessionException, PermissionDeniedException, ServerError
-	{
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
-		try (final OMEROSession session = new OMEROSession(omero, client)) {
-			final TreeNode<?> dn = session.downloadROI(1);
-
-			assertTrue(dn instanceof ROITree);
-			assertEquals(1, dn.children().size());
-
-			assertTrue(dn.children().get(0) instanceof OMEROROICollection);
-			final List<TreeNode<?>> children = dn.children().get(0).children();
+		for (final TreeNode<?> dn : dns.children()) {
+			assertTrue(dn instanceof OMEROROICollection);
+			final List<TreeNode<?>> children = dn.children();
 			assertEquals(1, children.size());
-
 			assertTrue(children.get(0).data() instanceof PointMask);
 		}
-		finally {
-			client.closeSession();
-		}
 	}
 
 	@Test
-	public void testUploadROIs() throws OMEROException,
-		CannotCreateSessionException, PermissionDeniedException, ServerError
-	{
+	public void testDownloadROI() throws OMEROException {
+		final TreeNode<?> dn = session.downloadROI(1);
+
+		assertTrue(dn instanceof ROITree);
+		assertEquals(1, dn.children().size());
+
+		assertTrue(dn.children().get(0) instanceof OMEROROICollection);
+		final List<TreeNode<?>> children = dn.children().get(0).children();
+		assertEquals(1, children.size());
+
+		assertTrue(children.get(0).data() instanceof PointMask);
+	}
+
+	@Test
+	public void testUploadROIs() throws OMEROException {
 		final Box b = GeomMasks.closedBox(new double[] { 10, 10 }, new double[] {
 			22, 46.5 });
 		final TreeNode<Box> dnb = new DefaultTreeNode<>(b, null);
@@ -296,42 +228,28 @@ public class OmeroIT {
 		final ROITree parent = new DefaultROITree();
 		parent.addChildren(dns);
 
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
-		try (final OMEROSession session = new OMEROSession(omero, client)) {
-			final long[] ids = session.uploadROIs(parent, 2);
+		final long[] ids = session.uploadROIs(parent, 2);
 
-			assertEquals(3, ids.length);
-			assertTrue(ids[0] > 0);
-			assertTrue(ids[1] > 0);
-			assertTrue(ids[2] > 0);
-		}
-		finally {
-			client.closeSession();
-		}
+		assertEquals(3, ids.length);
+		assertTrue(ids[0] > 0);
+		assertTrue(ids[1] > 0);
+		assertTrue(ids[2] > 0);
 	}
 
 	@Test
-	public void testDownloadThenUploadROI() throws OMEROException,
-		CannotCreateSessionException, PermissionDeniedException, ServerError
-	{
-		client.createSession(OMERO_USER, OMERO_PASSWORD);
-		try (final OMEROSession session = new OMEROSession(omero, client)) {
-			final long originalRoiId = 3;
-			final TreeNode<?> dn = session.downloadROI(originalRoiId);
+	public void testDownloadThenUploadROI() throws OMEROException {
+		final long originalRoiId = 3;
+		final TreeNode<?> dn = session.downloadROI(originalRoiId);
 
-			final List<TreeNode<?>> children = dn.children().get(0).children();
-			assertTrue(children.get(0).data() instanceof WritablePointMask);
-			final WritablePointMask pm = (WritablePointMask) children.get(0).data();
+		final List<TreeNode<?>> children = dn.children().get(0).children();
+		assertTrue(children.get(0).data() instanceof WritablePointMask);
+		final WritablePointMask pm = (WritablePointMask) children.get(0).data();
 
-			pm.setPosition(new double[] { 0, 0 });
+		pm.setPosition(new double[] { 0, 0 });
 
-			final long[] ids = session.uploadROIs(dn, 2);
+		final long[] ids = session.uploadROIs(dn, 2);
 
-			assertEquals(1, ids.length);
-			assertTrue(originalRoiId != ids[0]);
-		}
-		finally {
-			client.closeSession();
-		}
+		assertEquals(1, ids.length);
+		assertTrue(originalRoiId != ids[0]);
 	}
 }
