@@ -106,6 +106,11 @@ public class OMEROFormat extends AbstractFormat {
 		return "OMERO";
 	}
 
+	@Override
+	public boolean ownsLocationType(Location outputLocation) {
+		return outputLocation instanceof OMEROLocation;
+	}
+
 	// -- AbstractFormat methods --
 
 	@Override
