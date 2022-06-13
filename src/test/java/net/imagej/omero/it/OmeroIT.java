@@ -94,7 +94,7 @@ public class OmeroIT {
 	public void setup() throws OMEROException {
 		context = new Context();
 		omero = context.getService(OMEROService.class);
-		session = new OMEROSession(omero, new OMEROServer(OMERO_SERVER, OMERO_PORT),
+		session = omero.session(new OMEROServer(OMERO_SERVER, OMERO_PORT),
 			new OMEROCredentials(OMERO_USER, OMERO_PASSWORD));
 
 	}
