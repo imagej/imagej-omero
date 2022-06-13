@@ -47,12 +47,11 @@ import net.imagej.omero.OMEROSession;
 import net.imagej.omero.roi.OMEROROICollection;
 import net.imagej.roi.DefaultROITree;
 import net.imagej.roi.ROITree;
+import net.imglib2.roi.RealMask;
 import net.imglib2.roi.geom.GeomMasks;
 import net.imglib2.roi.geom.real.Box;
 import net.imglib2.roi.geom.real.Ellipsoid;
-import net.imglib2.roi.geom.real.PointMask;
 import net.imglib2.roi.geom.real.Polygon2D;
-import net.imglib2.roi.geom.real.WritablePointMask;
 
 import org.junit.After;
 import org.junit.Before;
@@ -108,16 +107,10 @@ public class OmeroIT {
 	public void testConnectingToServer() throws DSOutOfServiceException,
 		OMEROException
 	{
-		ExperimenterData experimenter = session().getSecurityContext()
+		final ExperimenterData experimenter = session().getSecurityContext()
 			.getExperimenterData();
-		String sessionId = session().getGateway().getSessionId(experimenter);
+		final String sessionId = session().getGateway().getSessionId(experimenter);
 		assertNotNull(sessionId);
-	}
-
-	@Test
-	public void testDownloadImage() throws OMEROException {
-		final Dataset d = session().downloadImage(1);
-		assertNotNull(d.getImgPlus());
 	}
 
 	@Test
@@ -127,26 +120,7 @@ public class OmeroIT {
 	}
 
 	@Test
-	public void testDownloadThenUploadImage() throws OMEROException {
-		final long originalId = 1;
-
-		final Dataset d = session().downloadImage(originalId);
-		final long newId = session().uploadImage(d);
-		assertTrue(originalId != newId);
-	}
-
-	@Test
-	public void testDownloadTable() throws OMEROException {
-		// now download the table
-		final Table<?, ?> ijTable = session().downloadTable(83);
-
-		assertNotNull(ijTable);
-		assertEquals(3, ijTable.getColumnCount());
-		assertEquals(3, ijTable.getRowCount());
-	}
-
-	@Test
-	public void testUploadTable() throws ExecutionException,
+	public void testUploadThenDownloadTable() throws ExecutionException,
 		DSOutOfServiceException, DSAccessException, OMEROException, IOException
 	{
 		final long id = uploadBlobs();
@@ -170,50 +144,17 @@ public class OmeroIT {
 		assertEquals(td.getColumns()[1].getName(), "Heading 2");
 		assertEquals(td.getColumns()[2].getName(), "Heading 3");
 		assertEquals(td.getNumberOfRows(), 3);
+
+		// now download the table
+		final Table<?, ?> ijTable = session().downloadTable(id);
+
+		assertNotNull(ijTable);
+		assertEquals(3, ijTable.getColumnCount());
+		assertEquals(3, ijTable.getRowCount());
 	}
 
 	@Test
-	public void testDownloadThenUploadTable() throws OMEROException {
-		final long originalId = 83;
-		final Table<?, ?> ijTable = session().downloadTable(originalId);
-
-		final long newId = session().uploadTable("table-version2", ijTable, 1);
-
-		assertTrue(originalId != newId);
-	}
-
-	@Test
-	public void testDownloadROIs() throws OMEROException {
-		final TreeNode<?> dns = session().downloadROIs(1);
-
-		assertNotNull(dns);
-		assertFalse(dns.children().isEmpty());
-		assertEquals(10, dns.children().size());
-
-		for (final TreeNode<?> dn : dns.children()) {
-			assertTrue(dn instanceof OMEROROICollection);
-			final List<TreeNode<?>> children = dn.children();
-			assertEquals(1, children.size());
-			assertTrue(children.get(0).data() instanceof PointMask);
-		}
-	}
-
-	@Test
-	public void testDownloadROI() throws OMEROException {
-		final TreeNode<?> dn = session().downloadROI(1);
-
-		assertTrue(dn instanceof ROITree);
-		assertEquals(1, dn.children().size());
-
-		assertTrue(dn.children().get(0) instanceof OMEROROICollection);
-		final List<TreeNode<?>> children = dn.children().get(0).children();
-		assertEquals(1, children.size());
-
-		assertTrue(children.get(0).data() instanceof PointMask);
-	}
-
-	@Test
-	public void testUploadROIs() throws OMEROException, IOException {
+	public void testUploadThenDownloadROIs() throws OMEROException, IOException {
 		final long id = uploadBlobs();
 		final Box b = GeomMasks.closedBox(new double[] { 10, 10 }, new double[] {
 			22, 46.5 });
@@ -235,23 +176,27 @@ public class OmeroIT {
 		assertTrue(ids[0] > 0);
 		assertTrue(ids[1] > 0);
 		assertTrue(ids[2] > 0);
+
+		final TreeNode<?> downloadedRois = session().downloadROIs(id);
+
+		assertNotNull(downloadedRois);
+		assertFalse(downloadedRois.children().isEmpty());
+		assertEquals(3, downloadedRois.children().size());
+
+		for (final TreeNode<?> dn : downloadedRois.children()) {
+			assertTrue(dn instanceof OMEROROICollection);
+			final List<TreeNode<?>> children = dn.children();
+			assertEquals(1, children.size());
+			assertTrue(children.get(0).data() instanceof RealMask);
+		}
 	}
 
 	@Test
-	public void testDownloadThenUploadROI() throws OMEROException {
-		final long originalRoiId = 3;
-		final TreeNode<?> dn = session().downloadROI(originalRoiId);
-
-		final List<TreeNode<?>> children = dn.children().get(0).children();
-		assertTrue(children.get(0).data() instanceof WritablePointMask);
-		final WritablePointMask pm = (WritablePointMask) children.get(0).data();
-
-		pm.setPosition(new double[] { 0, 0 });
-
-		final long[] ids = session().uploadROIs(dn, 2);
-
-		assertEquals(1, ids.length);
-		assertTrue(originalRoiId != ids[0]);
+	public void testDownloadThenUploadImage() throws OMEROException, IOException {
+		final long originalId = uploadBlobs();
+		final Dataset d = session().downloadImage(originalId);
+		final long newId = session().uploadImage(d);
+		assertTrue(originalId != newId);
 	}
 
 	private long uploadBlobs() throws OMEROException, IOException {
