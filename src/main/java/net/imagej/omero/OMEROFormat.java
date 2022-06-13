@@ -657,10 +657,13 @@ public class OMEROFormat extends AbstractFormat {
 		}
 
 		@Override
-		public void setDest(final Location fileName, final int imageIndex,
+		public void setDest(final Location out, final int imageIndex,
 			final SCIFIOConfig config) throws FormatException, IOException
 		{
-			getMetadata().setDatasetName(fileName.getName());
+			getMetadata().setDatasetName(out.getName());
+			if (out instanceof OMEROLocation) {
+				getMetadata().setServer(((OMEROLocation)out).getServer());
+			}
 			// HACK: Create a dummy RAOS around this "fileName".
 			// The OMERO format does not use RAOS to wrangle bytes.
 			// This avoids creating a spurious empty file on disk.
