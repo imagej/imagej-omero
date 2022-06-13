@@ -94,7 +94,7 @@ public class OmeroIT {
 		OMERO_USER, OMERO_PASSWORD);
 
 	@Before
-	public void setup() throws OMEROException {
+	public void setup() {
 		context = new Context();
 		omero = context.getService(OMEROService.class);
 	}
@@ -122,10 +122,7 @@ public class OmeroIT {
 
 	@Test
 	public void testUploadImage() throws IOException, OMEROException {
-		final DatasetIOService io = context.getService(DatasetIOService.class);
-		final Dataset d = io.open("http://imagej.net/images/blobs.gif");
-
-		final long id = session().uploadImage(d);
+		final long id = uploadBlobs();
 		assertTrue(id > 0);
 	}
 
@@ -152,6 +149,7 @@ public class OmeroIT {
 	public void testUploadTable() throws ExecutionException,
 		DSOutOfServiceException, DSAccessException, OMEROException, IOException
 	{
+		final long id = uploadBlobs();
 		final byte[][] d = new byte[][] { { 127, 0, -128 }, { -1, -6, -23 }, { 100,
 			87, 4 } };
 		final ByteTable table = new DefaultByteTable(3, 3);
@@ -161,7 +159,7 @@ public class OmeroIT {
 				table.set(c, r, d[c][r]);
 		}
 
-		final long tableId = session().uploadTable("test-table-upload", table, 1);
+		final long tableId = session().uploadTable("test-table-upload", table, id);
 		final TablesFacility tablesFacility = session().getGateway().getFacility(
 			TablesFacility.class);
 		final TableData td = tablesFacility.getTableInfo(session()
@@ -216,6 +214,7 @@ public class OmeroIT {
 
 	@Test
 	public void testUploadROIs() throws OMEROException, IOException {
+		final long id = uploadBlobs();
 		final Box b = GeomMasks.closedBox(new double[] { 10, 10 }, new double[] {
 			22, 46.5 });
 		final TreeNode<Box> dnb = new DefaultTreeNode<>(b, null);
@@ -230,7 +229,7 @@ public class OmeroIT {
 		final ROITree parent = new DefaultROITree();
 		parent.addChildren(dns);
 
-		final long[] ids = session().uploadROIs(parent, 1);
+		final long[] ids = session().uploadROIs(parent, id);
 
 		assertEquals(3, ids.length);
 		assertTrue(ids[0] > 0);
@@ -253,6 +252,13 @@ public class OmeroIT {
 
 		assertEquals(1, ids.length);
 		assertTrue(originalRoiId != ids[0]);
+	}
+
+	private long uploadBlobs() throws OMEROException, IOException {
+		final DatasetIOService io = context.getService(DatasetIOService.class);
+		final Dataset d = io.open("http://imagej.net/images/blobs.gif");
+
+		return session().uploadImage(d);
 	}
 
 	private OMEROSession session() throws OMEROException {
