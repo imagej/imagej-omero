@@ -284,6 +284,10 @@ public class OMEROFormat extends AbstractFormat {
 			this.name = name;
 		}
 
+		public void setServer(final OMEROServer server) {
+			this.server = server;
+		}
+
 		public void setImageID(final long imageID) {
 			this.imageID = imageID;
 
