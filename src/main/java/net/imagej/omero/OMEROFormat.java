@@ -441,7 +441,8 @@ public class OMEROFormat extends AbstractFormat {
 			final Metadata meta, final SCIFIOConfig config) throws IOException,
 			FormatException
 		{
-			// NB: The DataHandle is just a dummy here, and won't be used.
+			OMEROLocation omeroLoc = (OMEROLocation)handle.get();
+			meta.setServer(omeroLoc.getServer());
 
 			// initialize OMERO session
 			final OMEROSession session;
