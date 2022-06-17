@@ -443,6 +443,7 @@ public class OMEROFormat extends AbstractFormat {
 		{
 			OMEROLocation omeroLoc = (OMEROLocation)handle.get();
 			meta.setServer(omeroLoc.getServer());
+			meta.setImageID(omeroLoc.getImageID());
 
 			// initialize OMERO session
 			final OMEROSession session;
