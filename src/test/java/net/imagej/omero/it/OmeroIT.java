@@ -146,7 +146,7 @@ public class OmeroIT {
 		assertEquals(td.getNumberOfRows(), 3);
 
 		// now download the table
-		final Table<?, ?> ijTable = session().downloadTable(id);
+		final Table<?, ?> ijTable = session().downloadTable(tableId);
 
 		assertNotNull(ijTable);
 		assertEquals(3, ijTable.getColumnCount());
