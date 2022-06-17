@@ -88,6 +88,11 @@ public class OMEROLocation extends URILocation {
 		return getURI().getPath();
 	}
 
+	public long getImageID() {
+		String path = getPath();
+		return Long.parseLong(path.substring(path.lastIndexOf('/') + 1));
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (!(obj instanceof OMEROLocation)) return false;
