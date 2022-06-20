@@ -175,6 +175,7 @@
 		<dependency>
 			<groupId>io.scif</groupId>
 			<artifactId>scifio</artifactId>
+			<version>0.43.2</version>
 		</dependency>
 
 		<!-- SciJava dependencies -->
