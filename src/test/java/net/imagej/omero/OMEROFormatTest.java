@@ -70,9 +70,10 @@ public class OMEROFormatTest {
 	public void testChecker() throws FormatException {
 		final OMEROFormat omeroFormat = getFormat();
 		final Checker checker = omeroFormat.createChecker();
+		assertTrue(checker.isFormat(new OMEROLocation("example.com", , sessionID)))
 		assertFalse(checker.isFormat(new FileLocation("asdf")));
-		assertTrue(checker.isFormat(new FileLocation("asdf.omero")));
-		assertTrue(checker.isFormat(new FileLocation("omero:asdf")));
+		assertFalse(checker.isFormat(new FileLocation("asdf.omero")));
+		assertFalse(checker.isFormat(new FileLocation("omero:asdf")));
 		assertEquals("omero", omeroFormat.getSuffixes()[0]);
 	}
 
