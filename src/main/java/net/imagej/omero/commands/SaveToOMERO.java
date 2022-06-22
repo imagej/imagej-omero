@@ -79,7 +79,7 @@ public class SaveToOMERO extends OMEROCommand {
 	private MetadataService metadataService;
 
 	@Parameter(label = "OMERO Dataset ID")
-	private final long datasetID = -1;
+	private long datasetID = -1;
 
 	@Parameter(type = ItemIO.BOTH)
 	private Dataset image;
@@ -98,7 +98,7 @@ public class SaveToOMERO extends OMEROCommand {
 	private boolean updateROIs;
 
 	@Parameter(label = "Table names")
-	private final String tableNames = "";
+	private String tableNames = "";
 
 	@Override
 	public void run() {

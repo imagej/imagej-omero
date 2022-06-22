@@ -33,10 +33,10 @@ import org.scijava.widget.TextWidget;
 public abstract class OMEROCommand extends ContextCommand {
 
 	@Parameter
-	private final String server = "localhost";
+	private String server = "localhost";
 
 	@Parameter
-	private final int port = 4064;
+	private int port = 4064;
 
 	@Parameter
 	private String user;
