@@ -697,7 +697,6 @@ public class OMEROFormat extends AbstractFormat {
 				}
 			}
 			store = null;
-			if (session != null) session.close();
 			session = null;
 		}
 
