@@ -82,6 +82,7 @@ public class OmeroIT {
 
 	private Context context;
 	private OMEROService omero;
+	private OMEROSession session;
 
 	private static final String OMERO_SERVER = "localhost";
 	private static final int OMERO_PORT = 4064;
@@ -93,9 +94,10 @@ public class OmeroIT {
 		OMERO_USER, OMERO_PASSWORD);
 
 	@Before
-	public void setup() {
+	public void setup() throws OMEROException {
 		context = new Context();
 		omero = context.getService(OMEROService.class);
+		session = omero.session(SERVER, CREDENTIALS);
 	}
 
 	@After
@@ -104,12 +106,11 @@ public class OmeroIT {
 	}
 
 	@Test
-	public void testConnectingToServer() throws DSOutOfServiceException,
-		OMEROException
+	public void testConnectingToServer() throws DSOutOfServiceException
 	{
-		final ExperimenterData experimenter = session().getSecurityContext()
+		final ExperimenterData experimenter = session.getSecurityContext()
 			.getExperimenterData();
-		final String sessionId = session().getGateway().getSessionId(experimenter);
+		final String sessionId = session.getGateway().getSessionId(experimenter);
 		assertNotNull(sessionId);
 	}
 
@@ -133,10 +134,10 @@ public class OmeroIT {
 				table.set(c, r, d[c][r]);
 		}
 
-		final long tableId = session().uploadTable("test-table-upload", table, id);
-		final TablesFacility tablesFacility = session().getGateway().getFacility(
+		final long tableId = session.uploadTable("test-table-upload", table, id);
+		final TablesFacility tablesFacility = session.getGateway().getFacility(
 			TablesFacility.class);
-		final TableData td = tablesFacility.getTableInfo(session()
+		final TableData td = tablesFacility.getTableInfo(session
 			.getSecurityContext(), tableId);
 
 		assertEquals(td.getColumns().length, 3);
@@ -146,7 +147,7 @@ public class OmeroIT {
 		assertEquals(td.getNumberOfRows(), 3);
 
 		// now download the table
-		final Table<?, ?> ijTable = session().downloadTable(tableId);
+		final Table<?, ?> ijTable = session.downloadTable(tableId);
 
 		assertNotNull(ijTable);
 		assertEquals(3, ijTable.getColumnCount());
@@ -170,14 +171,14 @@ public class OmeroIT {
 		final ROITree parent = new DefaultROITree();
 		parent.addChildren(dns);
 
-		final long[] ids = session().uploadROIs(parent, id);
+		final long[] ids = session.uploadROIs(parent, id);
 
 		assertEquals(3, ids.length);
 		assertTrue(ids[0] > 0);
 		assertTrue(ids[1] > 0);
 		assertTrue(ids[2] > 0);
 
-		final TreeNode<?> downloadedRois = session().downloadROIs(id);
+		final TreeNode<?> downloadedRois = session.downloadROIs(id);
 
 		assertNotNull(downloadedRois);
 		assertFalse(downloadedRois.children().isEmpty());
@@ -194,8 +195,8 @@ public class OmeroIT {
 	@Test
 	public void testDownloadThenUploadImage() throws OMEROException, IOException {
 		final long originalId = uploadBlobs();
-		final Dataset d = session().downloadImage(originalId);
-		final long newId = session().uploadImage(d);
+		final Dataset d = session.downloadImage(originalId);
+		final long newId = session.uploadImage(d);
 		assertTrue(originalId != newId);
 	}
 
@@ -203,10 +204,7 @@ public class OmeroIT {
 		final DatasetIOService io = context.getService(DatasetIOService.class);
 		final Dataset d = io.open("http://imagej.net/images/blobs.gif");
 
-		return session().uploadImage(d);
+		return session.uploadImage(d);
 	}
 
-	private OMEROSession session() throws OMEROException {
-		return omero.session(SERVER, CREDENTIALS);
-	}
 }
