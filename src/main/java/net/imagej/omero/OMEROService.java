@@ -29,11 +29,14 @@ import io.scif.services.DatasetIOService;
 
 import net.imagej.ImageJService;
 import net.imagej.display.ImageDisplayService;
+import net.imagej.omero.roi.ROICache;
 
 import org.scijava.convert.ConvertService;
 import org.scijava.display.DisplayService;
 import org.scijava.module.ModuleItem;
 import org.scijava.object.ObjectService;
+
+import omero.gateway.model.ROIData;
 
 /**
  * SciJava service interface for managing OMERO server access.
@@ -130,6 +133,17 @@ public interface OMEROService extends ImageJService {
 	 * @return The {@link DisplayService} of this application context.
 	 */
 	DisplayService display();
+
+	/**
+	 * @return The {@link ROICache} for this session
+	 */
+	ROICache roiCache();
+
+	void addROIMapping(Object roi, ROIData shape);
+
+	ROIData getROIMapping(Object key);
+
+	void removeROIMapping(Object key);
 
 	/** Converts an ImageJ module parameter to an OMERO job parameter. */
 	omero.grid.Param getJobParam(ModuleItem<?> item);

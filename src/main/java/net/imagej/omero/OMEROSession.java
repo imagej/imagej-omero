@@ -53,7 +53,6 @@ import net.imagej.axis.AxisType;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.omero.roi.OMEROROICollection;
-import net.imagej.omero.roi.ROICache;
 import net.imagej.omero.roi.ROIUtils;
 import net.imagej.omero.table.TableUtils;
 import net.imagej.roi.DefaultROITree;
@@ -115,7 +114,6 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	private final OMEROService omeroService;
 
 	private final OMEROServer server;
-	private final ROICache roiCache;
 
 	private omero.client client;
 	private ServiceFactoryPrx sfp;
@@ -133,7 +131,6 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	private OMEROSession() {
 		omeroService = null;
 		server = null;
-		roiCache = new ROICache();
 	}
 
 	/**
@@ -184,7 +181,6 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 
 		this.omeroService = omeroService;
 		this.server = omeroServer;
-		roiCache = new ROICache();
 
 		initializeSession(omeroCredentials, omeroClient);
 	}
@@ -649,7 +645,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		for (final TreeNode<?> ijROI : splitROIs.getB()) {
 			final List<ROIData> roiData = convertOMEROROI(ijROI, interval);
 			final Collection<ROIData> saved = saveROIs(imageID, roifac, roiData);
-			roiCache.addROIMapping(ijROI.data(), saved.iterator().next());
+			omeroService.roiCache().addROIMapping(ijROI.data(), saved.iterator().next());
 			savedOMERORois.add(saved.iterator().next());
 		}
 
@@ -657,13 +653,13 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		for (final OMEROROICollection orc : splitROIs.getA()) {
 			final List<ROIData> roiData = convertOMEROROI(orc, interval);
 			final long roiID = roiData.get(0).getId();
-			roiCache.removeDownloaded(roiID);
+			omeroService.roiCache().removeDownloaded(roiID);
 			final Collection<ROIData> saved = saveROIs(imageID, roifac, roiData);
 			final ROIData savedRoi = saved.iterator().next();
 
 			// NB: If updated later, the id will match correctly
 			ROIUtils.updateROIData(orc, savedRoi);
-			roiCache.updateServerROIData(savedRoi.getId(), savedRoi);
+			omeroService.roiCache().updateServerROIData(savedRoi.getId(), savedRoi);
 
 			savedOMERORois.add(savedRoi);
 		}
@@ -679,12 +675,6 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		return omeroService.log();
 	}
 
-	/**
-	 * @return The {@link ROICache} for this session
-	 */
-	public ROICache roiCache() {
-		return roiCache;
-	}
 
 	/**
 	 * Helper method to ensure a given {@link Callable} is executed with the
@@ -735,7 +725,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		for (final OMEROROICollection orc : splitROIs.getA()) {
 			final ROIData converted = convertOMEROROI(orc, interval).get(0);
 			final ROIData downloaded = //
-				roiCache.getUpdatedServerROIData(converted.getId());
+				omeroService.roiCache().getUpdatedServerROIData(converted.getId());
 			final ROIData roiToSave = downloaded == null ? converted : downloaded;
 			final DataObject savedOMERO = //
 				OMERO.ask(() -> dm.saveAndReturnObject(ctx, roiToSave));
@@ -743,7 +733,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 				throw new IllegalArgumentException("ROI was not returned by OMERO");
 			}
 			final ROIData savedROI = (ROIData) savedOMERO;
-			roiCache.updateServerROIData(savedROI.getId(), savedROI);
+			omeroService.roiCache().updateServerROIData(savedROI.getId(), savedROI);
 			ROIUtils.updateROIData(orc, savedROI);
 			ids.add(savedROI.getId());
 		}
@@ -756,10 +746,10 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 				final List<ROIData> converted = convertOMEROROI(dn, interval);
 				final Collection<ROIData> saved = roifac.saveROIs(ctx, imageID,
 					converted);
-				if (roiCache.getROIMapping(dn.data()) == null) {
+				if (omeroService.roiCache().getROIMapping(dn.data()) == null) {
 					newROIs.add(saved.iterator().next());
 				}
-				roiCache.addROIMapping(dn.data(), saved.iterator().next());
+				omeroService.roiCache().addROIMapping(dn.data(), saved.iterator().next());
 				ids.add(saved.iterator().next().getId());
 			}
 
@@ -772,8 +762,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 						dm.delete(ctx, roi.asIObject());
 
 						// check if deleted ROI was mapped, if so remove mapping
-						roiCache.removeDownloaded(roiID);
-						roiCache.removeSaved(roiID);
+						omeroService.roiCache().removeDownloaded(roiID);
+						omeroService.roiCache().removeSaved(roiID);
 					}
 				}
 			}

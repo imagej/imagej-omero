@@ -37,6 +37,7 @@ import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
 import net.imagej.display.ImageDisplayService;
+import net.imagej.omero.roi.ROICache;
 import net.imglib2.roi.MaskPredicate;
 
 import org.scijava.Optional;
@@ -53,6 +54,8 @@ import org.scijava.table.Table;
 import org.scijava.table.TableDisplay;
 import org.scijava.util.TreeNode;
 import org.scijava.util.Types;
+
+import omero.gateway.model.ROIData;
 
 /**
  * Default implementation of {@link OMEROService}.
@@ -96,10 +99,12 @@ public class DefaultOMEROService extends AbstractService implements
 
 //-- Fields --
 
+	private ROICache roiCache = new ROICache();
 	private final HashMap<OMEROServer, OMEROSession> sessions = new HashMap<>();
 	private final ThreadLocal<List<OMEROSession>> localSessions =
 		new ThreadLocal<List<OMEROSession>>()
 		{
+
 			@Override
 			public List<OMEROSession> initialValue() {
 				return new ArrayList<>();
@@ -204,6 +209,26 @@ public class DefaultOMEROService extends AbstractService implements
 	@Override
 	public DisplayService display() {
 		return displayService;
+	}
+
+	@Override
+	public ROICache roiCache() {
+		return roiCache;
+	}
+
+	@Override
+	public void addROIMapping(final Object roi, final ROIData shape) {
+		roiCache().addROIMapping(roi, shape);
+	}
+
+	@Override
+	public ROIData getROIMapping(final Object key) {
+		return roiCache().getROIMapping(key);
+	}
+
+	@Override
+	public void removeROIMapping(final Object key) {
+		roiCache().removeROIMapping(key);
 	}
 
 	@Override
