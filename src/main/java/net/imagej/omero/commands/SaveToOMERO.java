@@ -27,13 +27,15 @@ package net.imagej.omero.commands;
 
 import io.scif.MetadataService;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Map;
 
 import net.imagej.Dataset;
 import net.imagej.omero.OMEROCommand;
 import net.imagej.omero.OMEROCredentials;
 import net.imagej.omero.OMEROException;
+import net.imagej.omero.OMEROLocation;
 import net.imagej.omero.OMEROServer;
 import net.imagej.omero.OMEROService;
 import net.imagej.omero.OMEROSession;
@@ -140,6 +142,11 @@ public class SaveToOMERO extends OMEROCommand {
 			exc.printStackTrace();
 			cancel("Error talking to OMERO: " + exc.getMessage());
 		}
+		catch (URISyntaxException exc) {
+			log.error(exc);
+			exc.printStackTrace();
+			cancel("Image has non-OMERO source");
+		}
 	}
 
 	// -- Helper methods --
@@ -156,24 +163,12 @@ public class SaveToOMERO extends OMEROCommand {
 		return names;
 	}
 
-	private long getImageID() {
+	private long getImageID() throws URISyntaxException {
 		final String source = image.getSource();
 		if (source == null || source.isEmpty() || !source.contains("omero"))
 			return -1;
 
-		// Parse source String
-		final String clean = source//
-			.replaceFirst("^omero:", "")//
-			.replaceFirst("\\.omero$", "");
-		final Map<String, Object> map = metadataService.parse(clean, "&");
-		final Object id = map.get("imageID");
-
-		try {
-			return Long.valueOf(id.toString());
-		}
-		catch (final NumberFormatException exc) {
-			return -1;
-		}
+		return new OMEROLocation(new URI(source)).getImageID();
 	}
 
 }
