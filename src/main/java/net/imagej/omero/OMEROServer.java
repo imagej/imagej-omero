@@ -18,7 +18,7 @@ public class OMEROServer {
 	}
 
 	public OMEROServer(final String host, final int port) {
-		this.host = host;
+		this.host = host.replaceFirst("^(http[s]?://www\\.|http[s]?://|www\\.)","");
 		this.port = port;
 	}
 
