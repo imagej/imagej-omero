@@ -80,6 +80,9 @@ public class OpenFromOMERO extends OMEROCommand {
 	private Dataset image;
 
 	@Parameter(type = ItemIO.OUTPUT, required = false)
+	private ROITree rois;
+
+	@Parameter(type = ItemIO.OUTPUT, required = false)
 	private List<Table<?, ?>> tables;
 
 	@Override
@@ -100,8 +103,8 @@ public class OpenFromOMERO extends OMEROCommand {
 			// Do NOT set ROIs as an output, because they're already attached to the
 			// image. Declaring them as output will cause duplicates to be attached.
 			if (downloadRois) {
-				final Object rois = props.get(ROIService.ROI_PROPERTY);
-				((ROITree) rois).children();
+				rois = (ROITree) image.getProperties().get(ROIService.ROI_PROPERTY);
+				rois.children();
 			}
 
 			// Load tables.
