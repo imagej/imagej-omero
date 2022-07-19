@@ -101,6 +101,7 @@ import omero.model.DatasetI;
 import omero.model.IObject;
 import omero.model.Image;
 import omero.model.ImageI;
+import omero.model.MapAnnotationI;
 import omero.model.Pixels;
 import omero.model.PixelsType;
 
@@ -645,7 +646,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		for (final TreeNode<?> ijROI : splitROIs.getB()) {
 			final List<ROIData> roiData = convertOMEROROI(ijROI, interval);
 			final Collection<ROIData> saved = saveROIs(imageID, roifac, roiData);
-			omeroService.roiCache().addROIMapping(ijROI.data(), saved.iterator().next());
+			omeroService.roiCache().addROIMapping(ijROI.data(), saved.iterator()
+				.next());
 			savedOMERORois.add(saved.iterator().next());
 		}
 
@@ -674,7 +676,6 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	public LogService log() {
 		return omeroService.log();
 	}
-
 
 	/**
 	 * Helper method to ensure a given {@link Callable} is executed with the
@@ -749,7 +750,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 				if (omeroService.roiCache().getROIMapping(dn.data()) == null) {
 					newROIs.add(saved.iterator().next());
 				}
-				omeroService.roiCache().addROIMapping(dn.data(), saved.iterator().next());
+				omeroService.roiCache().addROIMapping(dn.data(), saved.iterator()
+					.next());
 				ids.add(saved.iterator().next().getId());
 			}
 
@@ -811,6 +813,26 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		meta.setPixels(pixels);
 
 		return pixels;
+	}
+
+	/**
+	 * Gets the OMERO {@code MapAnnotation} instances from the remote
+	 */
+	public Map<String, String> loadAnnotations(final OMEROFormat.Metadata meta)
+		throws ServerError
+	{
+		Map<String, String> annotations = new HashMap<>();
+		final long pixelsID = loadPixelsID(meta);
+		Map<Long, List<IObject>> omeroAnnotations = sfp.getMetadataService()
+			.loadAnnotations("omero.model.Image", Arrays.asList(pixelsID), null, null,
+				null);
+		for (IObject o : omeroAnnotations.get(pixelsID)) {
+			if (o instanceof MapAnnotationI) {
+				MapAnnotationI mapAnnotation = (MapAnnotationI) o;
+				annotations.putAll(mapAnnotation.getMapValueAsMap());
+			}
+		}
+		return annotations;
 	}
 
 	/** Gets the metadata's associated image name, loading remotely as needed. */

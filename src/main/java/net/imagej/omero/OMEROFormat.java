@@ -458,6 +458,7 @@ public class OMEROFormat extends AbstractFormat {
 				session = omeroService.session(meta.server());
 				pix = session.loadPixels(meta);
 				session.loadImageName(meta);
+				meta.getTable().putAll(session.loadAnnotations(meta));
 			}
 			catch (final ServerError err) {
 				throw communicationException(err);
