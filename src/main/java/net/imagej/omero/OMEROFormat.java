@@ -447,7 +447,7 @@ public class OMEROFormat extends AbstractFormat {
 			final Metadata meta, final SCIFIOConfig config) throws IOException,
 			FormatException
 		{
-			OMEROLocation omeroLoc = (OMEROLocation)handle.get();
+			OMEROLocation omeroLoc = (OMEROLocation) handle.get();
 			meta.setServer(omeroLoc.getServer());
 			meta.setImageID(omeroLoc.getImageID());
 
@@ -670,7 +670,7 @@ public class OMEROFormat extends AbstractFormat {
 		{
 			getMetadata().setDatasetName(out.getName());
 			if (out instanceof OMEROLocation) {
-				getMetadata().setServer(((OMEROLocation)out).getServer());
+				getMetadata().setServer(((OMEROLocation) out).getServer());
 			}
 			// HACK: Create a dummy RAOS around this "fileName".
 			// The OMERO format does not use RAOS to wrangle bytes.
