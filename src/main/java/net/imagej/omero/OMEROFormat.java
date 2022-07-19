@@ -400,17 +400,22 @@ public class OMEROFormat extends AbstractFormat {
 			if (getImageCount() > 0) return; // already populated
 
 			// construct dimensional axes
-			final LinearAxis xAxis = axis(Axes.X, physSizeX);
-			final LinearAxis yAxis = axis(Axes.Y, physSizeY);
-			final LinearAxis zAxis = axis(Axes.Z, physSizeZ);
-			final LinearAxis cAxis = axis(Axes.CHANNEL, waveStart, waveIncrement);
-			final LinearAxis tAxis = axis(Axes.TIME, timeIncrement);
 			// HACK: Do things in XYCZT order for ImageJ1 compatibility.
 			// Technically, this _shouldn't_ matter because imagej-legacy
 			// should take care of dimension swapping incompatible orderings.
 			// But for now, this sidesteps the issue.
-			final CalibratedAxis[] axes = { xAxis, yAxis, cAxis, zAxis, tAxis };
-			final long[] axisLengths = { sizeX, sizeY, sizeC, sizeZ, sizeT };
+			final LinearAxis[] axes = { axis(Axes.X, physSizeX), axis(Axes.Y,
+				physSizeY), axis(Axes.CHANNEL, waveStart, waveIncrement), axis(Axes.Z,
+					physSizeZ), axis(Axes.TIME, timeIncrement) };
+			final int[] axisLengths = { sizeX, sizeY, sizeC, sizeZ, sizeT };
+			List<CalibratedAxis> axisList = new ArrayList<>();
+			List<Long> axisLengthList = new ArrayList<>();
+			for (int i = 0; i < axisLengths.length; i++) {
+				if (axisLengths[i] > 1) {
+					axisList.add(axes[i]);
+					axisLengthList.add((long) axisLengths[i]);
+				}
+			}
 
 			// obtain pixel type
 			final int pixType = FormatTools.pixelTypeFromString(pixelType);
@@ -419,7 +424,8 @@ public class OMEROFormat extends AbstractFormat {
 			createImageMetadata(1);
 			final ImageMetadata imageMeta = get(0);
 			imageMeta.setName(name);
-			imageMeta.setAxes(axes, axisLengths);
+			imageMeta.setAxes(axisList.toArray(new CalibratedAxis[axisList.size()]),
+				axisLengthList.stream().mapToLong(Long::valueOf).toArray());
 			imageMeta.setPixelType(pixType);
 			imageMeta.setMetadataComplete(true);
 			imageMeta.setOrderCertain(true);
