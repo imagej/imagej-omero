@@ -34,7 +34,6 @@ import io.scif.AbstractWriter;
 import io.scif.ByteArrayPlane;
 import io.scif.ByteArrayReader;
 import io.scif.DefaultImageMetadata;
-import io.scif.DefaultTranslator;
 import io.scif.Field;
 import io.scif.Format;
 import io.scif.FormatException;
@@ -43,7 +42,6 @@ import io.scif.MetadataService;
 import io.scif.Plane;
 import io.scif.Translator;
 import io.scif.config.SCIFIOConfig;
-import io.scif.formats.APNGFormat.Metadata;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
@@ -202,7 +200,9 @@ public class OMEROFormat extends AbstractFormat {
 
 		// -- io.scif.omero.OMEROFormat.Metadata methods --
 
-		/** Gets the OMERO server address (host+port) where this object lives. */
+		/**
+		 * @return The OMERO server address (host+port) where this object lives.
+		 */
 		public OMEROServer server() {
 			return server;
 		}

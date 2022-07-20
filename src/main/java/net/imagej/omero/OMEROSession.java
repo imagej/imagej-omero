@@ -200,6 +200,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * In the case of {@link Table}s, it will be converted to a {@link TableData}.
 	 * </p>
 	 *
+	 * @param value ImageJ value to convert
+	 * @return Resulting OMERO equivalent of the given input
 	 * @throws IllegalArgumentException if the conversion is not supported.
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
@@ -287,6 +289,9 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * {@link #downloadImage} method will be used transparently to convert the
 	 * OMERO image ID into such an object.
 	 *
+	 * @param value OMERO value to convert
+	 * @param type Destination type to convert to
+	 * @return Resulting ImageJ equivalent of given input value
 	 * @throws IllegalArgumentException if the conversion is not supported.
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
@@ -360,6 +365,9 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * Downloads the image with the given image ID from OMERO, storing the result
 	 * into a new {@link Dataset}.
 	 *
+	 * @param imageID OMERO ID to download
+	 * @return Resulting ImageJ {@code Dataset} representation of the requested
+	 *         OMERO image
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public Dataset downloadImage(final long imageID) throws OMEROException {
@@ -378,6 +386,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * Uploads the given {@link Dataset} to OMERO, returning the new image ID on
 	 * the OMERO server.
 	 *
+	 * @param dataset ImageJ {@code Dataset} to upload to OMERO
+	 * @return OMERO image ID of the uploaded image
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public long uploadImage(final Dataset dataset) throws OMEROException {
@@ -400,6 +410,15 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * given ROIs and tables. The ROIs can also optionally be updated on the
 	 * server.
 	 *
+	 * @param image ImageJ {@code Dataset} to upload to OMERO
+	 * @param uploadROIs If {@code true}, attach the given ROIs in OMERO
+	 * @param rois Optional ROIs to attach
+	 * @param updateROIs Whether or not existing attached ROIs should be updated
+	 * @param uploadTables If {@code true}, attach the given Tables in OMERO
+	 * @param tables Optional Tables to attach
+	 * @param tableNames Desired names for attached tables
+	 * @param omeroDatasetID Optional OMERO dataset ID to which the image should
+	 *          be included
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public void uploadImage(final Dataset image, final boolean uploadROIs,
@@ -434,6 +453,13 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * associated with the given id. In order to update ROIs these ROIs must exist
 	 * on the given image in OMERO.
 	 *
+	 * @param imageID OMERO image ID to attach to
+	 * @param uploadROIs If {@code true}, attach the given ROIs in OMERO
+	 * @param updateROIs Whether or not existing attached ROIs should be updated
+	 * @param uploadTables If {@code true}, attach the given Tables in OMERO
+	 * @param rois Optional ROIs to attach
+	 * @param tables Optional Tables to attach
+	 * @param tableNames Desired names for attached tables
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public void uploadImageAttachments(final long imageID,
@@ -460,6 +486,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * Downloads the table with the given ID from OMERO, storing the result into a
 	 * new ImageJ {@link Table}.
 	 *
+	 * @param tableID OMERO table ID to download
+	 * @return ImageJ equivalent of the requested OMERO table
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public Table<?, ?> downloadTable(final long tableID) throws OMEROException {
@@ -499,6 +527,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	/**
 	 * Downloads all tables associated with the given image ID in OMERO.
 	 *
+	 * @param imageID OMERO image ID to query for table data
+	 * @return ImageJ table equivalents of the requested OMERO image's tables
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public List<Table<?, ?>> downloadTables(final long imageID)
@@ -522,6 +552,10 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * OMERO server. Tables must be attached to a DataObject, thus the given image
 	 * ID must be valid or this method will throw an exception.
 	 *
+	 * @param name Desired name for table data in OMERO
+	 * @param sjTable SciJava table data to upload to OMERO
+	 * @param imageID OMERO image ID that table data will attach to
+	 * @return Uploaded OMERO table id
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public long uploadTable(final String name, final Table<?, ?> sjTable,
@@ -567,6 +601,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * Downloads the ROIs associated with the given {@code imageID} from OMERO,
 	 * and returns them as a {@link ROITree}.
 	 *
+	 * @param imageID OMERO image ID to query for ROI data
+	 * @return ImageJ equivalent for requested OMERO ROI data
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public ROITree downloadROIs(final long imageID) throws OMEROException {
@@ -601,6 +637,9 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * OMEROServer, and attaches them to the image with the specified ID. All ROIs
 	 * are uploaded as new Objects, regardless of their origin.
 	 *
+	 * @param ijROIs ImageJ ROIs to upload to OMERO
+	 * @param imageID OMERO image ID that ROIs will be attached to
+	 * @return Resulting OMERO ROI object IDs
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public long[] uploadROIs(final TreeNode<?> ijROIs, final long imageID)
@@ -615,6 +654,9 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * from OMERO are updated on the server, and new ROIs are uploaded. The ids of
 	 * the new ROI objects is returned.
 	 *
+	 * @param ijROIs ImageJ ROIs to upload to OMERO
+	 * @param imageID OMERO image ID that ROIs will be attached to
+	 * @return Resulting OMERO ROI object IDs
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public long[] updateROIs(final TreeNode<?> ijROIs, final long imageID)
@@ -628,6 +670,9 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * Converts the given {@link TreeNode} to OMERO ROI(s), and uploads them all
 	 * as new Objects to the server. The new OMERO objects are then returned.
 	 *
+	 * @param ijROIs ImageJ ROIs to upload to OMERO
+	 * @param imageID OMERO image ID that ROIs will be attached to
+	 * @return OMERO equivalents of uploaded ImageJ ROI data
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public Collection<ROIData> uploadAndReturnROIs(final TreeNode<?> ijROIs,
@@ -672,6 +717,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	/**
 	 * Convenience method to access the {@link LogService} from the
 	 * {@link Context} in which this session was started.
+	 *
+	 * @return {@code LogService} of this session's {@code Context}
 	 */
 	public LogService log() {
 		return omeroService.log();
@@ -710,6 +757,9 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * originated from OMERO are updated on the server. A collection of the new
 	 * ROI objects is returned.
 	 *
+	 * @param ijROIs ImageJ ROIs to upload to OMERO
+	 * @param imageID OMERO image ID that ROIs will be attached to
+	 * @return OMERO equivalents of uploaded ImageJ ROI data
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public Collection<ROIData> updateAndReturnROIs(final TreeNode<?> ijROIs,
@@ -776,22 +826,41 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 
 	// -- Accessors --
 
-	/** Gets the {@link ExperimenterData} associated with this session. */
+	/**
+	 * Gets the {@link ExperimenterData} associated with this session.
+	 *
+	 * @return Current session's {@code ExperimenterData}
+	 */
 	public ExperimenterData getExperimenter() {
 		return experimenter;
 	}
 
-	/** Gets the {@link Gateway} associated with this session. */
+	/**
+	 * Gets the {@link Gateway} associated with this session.
+	 *
+	 * @return Current session's {@code Gateway}
+	 */
 	public Gateway getGateway() {
 		return gateway;
 	}
 
-	/** Gets the {@link SecurityContext} associated with this session. */
+	/**
+	 * Gets the {@link SecurityContext} associated with this session.
+	 *
+	 * @return Current session's {@code SecurityContext}
+	 */
 	public SecurityContext getSecurityContext() {
 		return ctx;
 	}
 
-	/** Gets an OMERO {@code Pixels} descriptor, loading remotely as needed. */
+	/**
+	 * Gets an OMERO {@link Pixels} descriptor, loading remotely as needed.
+	 *
+	 * @param meta SCIFIO metadata instance to load equivalent OMERO data for
+	 * @return Loaded OMERO {@code Pixels}
+	 * @throws ServerError if anything goes wrong when communicating with OMERO
+	 *           server
+	 */
 	public Pixels loadPixels(final OMEROFormat.Metadata meta) throws ServerError {
 		// return cached Pixels if available
 		Pixels pixels = meta.getPixels();
@@ -817,6 +886,11 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 
 	/**
 	 * Gets the OMERO {@code MapAnnotation} instances from the remote
+	 *
+	 * @param meta SCIFIO metadata instance to load equivalent OMERO data for
+	 * @return OMERO Key-Value pairs represented as Java map
+	 * @throws ServerError if anything goes wrong when communicating with OMERO
+	 *           server
 	 */
 	public Map<String, String> loadAnnotations(final OMEROFormat.Metadata meta)
 		throws ServerError
@@ -835,7 +909,14 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		return annotations;
 	}
 
-	/** Gets the metadata's associated image name, loading remotely as needed. */
+	/**
+	 * Gets the metadata's associated image name, loading remotely as needed.
+	 *
+	 * @param meta SCIFIO metadata instance to load equivalent OMERO data for
+	 * @return OMERO image name
+	 * @throws ServerError if anything goes wrong when communicating with OMERO
+	 *           server
+	 */
 	public String loadImageName(final OMEROFormat.Metadata meta)
 		throws ServerError
 	{
@@ -853,6 +934,11 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	/**
 	 * Obtains a raw pixels store for reading from the pixels associated with the
 	 * given metadata.
+	 *
+	 * @param meta SCIFIO metadata instance to load equivalent OMERO data for
+	 * @return Corresponding {@link RawPixelsStorePrx}
+	 * @throws OMEROException if anything goes wrong when communicating with OMERO
+	 *           server
 	 */
 	public RawPixelsStorePrx openPixels(final OMEROFormat.Metadata meta)
 		throws OMEROException
@@ -865,6 +951,11 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	/**
 	 * Obtains a raw pixels store for writing to a new image which will be
 	 * associated with the given metadata.
+	 *
+	 * @param meta SCIFIO metadata instance to load equivalent OMERO data for
+	 * @return Corresponding {@link RawPixelsStorePrx}
+	 * @throws OMEROException if anything goes wrong when communicating with OMERO
+	 *           server
 	 */
 	public RawPixelsStorePrx createPixels(final OMEROFormat.Metadata meta)
 		throws OMEROException
@@ -937,6 +1028,9 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 
 	// -- Helper methods --
 
+	/**
+	 * @see #initializeSession(OMEROCredentials, omero.client)
+	 */
 	private void initializeSession(OMEROCredentials credentials)
 		throws OMEROException
 	{
@@ -945,6 +1039,10 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 
 	/**
 	 * (Re-)establish a connection to the OMERO server.
+	 *
+	 * @param credentials Credentials for authentication to OMERO server
+	 * @param omeroClient Client to connect to OMERO server
+	 * @throws OMEROException If an error arises when connecting with OMERO server
 	 */
 	private void initializeSession(final OMEROCredentials credentials,
 		final omero.client omeroClient) throws OMEROException
@@ -1002,7 +1100,13 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		OMERO.tell(() -> sfp.detachOnDestroy());
 	}
 
-	/** Gets an OMERO {@code Image} descriptor, loading remotely as needed. */
+	/**
+	 * Gets an OMERO {@code Image} descriptor, loading remotely as needed.
+	 *
+	 * @param meta The SCIFIO equivalent {@code Metadata} for the requested image
+	 * @return The loaded OMERO image
+	 * @throws ServerError If an error arises when connecting with OMERO server
+	 */
 	private Image loadImage(final OMEROFormat.Metadata meta) throws ServerError {
 		// return cached Image if available
 		Image image = meta.getImage();
@@ -1024,7 +1128,13 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		return image;
 	}
 
-	/** Gets the metadata's associated pixels ID, loading remotely as needed. */
+	/**
+	 * Gets the metadata's associated pixels ID, loading remotely as needed.
+	 *
+	 * @param meta The SCIFIO equivalent {@code Metadata} for the requested image
+	 * @return The OMERO {@code Pixels} ID
+	 * @throws ServerError If an error arises when connecting with OMERO server
+	 */
 	private long loadPixelsID(final OMEROFormat.Metadata meta)
 		throws ServerError
 	{
@@ -1110,6 +1220,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 *
 	 * @param imageID ID of {@link ImageData} whose bounds should be computed
 	 * @return the computed {@link Interval}
+	 * @throws OMEROException If an error arises when connecting with OMERO server
 	 */
 	private Interval getImageInterval(final long imageID) throws OMEROException {
 		final BrowseFacility browse = facility(BrowseFacility.class);
@@ -1126,6 +1237,11 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * {@link ROIData}. If the interval is null, then unbounded
 	 * {@link MaskPredicate}s cannot be converted to {@link ROIData} and an
 	 * exception is thrown.
+	 *
+	 * @param dataNodeRois SciJava ROI representation
+	 * @param interval Optional bounding interval
+	 * @return Equivalent OMERO ROI representation
+	 * @throws OMEROException If an error arises when connecting with OMERO server
 	 */
 	private List<ROIData> convertOMEROROI(final TreeNode<?> dataNodeRois,
 		final Interval interval) throws OMEROException
@@ -1157,7 +1273,7 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	/**
 	 * Converts the given POJO to the specified type (if given).
 	 * <p>
-	 * This method handles coersion of POJOs unwrapped from OMERO into the
+	 * This method handles coercion of POJOs unwrapped from OMERO into the
 	 * relevant type needed by ImageJ2. Examples:
 	 * </p>
 	 * <ol>
@@ -1171,6 +1287,11 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	 * a specified ID and convert the result to the appropriate type of ImageJ2
 	 * object such as {@link Dataset}.</li>
 	 * </ol>
+	 *
+	 * @param value OMERO object to convert
+	 * @param type Desired output type
+	 * @return ImageJ2-compatible converted type
+	 * @throws OMEROException If an error arises when connecting with OMERO server
 	 */
 	@SuppressWarnings("deprecation")
 	private <T> T convert(final Object value, final Class<T> type)
@@ -1281,6 +1402,8 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 	/**
 	 * Gets a facility from the gateway.
 	 *
+	 * @param type Requested {@link Facility} type
+	 * @return Instance of the requested facility associated with this session
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	private <T extends Facility> T facility(final Class<T> type)
@@ -1289,7 +1412,13 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		return OMERO.ask(() -> gateway.getFacility(type));
 	}
 
-	/*** Converts a {@link Collection} to an array of the given type. */
+	/***
+	 * Converts a {@link Collection} to an array of the given type.
+	 *
+	 * @param collection Collection to convert
+	 * @param type Desired resulting array type
+	 * @return Converted array
+	 */
 	private static <T> T[] toArray(final Collection<Object> collection,
 		final Class<T> type)
 	{

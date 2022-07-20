@@ -59,10 +59,10 @@ public interface OMEROService extends ImageJService {
 	 * @param credentials Credentials for use if a new server session must be
 	 *          created
 	 * @return A session object for working with OMERO
-	 * @throw OMEROException if there is no existing OMERO session and a new one
-	 *        cannot be established.
-	 * @throw IllegalStateException if no active session for that server exists
-	 *        and credentials were not provided.
+	 * @throws OMEROException if there is no existing OMERO session and a new one
+	 *           cannot be established.
+	 * @throws IllegalStateException if no active session for that server exists
+	 *           and credentials were not provided.
 	 */
 	OMEROSession session(OMEROServer server, OMEROCredentials credentials)
 		throws OMEROException;
@@ -73,7 +73,7 @@ public interface OMEROService extends ImageJService {
 	 * @param server OMEROServer for which a session is desired
 	 * @param credentials Credentials for obtaining access to the server
 	 * @return A new session object for working with OMERO
-	 * @throw OMEROException if the OMERO session cannot be established.
+	 * @throws OMEROException if the OMERO session cannot be established.
 	 */
 	OMEROSession createSession(OMEROServer server, OMEROCredentials credentials)
 		throws OMEROException;
@@ -139,15 +139,38 @@ public interface OMEROService extends ImageJService {
 	 */
 	ROICache roiCache();
 
+	/**
+	 * Create a mapping from ImageJ to OMERO ROI types
+	 *
+	 * @param roi ImageJ ROI
+	 * @param shape OMERO ROI
+	 */
 	void addROIMapping(Object roi, ROIData shape);
 
+	/**
+	 * @param key ImageJ ROI
+	 * @return The mapped OMERO ROI data for the given ImageJ ROI
+	 */
 	ROIData getROIMapping(Object key);
 
+	/**
+	 * @param key ImageJ ROI to remove from ROI map
+	 */
 	void removeROIMapping(Object key);
 
-	/** Converts an ImageJ module parameter to an OMERO job parameter. */
+	/**
+	 * Converts an ImageJ module parameter to an OMERO job parameter.
+	 *
+	 * @param item Target ImageJ module parameter
+	 * @return OMERO equivalent for given module parameter
+	 */
 	omero.grid.Param getJobParam(ModuleItem<?> item);
 
-	/** Creates an OMERO parameter prototype for the given Java class. */
+	/**
+	 * Creates an OMERO parameter prototype for the given Java class.
+	 *
+	 * @param type Desired Java type
+	 * @return OMERO equivalent for the given Java type
+	 */
 	omero.RType prototype(Class<?> type);
 }

@@ -52,6 +52,9 @@ public final class OMERO {
 
 	/**
 	 * Converts a {@link UnitsLength} object into a {@link Unit}{@code <Length>}.
+	 *
+	 * @param unit OMERO model object to convert
+	 * @return Equivalent length unit for the given input
 	 */
 	public static Unit<Length> unit(final UnitsLength unit) {
 		switch (unit) {
@@ -128,7 +131,12 @@ public final class OMERO {
 		}
 	}
 
-	/** Converts a {@link UnitsTime} object into a {@link Unit}{@code <Time>}. */
+	/**
+	 * Converts a {@link UnitsTime} object into a {@link Unit}{@code <Time>}.
+	 *
+	 * @param unit OMERO model object to convert
+	 * @return Equivalent time unit for the given input
+	 */
 	public static Unit<Time> unit(final UnitsTime unit) {
 		switch (unit) {
 			case ATTOSECOND:
@@ -184,6 +192,12 @@ public final class OMERO {
 		}
 	}
 
+	/**
+	 * Recursively convert an object to its {@link omero.RType}
+	 *
+	 * @param value Object to convert
+	 * @return {@code omero.RType} representation of given input
+	 */
 	public static omero.RType rtype(final Object value) {
 		if (value == null) return null;
 
@@ -239,6 +253,8 @@ public final class OMERO {
 	/**
 	 * Gets the host associated with the given OMERO client.
 	 *
+	 * @param client OMERO client to interrogate
+	 * @return Host of the given OMERO client
 	 * @throws IllegalArgumentException if the client has no associated host.
 	 */
 	public static String host(final omero.client client) {
@@ -253,6 +269,8 @@ public final class OMERO {
 	/**
 	 * Gets the port associated with the given OMERO client.
 	 *
+	 * @param client OMERO client to interrogate
+	 * @return Port of the given OMERO client
 	 * @throws IllegalArgumentException if the client has no associated port.
 	 */
 	public static int port(final omero.client client) {
@@ -272,6 +290,7 @@ public final class OMERO {
 	/**
 	 * Performs the given operation that might throw OMERO-related exceptions.
 	 *
+	 * @param c Code to execute
 	 * @return The result of the execution.
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
@@ -287,6 +306,7 @@ public final class OMERO {
 	/**
 	 * Performs the given operation that might throw OMERO-related exceptions.
 	 *
+	 * @param c Code to execute
 	 * @throws OMEROException if something goes wrong with OMERO.
 	 */
 	public static void tell(final VoidCallable c) throws OMEROException {
