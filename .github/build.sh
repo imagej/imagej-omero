@@ -7,4 +7,4 @@ chmod a+rw $HOME/.m2
 curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/ci-build.sh
 sh ci-build.sh
 
-exec $0/test.sh
+exec .github/test.sh
