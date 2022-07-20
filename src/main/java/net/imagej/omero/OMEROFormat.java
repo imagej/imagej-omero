@@ -29,16 +29,21 @@ import io.scif.AbstractChecker;
 import io.scif.AbstractFormat;
 import io.scif.AbstractMetadata;
 import io.scif.AbstractParser;
+import io.scif.AbstractTranslator;
 import io.scif.AbstractWriter;
 import io.scif.ByteArrayPlane;
 import io.scif.ByteArrayReader;
+import io.scif.DefaultImageMetadata;
+import io.scif.DefaultTranslator;
 import io.scif.Field;
 import io.scif.Format;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
 import io.scif.MetadataService;
 import io.scif.Plane;
+import io.scif.Translator;
 import io.scif.config.SCIFIOConfig;
+import io.scif.formats.APNGFormat.Metadata;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
@@ -83,8 +88,10 @@ import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.DataManagerFacility;
 import omero.gateway.model.DatasetData;
 import omero.gateway.model.ImageData;
+import omero.gateway.model.MapAnnotationData;
 import omero.model.Image;
 import omero.model.Length;
+import omero.model.NamedValue;
 import omero.model.Pixels;
 import omero.model.Time;
 import omero.model.enums.UnitsLength;
@@ -690,6 +697,8 @@ public class OMEROFormat extends AbstractFormat {
 					final Image image = store.save().getImage();
 					getMetadata().setImageID(image.getId().getValue());
 
+					attachAnnotationsToImage(image, getMetadata().getTable());
+
 					// try to attach image to dataset
 					if (session.getExperimenter() != null && //
 						session.getGateway() != null && getMetadata().getDatasetID() != 0)
@@ -720,6 +729,38 @@ public class OMEROFormat extends AbstractFormat {
 			}
 			catch (final OMEROException err) {
 				throw communicationException(err);
+			}
+		}
+
+		private void attachAnnotationsToImage(final Image image,
+			Map<String, Object> annotations)
+		{
+			try {
+				final Gateway gateway = session.getGateway();
+				final SecurityContext ctx = session.getSecurityContext();
+				final BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
+				final DataManagerFacility dmf = gateway.getFacility(
+					DataManagerFacility.class);
+
+				if (!annotations.isEmpty()) {
+					final ImageData imgdata = browse.getImage(ctx, //
+						image.getId().getValue());
+					MapAnnotationData newAnno = new MapAnnotationData();
+					List<NamedValue> content = new ArrayList<>();
+					newAnno.setContent(content);
+					annotations.entrySet().forEach(entry -> content.add(new NamedValue(
+						entry.getKey(), entry.getValue().toString())));
+					dmf.attachAnnotation(ctx, newAnno, imgdata);
+				}
+			}
+			catch (ExecutionException err) {
+				log().error("Error creating Facility", err);
+			}
+			catch (DSOutOfServiceException err) {
+				log().error("Error attaching annotation to OMERO image", err);
+			}
+			catch (DSAccessException err) {
+				log().error("Error attaching annotation to OMERO image", err);
 			}
 		}
 
@@ -756,6 +797,50 @@ public class OMEROFormat extends AbstractFormat {
 			}
 		}
 
+	}
+
+	@Plugin(type = Translator.class, priority = Priority.LOW)
+	public static class OMEROTranslator extends
+		AbstractTranslator<io.scif.Metadata, Metadata>
+	{
+
+		@Override
+		public Class<? extends io.scif.Metadata> source() {
+			return io.scif.Metadata.class;
+		}
+
+		@Override
+		public Class<? extends io.scif.Metadata> dest() {
+			return Metadata.class;
+		}
+
+		@Override
+		protected void translateImageMetadata(List<ImageMetadata> source,
+			Metadata dest)
+		{
+			dest.createImageMetadata(source.size());
+
+			for (int i = 0; i < source.size(); i++) {
+				final ImageMetadata sourceMeta = source.get(i);
+
+				// Need to add a new ImageMetadata
+				if (i >= dest.getImageCount()) {
+					dest.add(new DefaultImageMetadata(sourceMeta));
+				}
+				// Update the existing ImageMetadata using sourceMeta
+				else {
+					dest.get(i).copy(sourceMeta);
+				}
+			}
+		}
+
+		@Override
+		protected void translateFormatMetadata(final io.scif.Metadata source,
+			final Metadata dest)
+		{
+			// Preserve the Key-Value pairs
+			dest.getTable().putAll(source.getTable());
+		}
 	}
 
 	/** A map of axis types to their associated {@link CalibratedAxis} objects. */
