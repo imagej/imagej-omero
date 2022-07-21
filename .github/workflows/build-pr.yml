@@ -21,5 +21,3 @@ jobs:
         run: .github/setup.sh
       - name: Execute the build
         run: .github/build.sh
-      - name: Execute the tests
-        run: .github/test.sh
