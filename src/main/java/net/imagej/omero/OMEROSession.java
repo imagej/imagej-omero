@@ -1305,8 +1305,6 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 			return typedResult;
 		}
 
-		// CTR START HERE
-
 		// First, we look for registered objects of the requested type whose
 		// toString() value matches the given string. This allows known sorts of
 		// objects to be requested by name, including SingletonPlugin types like
