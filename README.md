@@ -1,5 +1,5 @@
 [![](https://github.com/imagej/imagej-omero/actions/workflows/build-main.yml/badge.svg)](https://github.com/imagej/imagej-omero/actions/workflows/build-main.yml)
-[![Join the chat at https://gitter.im/imagej/imagej-omero](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/imagej/imagej-omero?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![developer chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://imagesc.zulipchat.com/#narrow/stream/327236-ImageJ2)
 
 [ImageJ-OMERO Presentation Slides](https://imagej.github.io/presentations/2018-05-30-imagej-omero/#/)
 
