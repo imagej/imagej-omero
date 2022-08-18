@@ -43,7 +43,9 @@ public abstract class AbstractOMERORectangle extends
 	AbstractOMERORealMaskRealInterval<RectangleData> implements OMERORectangle
 {
 
-	public AbstractOMERORectangle(final RectangleData shape, final BoundaryType bt) {
+	public AbstractOMERORectangle(final RectangleData shape,
+		final BoundaryType bt)
+	{
 		super(shape, bt);
 	}
 

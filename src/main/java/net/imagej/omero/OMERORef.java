@@ -26,5 +26,5 @@
 package net.imagej.omero;
 
 public enum OMERORef {
-	FILE, IMAGE, ROI, WELL, PLATE, PROJECT, DATASET
+		FILE, IMAGE, ROI, WELL, PLATE, PROJECT, DATASET
 }

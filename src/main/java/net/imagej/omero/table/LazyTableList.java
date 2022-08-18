@@ -23,27 +23,23 @@
  * #L%
  */
 
-package net.imagej.omero;
+package net.imagej.omero.table;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.ExecutionException;
 
-import org.scijava.table.Table;
+import net.imagej.omero.OMEROException;
+import net.imagej.omero.OMEROSession;
 
 import org.scijava.log.LogService;
-
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-import omero.ServerError;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
+import org.scijava.table.Table;
 
 /**
- * A {@code List<Table<?, ?>>} whose elements are downloaded lazily from an
- * OMERO server.
+ * A {@code List
+ * <Table>
+ * } whose elements are downloaded lazily from an OMERO server.
  *
  * @author Alison Walter
  */
@@ -51,17 +47,13 @@ public class LazyTableList implements List<Table<?, ?>> {
 
 	private List<Table<?, ?>> tables;
 	private final long imageID;
-	private final OMEROLocation location;
-	private final OMEROService omero;
+	private final OMEROSession session;
 	private final LogService log;
 
-	public LazyTableList(final long imageID, final OMEROLocation location,
-		final OMEROService omero, final LogService log)
-	{
+	public LazyTableList(final long imageID, final OMEROSession session) {
 		this.imageID = imageID;
-		this.location = location;
-		this.omero = omero;
-		this.log = log;
+		this.session = session;
+		log = session.log();
 	}
 
 	@Override
@@ -192,12 +184,9 @@ public class LazyTableList implements List<Table<?, ?>> {
 		if (tables != null) return;
 		List<Table<?, ?>> t = null;
 		try {
-			t = omero.downloadTables(location, imageID);
+			t = session.downloadTables(imageID);
 		}
-		catch (ServerError | PermissionDeniedException
-				| CannotCreateSessionException | ExecutionException
-				| DSOutOfServiceException | DSAccessException exc)
-		{
+		catch (final OMEROException exc) {
 			log.error("Error retrieving tables", exc);
 		}
 		tables = t;

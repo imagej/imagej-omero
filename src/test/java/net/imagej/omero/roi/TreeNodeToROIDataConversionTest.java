@@ -35,6 +35,7 @@ import net.imagej.axis.Axes;
 import net.imagej.axis.DefaultTypedAxis;
 import net.imagej.axis.TypedAxis;
 import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROSession;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMaskRealInterval;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMaskToShapeData;
 import net.imagej.omero.roi.project.ProjectedOMERORealMaskToShapeData;
@@ -65,6 +66,7 @@ import org.scijava.log.LogService;
 import org.scijava.util.DefaultTreeNode;
 import org.scijava.util.TreeNode;
 
+import mockit.Tested;
 import omero.gateway.model.EllipseData;
 import omero.gateway.model.ROIData;
 import omero.gateway.model.RectangleData;
@@ -82,15 +84,18 @@ import omero.model.Shape;
  */
 public class TreeNodeToROIDataConversionTest {
 
-	public ConvertService convert;
-	public String imagejOmeroVersion;
+	private OMEROService omeroService;
+	private ConvertService convert;
+
+	@Tested
+	private OMEROSession session;
 
 	@Before
 	public void setUp() {
 		final Context c = new Context(OMEROService.class, ConvertService.class,
 			LogService.class);
-		convert = c.getService(ConvertService.class);
-		imagejOmeroVersion = c.getService(OMEROService.class).getVersion();
+		omeroService = c.getService(OMEROService.class);
+		convert = omeroService.convert();
 	}
 
 	@After
@@ -146,6 +151,7 @@ public class TreeNodeToROIDataConversionTest {
 
 	@Test
 	public void testDefaultTreeNodeToROIData() {
+		omeroService.pushSession(session);
 		final Box b = new OpenWritableBox(new double[] { 10, 10 }, new double[] {
 			22, 35.5 });
 		final TreeNode<Box> dn = new DefaultTreeNode<>(b, null);
@@ -172,6 +178,7 @@ public class TreeNodeToROIDataConversionTest {
 
 	@Test
 	public void testOMERORoiCollectionToROIData() {
+		omeroService.pushSession(session);
 		final RectangleData rdOne = new RectangleData(10, 10, 30, 40);
 		rdOne.setId(22);
 		rdOne.setZ(0);
@@ -262,6 +269,7 @@ public class TreeNodeToROIDataConversionTest {
 
 	@Test
 	public void testProjectedOMERORealMaskToROIData() {
+		omeroService.pushSession(session);
 		final RectangleData rect = new RectangleData(10, 10, 30, 40);
 		rect.setId(22);
 		rect.setZ(0);
@@ -299,6 +307,7 @@ public class TreeNodeToROIDataConversionTest {
 
 	@Test
 	public void testProjectedRealMaskToROIData() {
+		omeroService.pushSession(session);
 		final Ellipsoid e = new OpenWritableEllipsoid(new double[] { 24.5, 62 },
 			new double[] { 3, 9.5 });
 		final OMEROZTCProjectedRealMaskRealInterval projected =
@@ -320,6 +329,7 @@ public class TreeNodeToROIDataConversionTest {
 
 	@Test
 	public void testRealTransformUnaryCompositeRealMaskRealIntervalToROIData() {
+		omeroService.pushSession(session);
 		final Ellipsoid e = new ClosedWritableEllipsoid(new double[] { 12, 12 },
 			new double[] { 3, 5 });
 		final AffineTransform2D rot = new AffineTransform2D();
@@ -359,6 +369,7 @@ public class TreeNodeToROIDataConversionTest {
 
 	@Test
 	public void testTransformedOMERORealMaskRealIntervalToROIData() {
+		omeroService.pushSession(session);
 		final omero.model.AffineTransform transform =
 			new omero.model.AffineTransformI();
 		transform.setA00(omero.rtypes.rdouble(0));
@@ -410,6 +421,7 @@ public class TreeNodeToROIDataConversionTest {
 
 	@Test
 	public void testDoublyTransformedRealMaskToROIData() {
+		omeroService.pushSession(session);
 		final omero.model.AffineTransform transform =
 			new omero.model.AffineTransformI();
 		transform.setA00(omero.rtypes.rdouble(1));

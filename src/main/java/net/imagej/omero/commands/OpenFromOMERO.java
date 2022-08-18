@@ -25,12 +25,16 @@
 
 package net.imagej.omero.commands;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import net.imagej.Dataset;
 import net.imagej.omero.OMEROCommand;
+import net.imagej.omero.OMEROCredentials;
+import net.imagej.omero.OMEROException;
+import net.imagej.omero.OMEROServer;
 import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROSession;
 import net.imagej.roi.ROIService;
 import net.imagej.roi.ROITree;
 import net.imagej.table.TableService;
@@ -44,13 +48,9 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.table.Table;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
-import omero.ServerError;
-
 /**
  * A command to import objects from an OMERO database.
- * 
+ *
  * @author Alison Walter
  */
 @Plugin(type = Command.class, label = "Import from OMERO", menu = { //
@@ -60,10 +60,6 @@ import omero.ServerError;
 	@Menu(label = "OMERO...", weight = 100, mnemonic = 'o') //
 })
 public class OpenFromOMERO extends OMEROCommand {
-
-        static {
-                net.imagej.omero.SSLUtils.fixDisabledAlgorithms();
-        }
 
 	@Parameter
 	private LogService log;
@@ -84,38 +80,45 @@ public class OpenFromOMERO extends OMEROCommand {
 	private Dataset image;
 
 	@Parameter(type = ItemIO.OUTPUT, required = false)
+	private ROITree rois;
+
+	@Parameter(type = ItemIO.OUTPUT, required = false)
 	private List<Table<?, ?>> tables;
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void run() {
 		try {
-			final omero.client c = new omero.client(getServer(), getPort());
-			c.createSession(getUser(), getPassword());
-			image = omeroService.downloadImage(c, imageID);
+			// Connect to OMERO.
+			final OMEROServer server = new OMEROServer(getServer(), getPort());
+			final OMEROCredentials credentials = //
+				new OMEROCredentials(getUser(), getPassword());
+			final OMEROSession session = omeroService.session(server, credentials);
 
-			// Load ROIs by requesting the children
+			// Download the image.
+			image = session.downloadImage(imageID);
+
+			final Map<String, Object> props = image.getProperties();
+
+			// Load ROIs by requesting the children.
 			// Do NOT set ROIs as an output, because they're already attached to the
 			// image. Declaring them as output will cause duplicates to be attached.
 			if (downloadRois) {
-				final Object rois = image.getProperties().get(ROIService.ROI_PROPERTY);
-				((ROITree) rois).children();
+				rois = (ROITree) image.getProperties().get(ROIService.ROI_PROPERTY);
+				rois.children();
 			}
 
+			// Load tables.
 			if (downloadTables) {
-				tables = (List<Table<?, ?>>) image.getProperties().get(
-					TableService.TABLE_PROPERTY);
+				@SuppressWarnings("unchecked")
+				final List<Table<?, ?>> tableProperty = //
+					(List<Table<?, ?>>) props.get(TableService.TABLE_PROPERTY);
+				tables = tableProperty;
 			}
 		}
-		catch (final ServerError | PermissionDeniedException
-				| CannotCreateSessionException exc)
-		{
+		catch (final OMEROException exc) {
 			log.error(exc);
 			exc.printStackTrace();
 			cancel("Error talking to OMERO: " + exc.getMessage());
-		}
-		catch (final IOException exc) {
-			log.error(exc);
 		}
 	}
 }

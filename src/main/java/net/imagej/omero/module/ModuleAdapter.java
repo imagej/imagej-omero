@@ -23,7 +23,7 @@
  * #L%
  */
 
-package net.imagej.omero;
+package net.imagej.omero.module;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -40,6 +40,10 @@ import java.util.concurrent.Future;
 import net.imagej.Dataset;
 import net.imagej.display.DatasetView;
 import net.imagej.display.ImageDisplay;
+import net.imagej.omero.OMERO;
+import net.imagej.omero.OMEROException;
+import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROSession;
 
 import org.scijava.AbstractContextual;
 import org.scijava.Context;
@@ -90,8 +94,8 @@ import omero.model.Roi;
 import omero.model.Shape;
 
 /**
- * Adapts an ImageJ {@link Module} (such as a {@link Command}) to be usable as
- * an OMERO script, converting information between ImageJ- and OMERO-compatible
+ * Adapts a SciJava {@link Module} (such as a {@link Command}) to be usable as
+ * an OMERO script, converting information between ImageJ2- and OMERO-compatible
  * formats as appropriate.
  *
  * @author Curtis Rueden
@@ -129,7 +133,11 @@ public class ModuleAdapter extends AbstractContextual {
 	private final ModuleInfo info;
 
 	/** The OMERO client to use when communicating about a job. */
+	// TODO: This should be an OMEROSession instead of a raw omero.client now.
 	private final omero.client client;
+
+	/** The {@link OMEROSession} associated with this adapter. */
+	private OMEROSession session;
 
 	/**
 	 * The single image input parameter for the module, or null if there are no
@@ -177,7 +185,7 @@ public class ModuleAdapter extends AbstractContextual {
 
 	/**
 	 * Executes the associated ImageJ module as an OMERO script.
-	 * 
+	 *
 	 * @throws IOException
 	 * @throws ServerError
 	 * @throws ExecutionException
@@ -185,13 +193,14 @@ public class ModuleAdapter extends AbstractContextual {
 	 * @throws PermissionDeniedException
 	 * @throws DSAccessException
 	 * @throws DSOutOfServiceException
-	 * @throws URISyntaxException 
-	 * @throws NumberFormatException 
+	 * @throws URISyntaxException
+	 * @throws NumberFormatException
+	 * @throws OMEROException
 	 */
 	public void launch() throws ServerError, IOException, ExecutionException,
 		PermissionDeniedException, CannotCreateSessionException,
 		DSOutOfServiceException, DSAccessException, NumberFormatException,
-		URISyntaxException
+		URISyntaxException, OMEROException
 	{
 		// populate inputs
 		log.debug(info.getTitle() + ": populating inputs");
@@ -200,11 +209,10 @@ public class ModuleAdapter extends AbstractContextual {
 		for (final String name : client.getInputKeys()) {
 			final ModuleItem<?> input = getInput(name);
 			final Class<?> type = input.getType();
-			final Object value = omeroService.toImageJ(client, client.getInput(name),
-				type);
+			final Object value = session().toImageJ(client.getInput(name), type);
 			inputMap.put(input.getName(), value);
 			if (isImageType(value.getClass())) inputImages.put(input.getName(),
-					((RLong) client.getInput(name)).getValue());
+				((RLong) client.getInput(name)).getValue());
 		}
 
 		// execute ImageJ module
@@ -218,7 +226,7 @@ public class ModuleAdapter extends AbstractContextual {
 		// populate outputs, except tables and ROIs
 		log.debug(info.getTitle() + ": populating outputs");
 		for (final ModuleItem<?> item : module.getInfo().outputs()) {
-			final Object value = omeroService.toOMERO(client, item.getValue(module));
+			final Object value = session().toOMERO(item.getValue(module));
 			final String name = getOutputName(item);
 			if (value == null) {
 				log.warn(info.getTitle() + ": output '" + name + "' is null");
@@ -282,8 +290,8 @@ public class ModuleAdapter extends AbstractContextual {
 		params.inputs = new HashMap<>();
 		int inputIndex = 0;
 		for (final ModuleItem<?> item : info.inputs()) {
-			if (item.getVisibility() == ItemVisibility.MESSAGE) continue;
-			if (m.isInputResolved(item.getName())) continue;
+			if ((item.getVisibility() == ItemVisibility.MESSAGE) || m.isInputResolved(
+				item.getName())) continue;
 			final omero.grid.Param param = omeroService.getJobParam(item);
 			if (param != null) {
 				param.grouping = pad(inputIndex++, inputDigits);
@@ -366,13 +374,27 @@ public class ModuleAdapter extends AbstractContextual {
 		ModuleItem<?> imageItem = null;
 		for (final ModuleItem<?> item : items) {
 			final Class<?> type = item.getType();
-			if (isImageType(type))
-			{
+			if (isImageType(type)) {
 				if (imageItem == null) imageItem = item;
 				else return null; // multiple image parameters
 			}
 		}
 		return imageItem;
+	}
+
+	/**
+	 * @return An {@link OMEROSession} for interacting with the OMERO server.
+	 * @throws OMEROException
+	 */
+	private OMEROSession session() throws OMEROException {
+		if (session == null) {
+			synchronized (this) {
+				if (session == null) {
+					session = new OMEROSession(omeroService, client);
+				}
+			}
+		}
+		return session;
 	}
 
 	/**
@@ -389,8 +411,8 @@ public class ModuleAdapter extends AbstractContextual {
 	private ExperimenterData createUser() {
 		String host = client.getProperty("omero.host");
 		if (host.equals("")) {
-			String router = client.getProperty("omero.ClientCallback.Router");
-			String[] comp = router.split("\\s+");
+			final String router = client.getProperty("omero.ClientCallback.Router");
+			final String[] comp = router.split("\\s+");
 			for (int i = 0; i < comp.length; i++) {
 				if (comp[i].equals("-h")) {
 					host = comp[i + 1];
@@ -399,7 +421,7 @@ public class ModuleAdapter extends AbstractContextual {
 			}
 		}
 		final LoginCredentials cred = new LoginCredentials(client.getSessionId(),
-			null, host, Integer.parseInt(client.getProperty("omero.port")));
+			null, host, OMERO.port(client));
 
 		try {
 			return gateway.connect(cred);
@@ -427,7 +449,7 @@ public class ModuleAdapter extends AbstractContextual {
 		final SecurityContext ctx = new SecurityContext(user.getGroupId());
 		final IQueryPrx query = gateway.getQueryService(ctx);
 
-		for (ModuleItem<?> item : outputs.keySet()) {
+		for (final ModuleItem<?> item : outputs.keySet()) {
 			final Object o = outputs.get(item);
 			if (o instanceof RLong) attachImageToDataset((RLong) o, item, inputImages,
 				browse, query, dm, ctx);
@@ -468,7 +490,7 @@ public class ModuleAdapter extends AbstractContextual {
 					final long id = Long.parseLong(idStrings[i]);
 					ids.add(id);
 				}
-				catch (NumberFormatException exc) {
+				catch (final NumberFormatException exc) {
 					log.error(idStrings[i] + " is not a valid number", exc);
 				}
 			}

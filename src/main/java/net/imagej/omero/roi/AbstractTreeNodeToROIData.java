@@ -107,8 +107,8 @@ public abstract class AbstractTreeNodeToROIData<D extends TreeNode<?>> extends
 		}
 		if (((TreeNode<?>) src).data() instanceof MaskPredicate) mp =
 			(MaskPredicate<?>) ((TreeNode<?>) src).data();
-		if (omero.getROIMapping(mp) != null) {
-			final ROIData prev = omero.getROIMapping(mp);
+		if (omero.roiCache().getROIMapping(mp) != null) {
+			final ROIData prev = omero.roiCache().getROIMapping(mp);
 			r.setId(prev.getId());
 
 			// Assume there's only one shape, since only ROIData with one ShapeData is

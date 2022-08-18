@@ -50,6 +50,7 @@ public interface OMEROPolyshape<SD extends ShapeData> extends
 {
 
 	List<Point2D.Double> getPoints();
+
 	void setPoints(List<Point2D.Double> points);
 
 	@Override
@@ -89,7 +90,7 @@ public interface OMEROPolyshape<SD extends ShapeData> extends
 
 	@Override
 	default void addVertices(final int index,
-		Collection<RealLocalizable> vertices)
+		final Collection<RealLocalizable> vertices)
 	{
 		final List<Point2D.Double> pts = getPoints();
 		pts.addAll(vertices.stream()//

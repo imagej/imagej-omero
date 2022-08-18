@@ -29,22 +29,22 @@ import io.scif.AbstractChecker;
 import io.scif.AbstractFormat;
 import io.scif.AbstractMetadata;
 import io.scif.AbstractParser;
+import io.scif.AbstractTranslator;
 import io.scif.AbstractWriter;
 import io.scif.ByteArrayPlane;
 import io.scif.ByteArrayReader;
+import io.scif.DefaultImageMetadata;
 import io.scif.Field;
 import io.scif.Format;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
 import io.scif.MetadataService;
 import io.scif.Plane;
+import io.scif.Translator;
 import io.scif.config.SCIFIOConfig;
-import io.scif.io.RandomAccessInputStream;
-import io.scif.io.RandomAccessOutputStream;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,10 +61,15 @@ import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imagej.axis.LinearAxis;
 import net.imagej.omero.roi.LazyROITree;
+import net.imagej.omero.table.LazyTableList;
 import net.imagej.roi.ROITree;
 import net.imglib2.Interval;
 
 import org.scijava.Priority;
+import org.scijava.io.handle.DataHandle;
+import org.scijava.io.handle.DataHandleService;
+import org.scijava.io.location.DummyLocation;
+import org.scijava.io.location.Location;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.table.Table;
@@ -81,8 +86,10 @@ import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.DataManagerFacility;
 import omero.gateway.model.DatasetData;
 import omero.gateway.model.ImageData;
+import omero.gateway.model.MapAnnotationData;
 import omero.model.Image;
 import omero.model.Length;
+import omero.model.NamedValue;
 import omero.model.Pixels;
 import omero.model.Time;
 import omero.model.enums.UnitsLength;
@@ -104,6 +111,11 @@ public class OMEROFormat extends AbstractFormat {
 		return "OMERO";
 	}
 
+	@Override
+	public boolean ownsLocationType(Location outputLocation) {
+		return outputLocation instanceof OMEROLocation;
+	}
+
 	// -- AbstractFormat methods --
 
 	@Override
@@ -116,17 +128,15 @@ public class OMEROFormat extends AbstractFormat {
 	public static class Checker extends AbstractChecker {
 
 		@Override
-		public boolean isFormat(final String name, final SCIFIOConfig config) {
-			if (name != null && name.startsWith("omero:")) return true;
-			return super.isFormat(name, config);
+		public boolean isFormat(final Location loc, final SCIFIOConfig config) {
+			return loc instanceof OMEROLocation;
 		}
-
 	}
 
 	public static class Metadata extends AbstractMetadata {
 
 		@Field
-		private OMEROLocation credentials;
+		private OMEROServer server;
 
 		@Field
 		private String name;
@@ -190,8 +200,11 @@ public class OMEROFormat extends AbstractFormat {
 
 		// -- io.scif.omero.OMEROFormat.Metadata methods --
 
-		public OMEROLocation getCredentials() {
-			return credentials;
+		/**
+		 * @return The OMERO server address (host+port) where this object lives.
+		 */
+		public OMEROServer server() {
+			return server;
 		}
 
 		public String getName() {
@@ -278,8 +291,8 @@ public class OMEROFormat extends AbstractFormat {
 			this.name = name;
 		}
 
-		public void setCredentials(final OMEROLocation credentials) {
-			this.credentials = credentials;
+		public void setServer(final OMEROServer server) {
+			this.server = server;
 		}
 
 		public void setImageID(final long imageID) {
@@ -394,17 +407,22 @@ public class OMEROFormat extends AbstractFormat {
 			if (getImageCount() > 0) return; // already populated
 
 			// construct dimensional axes
-			final LinearAxis xAxis = axis(Axes.X, physSizeX);
-			final LinearAxis yAxis = axis(Axes.Y, physSizeY);
-			final LinearAxis zAxis = axis(Axes.Z, physSizeZ);
-			final LinearAxis cAxis = axis(Axes.CHANNEL, waveStart, waveIncrement);
-			final LinearAxis tAxis = axis(Axes.TIME, timeIncrement);
 			// HACK: Do things in XYCZT order for ImageJ1 compatibility.
 			// Technically, this _shouldn't_ matter because imagej-legacy
 			// should take care of dimension swapping incompatible orderings.
 			// But for now, this sidesteps the issue.
-			final CalibratedAxis[] axes = { xAxis, yAxis, cAxis, zAxis, tAxis };
-			final long[] axisLengths = { sizeX, sizeY, sizeC, sizeZ, sizeT };
+			final LinearAxis[] axes = { axis(Axes.X, physSizeX), axis(Axes.Y,
+				physSizeY), axis(Axes.CHANNEL, waveStart, waveIncrement), axis(Axes.Z,
+					physSizeZ), axis(Axes.TIME, timeIncrement) };
+			final int[] axisLengths = { sizeX, sizeY, sizeC, sizeZ, sizeT };
+			List<CalibratedAxis> axisList = new ArrayList<>();
+			List<Long> axisLengthList = new ArrayList<>();
+			for (int i = 0; i < axisLengths.length; i++) {
+				if (axisLengths[i] > 1) {
+					axisList.add(axes[i]);
+					axisLengthList.add((long) axisLengths[i]);
+				}
+			}
 
 			// obtain pixel type
 			final int pixType = FormatTools.pixelTypeFromString(pixelType);
@@ -413,7 +431,8 @@ public class OMEROFormat extends AbstractFormat {
 			createImageMetadata(1);
 			final ImageMetadata imageMeta = get(0);
 			imageMeta.setName(name);
-			imageMeta.setAxes(axes, axisLengths);
+			imageMeta.setAxes(axisList.toArray(new CalibratedAxis[axisList.size()]),
+				axisLengthList.stream().mapToLong(Long::valueOf).toArray());
 			imageMeta.setPixelType(pixType);
 			imageMeta.setMetadataComplete(true);
 			imageMeta.setOrderCertain(true);
@@ -431,20 +450,22 @@ public class OMEROFormat extends AbstractFormat {
 		private OMEROService omeroService;
 
 		@Override
-		public void typedParse(final RandomAccessInputStream stream,
+		public void typedParse(final DataHandle<Location> handle,
 			final Metadata meta, final SCIFIOConfig config) throws IOException,
 			FormatException
 		{
-			// parse OMERO credentials from source string
-			parseArguments(metadataService, stream.getFileName(), meta);
+			OMEROLocation omeroLoc = (OMEROLocation) handle.get();
+			meta.setServer(omeroLoc.getServer());
+			meta.setImageID(omeroLoc.getImageID());
 
 			// initialize OMERO session
 			final OMEROSession session;
 			final Pixels pix;
 			try {
-				session = omeroService.session(meta.getCredentials());
+				session = omeroService.session(meta.server());
 				pix = session.loadPixels(meta);
 				session.loadImageName(meta);
+				meta.getTable().putAll(session.loadAnnotations(meta));
 			}
 			catch (final ServerError err) {
 				throw communicationException(err);
@@ -452,12 +473,13 @@ public class OMEROFormat extends AbstractFormat {
 			catch (final Ice.LocalException exc) {
 				throw versionException(exc);
 			}
+			catch (OMEROException exc) {
+				throw new FormatException("Error creating OMERO session", exc);
+			}
 
-			// Set table and rois to lazy loaders
-			meta.setRois(new LazyROITree(null, meta.getImageID(), //
-				meta.getCredentials(), omeroService, log()));
-			meta.setTables(new LazyTableList(meta.getImageID(), meta.getCredentials(),
-				omeroService, log()));
+			// Set table and ROIs to lazy loaders
+			meta.setRois(new LazyROITree(meta.getImageID(), session));
+			meta.setTables(new LazyTableList(meta.getImageID(), session));
 
 			// parse pixel sizes
 			meta.setSizeX(pix.getSizeX().getValue());
@@ -493,8 +515,13 @@ public class OMEROFormat extends AbstractFormat {
 			final ByteArrayPlane plane, final Interval bounds,
 			final SCIFIOConfig config) throws FormatException, IOException
 		{
-			// TODO: Consider whether to reuse OMERO session from the parsing step.
-			if (session == null) initSession();
+			try {
+				session = omeroService.session(getMetadata().server());
+				store = session.openPixels(getMetadata());
+			}
+			catch (final OMEROException exc) {
+				throw communicationException(exc);
+			}
 
 			final AxisMap axisMap = new AxisMap(getMetadata().get(imageIndex));
 			final int[] zct = axisMap.zct(planeIndex);
@@ -523,7 +550,6 @@ public class OMEROFormat extends AbstractFormat {
 
 		@Override
 		public void close() {
-			if (session != null) ((DefaultOMEROSession) session).close();
 			session = null;
 			store = null;
 		}
@@ -534,25 +560,15 @@ public class OMEROFormat extends AbstractFormat {
 			return new String[] { FormatTools.LM_DOMAIN };
 		}
 
-		private void initSession() throws FormatException {
-			try {
-				session = omeroService.session(getMetadata().getCredentials());
-				store = session.openPixels(getMetadata());
-			}
-			catch (final ServerError err) {
-				throw communicationException(err);
-			}
-			catch (final Ice.LocalException exc) {
-				throw versionException(exc);
-			}
-		}
-
 	}
 
 	public static class Writer extends AbstractWriter<Metadata> {
 
 		@Parameter
 		private MetadataService metadataService;
+
+		@Parameter
+		private DataHandleService dataHandleService;
 
 		@Parameter
 		private OMEROService omeroService;
@@ -565,7 +581,7 @@ public class OMEROFormat extends AbstractFormat {
 			final Plane plane, final Interval bounds) throws FormatException,
 			IOException
 		{
-			if (session == null) initSession();
+			if (session == null) initWriterSession();
 			final ImageMetadata imageMeta = getMetadata().get(imageIndex);
 			final AxisMap axisMap = new AxisMap(imageMeta);
 
@@ -657,14 +673,19 @@ public class OMEROFormat extends AbstractFormat {
 		}
 
 		@Override
-		public void setDest(final String fileName, final int imageIndex,
+		public void setDest(final Location out, final int imageIndex,
 			final SCIFIOConfig config) throws FormatException, IOException
 		{
-			getMetadata().setDatasetName(fileName);
+			getMetadata().setDatasetName(out.getName());
+			if (out instanceof OMEROLocation) {
+				getMetadata().setServer(((OMEROLocation) out).getServer());
+			}
 			// HACK: Create a dummy RAOS around this "fileName".
 			// The OMERO format does not use RAOS to wrangle bytes.
 			// This avoids creating a spurious empty file on disk.
-			setDest(new RandomAccessOutputStream(null), imageIndex, config);
+			// FIXME: Rework this.
+			setDest(dataHandleService.create(new DummyLocation()), imageIndex,
+				config);
 		}
 
 		@Override
@@ -675,6 +696,8 @@ public class OMEROFormat extends AbstractFormat {
 					// store resultant image ID into the metadata
 					final Image image = store.save().getImage();
 					getMetadata().setImageID(image.getId().getValue());
+
+					attachAnnotationsToImage(image, getMetadata().getTable());
 
 					// try to attach image to dataset
 					if (session.getExperimenter() != null && //
@@ -690,7 +713,6 @@ public class OMEROFormat extends AbstractFormat {
 				}
 			}
 			store = null;
-			if (session != null) ((DefaultOMEROSession) session).close();
 			session = null;
 		}
 
@@ -699,20 +721,46 @@ public class OMEROFormat extends AbstractFormat {
 			return new String[0];
 		}
 
-		private void initSession() throws FormatException {
+		private void initWriterSession() throws FormatException {
 			try {
 				final Metadata meta = getMetadata();
-
-				// parse OMERO credentials from destination string
-				// HACK: Get destination string from the metadata's dataset name.
-				// This is set in the method: AbstractWriter#setDest(String, int).
-				parseArguments(metadataService, meta.getDatasetName(), meta);
-
-				session = omeroService.session(meta.getCredentials());
+				session = omeroService.session(meta.server());
 				store = session.createPixels(meta);
 			}
-			catch (final ServerError err) {
+			catch (final OMEROException err) {
 				throw communicationException(err);
+			}
+		}
+
+		private void attachAnnotationsToImage(final Image image,
+			Map<String, Object> annotations)
+		{
+			try {
+				final Gateway gateway = session.getGateway();
+				final SecurityContext ctx = session.getSecurityContext();
+				final BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
+				final DataManagerFacility dmf = gateway.getFacility(
+					DataManagerFacility.class);
+
+				if (!annotations.isEmpty()) {
+					final ImageData imgdata = browse.getImage(ctx, //
+						image.getId().getValue());
+					MapAnnotationData newAnno = new MapAnnotationData();
+					List<NamedValue> content = new ArrayList<>();
+					newAnno.setContent(content);
+					annotations.entrySet().forEach(entry -> content.add(new NamedValue(
+						entry.getKey(), entry.getValue().toString())));
+					dmf.attachAnnotation(ctx, newAnno, imgdata);
+				}
+			}
+			catch (ExecutionException err) {
+				log().error("Error creating Facility", err);
+			}
+			catch (DSOutOfServiceException err) {
+				log().error("Error attaching annotation to OMERO image", err);
+			}
+			catch (DSAccessException err) {
+				log().error("Error attaching annotation to OMERO image", err);
 			}
 		}
 
@@ -751,14 +799,58 @@ public class OMEROFormat extends AbstractFormat {
 
 	}
 
+	@Plugin(type = Translator.class, priority = Priority.LOW)
+	public static class OMEROTranslator extends
+		AbstractTranslator<io.scif.Metadata, Metadata>
+	{
+
+		@Override
+		public Class<? extends io.scif.Metadata> source() {
+			return io.scif.Metadata.class;
+		}
+
+		@Override
+		public Class<? extends io.scif.Metadata> dest() {
+			return Metadata.class;
+		}
+
+		@Override
+		protected void translateImageMetadata(List<ImageMetadata> source,
+			Metadata dest)
+		{
+			dest.createImageMetadata(source.size());
+
+			for (int i = 0; i < source.size(); i++) {
+				final ImageMetadata sourceMeta = source.get(i);
+
+				// Need to add a new ImageMetadata
+				if (i >= dest.getImageCount()) {
+					dest.add(new DefaultImageMetadata(sourceMeta));
+				}
+				// Update the existing ImageMetadata using sourceMeta
+				else {
+					dest.get(i).copy(sourceMeta);
+				}
+			}
+		}
+
+		@Override
+		protected void translateFormatMetadata(final io.scif.Metadata source,
+			final Metadata dest)
+		{
+			// Preserve the Key-Value pairs
+			dest.getTable().putAll(source.getTable());
+		}
+	}
+
 	/** A map of axis types to their associated {@link CalibratedAxis} objects. */
 	private static class AxisMap {
 
 		private static final List<AxisType> XYZCT = //
 			Arrays.asList(Axes.X, Axes.Y, Axes.Z, Axes.CHANNEL, Axes.TIME);
 
-		private ImageMetadata imageMeta;
-		private Map<AxisType, CalibratedAxis> map;
+		private final ImageMetadata imageMeta;
+		private final Map<AxisType, CalibratedAxis> map;
 
 		private AxisMap(final ImageMetadata imageMeta) {
 			this.imageMeta = imageMeta;
@@ -794,8 +886,8 @@ public class OMEROFormat extends AbstractFormat {
 				}
 				else if (isUnknownAxis(axisType)) {
 					// Assign the first available axis type from XYZCT.
-					final Optional<AxisType> availableAxisType =
-						XYZCT.stream().filter(at -> isAvailable(at)).findFirst();
+					final Optional<AxisType> availableAxisType = XYZCT.stream().filter(
+						at -> isAvailable(at)).findFirst();
 					if (!availableAxisType.isPresent()) {
 						throw new IllegalArgumentException(
 							"Cannot map unknown axis type, no labels free.");
@@ -846,38 +938,10 @@ public class OMEROFormat extends AbstractFormat {
 		}
 	}
 
-	// -- Utility methods --
-
-	static void parseArguments(final MetadataService metadataService,
-		final String string, final Metadata meta) throws FormatException
-	{
-		// strip omero prefix and/or suffix
-		final String clean = string//
-			.replaceFirst("^omero:", "")//
-			.replaceFirst("\\.omero$", "");
-
-		final Map<String, Object> map = metadataService.parse(clean, "&");
-
-		try {
-			final OMEROLocation credentials = new OMEROLocation(map);
-			meta.setCredentials(credentials);
-		}
-		catch (final URISyntaxException exc) {
-			throw connectionException(exc);
-		}
-
-		// populate other metadata: image ID, etc.
-		metadataService.populate(meta, map);
-	}
-
 	// -- Helper methods --
 
 	private static FormatException communicationException(final Throwable cause) {
 		return new FormatException("Error communicating with OMERO", cause);
-	}
-
-	private static FormatException connectionException(final Throwable cause) {
-		return new FormatException("Error connecting to OMERO", cause);
 	}
 
 	private static FormatException versionException(final Throwable cause) {
@@ -921,11 +985,11 @@ public class OMEROFormat extends AbstractFormat {
 	}
 
 	private static String unit(final UnitsTime unit) {
-		return OMEROUtils.unit(unit).getSymbol();
+		return OMERO.unit(unit).getSymbol();
 	}
 
 	private static String unit(final UnitsLength unit) {
-		return OMEROUtils.unit(unit).getSymbol();
+		return OMERO.unit(unit).getSymbol();
 	}
 
 	private static Integer i(final RInt value) {

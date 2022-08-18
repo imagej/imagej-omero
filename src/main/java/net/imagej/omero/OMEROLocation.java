@@ -33,7 +33,6 @@ package net.imagej.omero;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
 import java.util.Objects;
 
 import org.scijava.io.location.Location;
@@ -47,51 +46,37 @@ import org.scijava.io.location.URILocation;
  */
 public class OMEROLocation extends URILocation {
 
-	private final boolean encrypted;
-
-	private final String sessionID;
-
-	public OMEROLocation(final String server, final int port, final String user,
-		final String password) throws URISyntaxException
-	{
-		super(new URI(null, user + ":" + password, server, port, null, null, null));
-		encrypted = false;
-		sessionID = null;
+	private static URI uri(final String host, final int port, final String path) {
+		try {
+			return new URI("omero", null, host, port, path, null, null);
+		}
+		catch (final URISyntaxException exc) {
+			throw new IllegalArgumentException(exc);
+		}
 	}
 
-	public OMEROLocation(final String server, final int port, final String user,
-		final String password, final boolean encrypted) throws URISyntaxException
-	{
-		super(new URI(null, user + ":" + password, server, port, null, null, null));
-		this.encrypted = encrypted;
-		sessionID = null;
+	public OMEROLocation(final OMEROServer server, final String path) {
+		super(uri(server.host, server.port, path));
 	}
 
-	public OMEROLocation(final String server, final int port,
-		final String sessionID) throws URISyntaxException
-	{
-		super(new URI(null, null, server, port, null, null, null));
-		encrypted = false;
-		this.sessionID = sessionID;
+	public OMEROLocation(final OMEROServer server, final long imageID) {
+		// TODO: Determine if OMERO already has some conventions
+		// surrounding URI-style expression of its resources.
+		// And reuse those same ones if so!
+		super(uri(server.host, server.port, "/image/" + imageID));
 	}
 
-	public OMEROLocation(final Map<String, Object> args)
-		throws URISyntaxException
-	{
-		super(createURI(args));
-
-		// Set encrypted if present
-		encrypted = args.containsKey("encrypted") ? //
-			Boolean.parseBoolean(args.get("encrypted").toString()) : false;
-
-		// Set sessionID if present
-		sessionID = args.containsKey("sessionID") ? //
-			args.get("sessionID").toString() : null;
+	public OMEROLocation(final URI uri) {
+		super(validateURI(uri));
 	}
 
 	// -- OMEROLocation methods --
 
-	public String getServer() {
+	public OMEROServer getServer() {
+		return new OMEROServer(getHost(), getPort());
+	}
+
+	public String getHost() {
 		return getURI().getHost();
 	}
 
@@ -99,54 +84,36 @@ public class OMEROLocation extends URILocation {
 		return getURI().getPort();
 	}
 
-	public String getUser() {
-		return getURI().getUserInfo() == null ? //
-			null : getURI().getUserInfo().split(":")[0];
+	public String getPath() {
+		return getURI().getPath();
 	}
 
-	public String getPassword() {
-		return getURI().getUserInfo() == null ? //
-			null : getURI().getUserInfo().split(":")[1];
-	}
-
-	public boolean isEncrypted() {
-		return encrypted;
-	}
-
-	public String getSessionID() {
-		return sessionID;
+	public long getImageID() {
+		String path = getPath();
+		return Long.parseLong(path.substring(path.lastIndexOf('/') + 1));
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
 		if (!(obj instanceof OMEROLocation)) return false;
-		final OMEROLocation other = (OMEROLocation) obj;
-		return Objects.equals(getServer(), other.getServer()) && //
-			Objects.equals(getUser(), other.getUser()) && //
-			Objects.equals(getPassword(), other.getPassword()) && //
-			getPort() == other.getPort() && //
-			encrypted == other.encrypted;
+		final OMEROLocation that = (OMEROLocation) obj;
+		return Objects.equals(this.getURI(), that.getURI());
 	}
 
 	@Override
 	public int hashCode() {
+		// TODO: Push upstream to URILocation base class!
+		// Why not? Answer: because it needs to go hand in hand with equals,
+		// but pushing equals upstream is maybe too tricky...
 		return getURI().hashCode();
 	}
 
 	// -- Helper methods --
 
-	private static URI createURI(final Map<String, Object> args)
-		throws NumberFormatException, URISyntaxException
-	{
-		final String server = (String) args.get("server");
-		final int port = Integer.parseInt(args.get("port").toString());
-		if (args.containsKey("user") && args.containsKey("password"))
-			return new URI(null, args.get("user") + ":" + args.get("password"),
-				server, port, null, null, null);
-		else if (args.containsKey("sessionID")) {
-			return new URI(null, null, server, port, null, null, null);
+	private static URI validateURI(final URI uri) {
+		if (!"omero".equals(uri.getScheme())) {
+			throw new IllegalArgumentException("Not an omero URI: " + uri);
 		}
-		throw new IllegalArgumentException(
-			"Need username and password OR session ID to create OMEROLocation");
+		return uri;
 	}
 }

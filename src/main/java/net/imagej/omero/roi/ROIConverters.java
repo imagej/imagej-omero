@@ -11,12 +11,12 @@
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -177,8 +177,7 @@ public class ROIConverters {
 	public static boolean shapeDataEquals(final ShapeData shapeOne,
 		final ShapeData shapeTwo)
 	{
-		if (!shapeOne.getClass().isInstance(shapeTwo)) return false;
-		if (shapeOne.getC() != shapeTwo.getC() || shapeOne.getT() != shapeTwo
+		if (!shapeOne.getClass().isInstance(shapeTwo) || shapeOne.getC() != shapeTwo.getC() || shapeOne.getT() != shapeTwo
 			.getT() || shapeOne.getZ() != shapeTwo.getZ()) return false;
 		if (shapeOne instanceof EllipseData) return ellipseDataEquals(
 			(EllipseData) shapeOne, (EllipseData) shapeTwo);

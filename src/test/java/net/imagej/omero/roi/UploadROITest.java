@@ -27,7 +27,7 @@ package net.imagej.omero.roi;
 
 import static org.junit.Assert.assertEquals;
 
-import java.net.URISyntaxException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,9 +35,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.omero.DefaultOMEROSession;
-import net.imagej.omero.OMEROLocation;
+import net.imagej.omero.OMEROException;
 import net.imagej.omero.OMEROService;
+import net.imagej.omero.OMEROSession;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMask;
 import net.imagej.omero.roi.project.OMEROZTCProjectedRealMaskRealInterval;
 import net.imagej.roi.DefaultROITree;
@@ -56,12 +56,11 @@ import org.scijava.convert.ConvertService;
 import org.scijava.util.DefaultTreeNode;
 import org.scijava.util.TreeNode;
 
-import Glacier2.CannotCreateSessionException;
-import Glacier2.PermissionDeniedException;
 import mockit.Expectations;
+import mockit.Injectable;
 import mockit.Mocked;
+import mockit.Tested;
 import mockit.Verifications;
-import omero.ServerError;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
@@ -81,22 +80,20 @@ import omero.model.RoiI;
 import omero.model.Shape;
 
 /**
- * Tests {@link OMEROService#uploadROIs(OMEROLocation, TreeNode, long)}. Note,
- * that the actual data structure conversions are not tested here as they are
- * tested elsewhere.
+ * Tests {@link OMEROSession#uploadROIs(TreeNode, long)}. Note, that the actual
+ * data structure conversions are not tested here as they are tested elsewhere.
  *
  * @author Alison Walter
  */
 public class UploadROITest {
 
-	private OMEROLocation location;
 	private OMEROService service;
 	private List<omero.model.IObject> tags;
 
-	@Mocked
-	private DefaultOMEROSession session;
+	@Tested
+	private OMEROSession session;
 
-	@Mocked
+	@Injectable
 	private Gateway gateway;
 
 	@Mocked
@@ -112,8 +109,7 @@ public class UploadROITest {
 	private PixelsData pixels;
 
 	@Before
-	public void setUp() throws URISyntaxException {
-		location = new OMEROLocation("localhost", 4064, "omero", "omero");
+	public void setUp() {
 		service = new Context(OMEROService.class, ConvertService.class).getService(
 			OMEROService.class);
 
@@ -129,16 +125,17 @@ public class UploadROITest {
 	}
 
 	@Test
-	public void testUploadSingleRMRI() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testUploadSingleRMRI() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final Box b = GeomMasks.closedBox(new double[] { 12.5, 16 }, new double[] {
 			83, 92 });
 		final TreeNode<Box> dn = new DefaultTreeNode<>(b, null);
 		setUpMethodCalls(false, 1, null);
 
-		final long[] ids = service.uploadROIs(location, dn, 12);
+		final long[] ids = session.uploadROIs(dn, 12);
 
 		assertEquals(1, ids.length);
 		assertEquals(50, ids[0]);
@@ -148,9 +145,10 @@ public class UploadROITest {
 	}
 
 	@Test
-	public void testUploadCompositeMaskPredicate() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testUploadCompositeMaskPredicate() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final Box b = GeomMasks.openBox(new double[] { 10, 11.25 }, new double[] {
 			66, 92.5 });
@@ -160,7 +158,7 @@ public class UploadROITest {
 		final TreeNode<RealMaskRealInterval> dn = new DefaultTreeNode<>(or, null);
 		setUpMethodCalls(false, 1, null);
 
-		final long[] ids = service.uploadROIs(location, dn, 22);
+		final long[] ids = session.uploadROIs(dn, 22);
 
 		assertEquals(1, ids.length);
 		assertEquals(50, ids[0]);
@@ -170,9 +168,10 @@ public class UploadROITest {
 	}
 
 	@Test
-	public void testUploadOMERORoiCollecton() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testUploadOMERORoiCollecton() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final RectangleData rd = new RectangleData(12, 15.5, 4, 6);
 		rd.setId(122);
@@ -201,7 +200,7 @@ public class UploadROITest {
 			service.getContext().getService(ConvertService.class));
 		setUpMethodCalls(false, 1, Collections.singletonList(data));
 
-		final long[] ids = service.uploadROIs(location, orc, 13);
+		final long[] ids = session.uploadROIs(orc, 13);
 
 		assertEquals(1, ids.length);
 		assertEquals(50, ids[0]);
@@ -211,9 +210,10 @@ public class UploadROITest {
 	}
 
 	@Test
-	public void testUploadOMERORoiElement() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testUploadOMERORoiElement() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final RectangleData rd = new RectangleData(12, 15.5, 4, 6);
 		rd.setId(122);
@@ -243,7 +243,7 @@ public class UploadROITest {
 		final TreeNode<?> ore = orc.children().get(1);
 		setUpMethodCalls(false, 1, null);
 
-		final long[] ids = service.uploadROIs(location, ore, 13);
+		final long[] ids = session.uploadROIs(ore, 13);
 
 		assertEquals(1, ids.length);
 		assertEquals(50, ids[0]);
@@ -253,9 +253,10 @@ public class UploadROITest {
 	}
 
 	@Test
-	public void testUploadUnboundedMaskPredicate() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testUploadUnboundedMaskPredicate() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 14, 15.5 },
 			new double[] { 2, 3 });
@@ -263,7 +264,7 @@ public class UploadROITest {
 		final TreeNode<RealMask> dn = new DefaultTreeNode<>(rm, null);
 		setUpMethodCalls(true, 1, null);
 
-		final long[] ids = service.uploadROIs(location, dn, 22);
+		final long[] ids = session.uploadROIs(dn, 22);
 
 		assertEquals(1, ids.length);
 		assertEquals(50, ids[0]);
@@ -273,9 +274,10 @@ public class UploadROITest {
 	}
 
 	@Test
-	public void testUploadMultipleRois() throws ServerError,
-		PermissionDeniedException, CannotCreateSessionException, ExecutionException,
-		DSOutOfServiceException, DSAccessException
+	public void testUploadMultipleRois() throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, OMEROException,
+		NoSuchFieldException, SecurityException, IllegalArgumentException,
+		IllegalAccessException
 	{
 		final Ellipsoid e = GeomMasks.closedEllipsoid(new double[] { 33, 27 },
 			new double[] { 8, 3.5 });
@@ -298,7 +300,7 @@ public class UploadROITest {
 		final TreeNode<?> parent = new DefaultROITree();
 
 		final List<ROIData> test = new ArrayList<>(5);
-		for (TreeNode<?> t : rois) {
+		for (final TreeNode<?> t : rois) {
 			final ShapeData r = service.getContext().getService(ConvertService.class)
 				.convert(t.data(), ShapeData.class);
 			final ROIData roi = new ROIData();
@@ -309,7 +311,7 @@ public class UploadROITest {
 		parent.addChildren(rois);
 		setUpMethodCalls(false, 5, test);
 
-		final long[] ids = service.uploadROIs(location, parent, 300);
+		final long[] ids = session.uploadROIs(parent, 300);
 
 		assertEquals(5, ids.length);
 
@@ -321,19 +323,17 @@ public class UploadROITest {
 
 	@SuppressWarnings({ "unchecked", "resource" })
 	private void setUpMethodCalls(final boolean needInterval,
-		final int numROIData, final List<ROIData> rois) throws ServerError, PermissionDeniedException,
-		CannotCreateSessionException, ExecutionException, DSOutOfServiceException,
-		DSAccessException
+		final int numROIData, final List<ROIData> rois) throws ExecutionException,
+		DSOutOfServiceException, DSAccessException, NoSuchFieldException,
+		SecurityException, IllegalArgumentException, IllegalAccessException
 	{
 
+		Field field = session.getClass().getDeclaredField("omeroService");
+		field.setAccessible(true);
+		field.set(session, service);
 		new Expectations() {
 
 			{
-				new DefaultOMEROSession(location, service);
-				result = session;
-				session.getGateway();
-				result = gateway;
-
 				gateway.getFacility(ROIFacility.class);
 				result = roiFac;
 
@@ -391,7 +391,8 @@ public class UploadROITest {
 		new Verifications() {
 
 			{
-				Collection<ROIData> rois = new ArrayList<>(numROIData);
+
+				final Collection<ROIData> rois = new ArrayList<>(numROIData);
 				for (int i = 0; i < numROIData; i++) {
 					Collection<ROIData> rd;
 					roiFac.saveROIs((SecurityContext) any, anyLong, rd = withCapture());

@@ -25,33 +25,26 @@
 
 package net.imagej.omero;
 
-import org.scijava.command.ContextCommand;
-import org.scijava.plugin.Parameter;
-import org.scijava.widget.TextWidget;
+/**
+ * Helper class for storing OMERO session credentials.
+ *
+ * @author Curtis Rueden
+ */
+public class OMEROCredentials {
 
-/** An ImageJ command for interacting with an OMERO server. */
-public abstract class OMEROCommand extends ContextCommand {
+	// -- Fields --
 
-	@Parameter
-	private String server = "localhost";
-
-	@Parameter
-	private int port = 4064;
-
-	@Parameter
 	private String user;
 
-	@Parameter(style = TextWidget.PASSWORD_STYLE)
 	private String password;
 
-	// -- OMEROCommand methods --
+	private boolean encrypted;
 
-	public String getServer() {
-		return server;
-	}
+	// -- OMEROCredentials methods --
 
-	public int getPort() {
-		return port;
+	public OMEROCredentials(final String user, final String password) {
+		this.user = user;
+		this.password = password;
 	}
 
 	public String getUser() {
@@ -62,4 +55,24 @@ public abstract class OMEROCommand extends ContextCommand {
 		return password;
 	}
 
+	public boolean isEncrypted() {
+		return encrypted;
+	}
+
+	public void setEncrypted(final boolean encrypted) {
+		this.encrypted = encrypted;
+	}
+
+	/**
+	 * Checks that some credentials were specified.
+	 *
+	 * @throws IllegalArgumentException if no session ID was given, and no
+	 *           username+password was given either.
+	 */
+	public void validate() {
+		if (user == null || password == null) {
+			throw new IllegalArgumentException("Invalid credentials: " +
+				"must specify either session ID OR username+password");
+		}
+	}
 }
