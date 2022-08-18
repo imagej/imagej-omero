@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>32.0.0-beta-4</version>
+		<version>32.0.0-beta-5</version>
 		<relativePath />
 	</parent>
 
@@ -130,17 +130,6 @@
 		<!-- Test configuration -->
 		<skipITs>true</skipITs>
 
-		<ice.version>3.6.5</ice.version>
-		<glacier2.version>${ice.version}</glacier2.version>
-
-		<omero-blitz.version>5.5.10</omero-blitz.version>
-		<omero-common.version>5.5.9</omero-common.version>
-		<omero-dsl-plugin.version>5.5.2</omero-dsl-plugin.version>
-		<omero-gateway.version>5.6.9</omero-gateway.version>
-		<omero-model.version>5.6.5</omero-model.version>
-		<omero-renderer.version>5.5.9</omero-renderer.version>
-		<omero-romio.version>5.6.4</omero-romio.version>
-		<omero-server.version>5.6.3</omero-server.version>
 	</properties>
 
 	<repositories>
@@ -175,7 +164,6 @@
 		<dependency>
 			<groupId>io.scif</groupId>
 			<artifactId>scifio</artifactId>
-			<version>0.43.2</version>
 		</dependency>
 
 		<!-- SciJava dependencies -->
