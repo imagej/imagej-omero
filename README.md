@@ -25,13 +25,13 @@ The two mechanisms work differently and have different features:
   [scijava-table](https://github.com/scijava/scijava-table) objects.
 
 * __OMERO.imagej__ is built on ImageJ 1.x. It is maintained by the OMERO team.
-  It must be installed manually; it does not have an ImageJ update site. The
-  plugin is a thin wrapper of the OMERO.insight client, enabling you to connect
-  to OMERO via the OMERO.insight GUI, browse your database as usual, and send
-  images to ImageJ on demand. It also supports
-  transferring ROIs to/from OMERO. The ImageJ ROIs are converted into OMERO ROIs when uploaded to OMERO.
-  The supported workflow is to do your analysis in ImageJ as
-  usual, then upload results tables as attachments on the OMERO side.
+  It must be installed manually; it does not have an ImageJ update site.
+  The plugin is a thin wrapper of the OMERO.insight client, enabling you to
+  connect to OMERO via the OMERO.insight GUI, browse your database as usual,
+  and send images to ImageJ on demand. It also supports transferring ROIs
+  to/from OMERO. The ImageJ ROIs are converted into OMERO ROIs when uploaded
+  to OMERO. The supported workflow is to do your analysis in ImageJ as usual,
+  then upload results tables as attachments on the OMERO side.
 
 A third way to integrate OMERO with ImageJ, if you are comfortable writing
 scripts, is via [PyImageJ](https://github.com/imagej/pyimagej), as [described
