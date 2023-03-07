@@ -221,7 +221,7 @@ public class ScriptGenerator extends AbstractContextual {
 			out.println("ident = \"" + escapedID + "\"");
 			out.println("try:");
 			out.println("    print(subprocess.check_output([exe, ident]))");
-			out.println("except subprocess.CalledProcessError, e:");
+			out.println("except subprocess.CalledProcessError as e:");
 			out.println("    print(e.output)");
 			out.println("    sys.exit(e.returncode)");
 		}
