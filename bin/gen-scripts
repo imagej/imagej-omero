@@ -43,5 +43,5 @@ test -f "$omero/lib/server/blitz.jar" ||
 
 # -- Generate OMERO script wrappers --
 
-"$(dirname "$0")/run-class" net.imagej.omero.ScriptGenerator "$omero" $@ &&
+"$(dirname "$0")/run-class" net.imagej.omero.module.ScriptGenerator "$omero" $@ &&
 	echo "$(find "$omero/lib/scripts/imagej" | wc -l) scripts generated."

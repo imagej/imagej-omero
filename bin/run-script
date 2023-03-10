@@ -18,4 +18,4 @@ test $# -gt 0 ||
 
 # -- Execute OMERO script wrapper --
 
-"$(dirname "$0")/run-class" net.imagej.omero.ScriptRunner $@
+"$(dirname "$0")/run-class" net.imagej.omero.module.ScriptRunner $@
