@@ -52,6 +52,7 @@ as well as uploading image data from ImageJ to OMERO as a new image.
 To try it out, enable the appropriate
 [update site](http://imagej.net/Update_Sites):
 
+* __OMERO-5.5-5.6__ If your OMERO server version is >= 5.5
 * __OMERO-5.4__ If your OMERO server is version 5.4.x.
 * __OMERO-5.2__ If your OMERO server is version 5.2.x.
 * __OMERO-5.1__ If your OMERO server is version 5.1.x.
