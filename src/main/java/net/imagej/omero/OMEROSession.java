@@ -900,10 +900,12 @@ public class OMEROSession /*extends AbstractContextual*/ implements Closeable {
 		Map<Long, List<IObject>> omeroAnnotations = sfp.getMetadataService()
 			.loadAnnotations("omero.model.Image", Arrays.asList(pixelsID), null, null,
 				null);
-		for (IObject o : omeroAnnotations.get(pixelsID)) {
-			if (o instanceof MapAnnotationI) {
-				MapAnnotationI mapAnnotation = (MapAnnotationI) o;
-				annotations.putAll(mapAnnotation.getMapValueAsMap());
+		if (omeroAnnotations.containsKey(pixelsID)) {
+			for (IObject o : omeroAnnotations.get(pixelsID)) {
+				if (o instanceof MapAnnotationI) {
+					MapAnnotationI mapAnnotation = (MapAnnotationI) o;
+					annotations.putAll(mapAnnotation.getMapValueAsMap());
+				}
 			}
 		}
 		return annotations;
